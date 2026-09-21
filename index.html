@@ -770,6 +770,29 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    .view-tab-btn {
+      background: transparent;
+      color: #94a3b8;
+      border: none;
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+      font-family: var(--font-main);
+    }
+    .view-tab-btn.active {
+      background: var(--primary);
+      color: white;
+    }
+    .view-tab-btn:hover:not(.active) {
+      color: #f8fafc;
+      background: rgba(255,255,255,0.08);
+    }
     .btn-elev-action {
       background: #334155;
       color: #f8fafc;
@@ -1644,6 +1667,16 @@
             <span data-i18n="elev_title">โพรไฟล์ความสูงภูมิประเทศ & แนวคลื่นวิทยุ (Elevation Profile & Line-of-Sight: A ➔ B)</span>
           </div>
           <div class="elevation-controls">
+            <!-- 2D / 3D Mode Switcher -->
+            <div class="view-mode-tabs" style="display:inline-flex; gap:3px; background:#0b1120; padding:3px; border-radius:6px; border:1px solid #334155;">
+              <button type="button" class="view-tab-btn active" id="btn-view-2d" onclick="switchElevationView('2d')">
+                📊 2D Profile
+              </button>
+              <button type="button" class="view-tab-btn" id="btn-view-3d" onclick="switchElevationView('3d')">
+                🌐 3D Fresnel Zone
+              </button>
+            </div>
+
             <button class="btn-elev-action" onclick="refreshElevationProfile()" title="ดึงข้อมูลความสูงใหม่">
               🔄 <span data-i18n="elev_refresh">รีเฟรช</span>
             </button>
@@ -1674,6 +1707,59 @@
             <span style="font-size: 0.85rem; color: #94a3b8; margin-top: 10px;">กำลังดึงข้อมูลความสูงภูมิประเทศจริงตามแนวเส้นทาง...</span>
           </div>
         </div>
+
+        <!-- 3D Fresnel Zone WebGL Container -->
+        <div class="elev-3d-wrapper" id="elev-3d-wrapper" style="display: none; position: relative; width: 100%; height: 420px; background: #070a12; overflow: hidden;">
+          <div id="threejs-container" style="width: 100%; height: 100%;"></div>
+
+          <!-- 3D Top Floating Control Bar -->
+          <div class="three-overlay-bar" style="position: absolute; top: 10px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; pointer-events: none; z-index: 10;">
+            <!-- Left: Frequency Selector & Fresnel Stats -->
+            <div style="display: flex; align-items: center; gap: 8px; pointer-events: auto; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(6px); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.35); font-size: 0.8rem; color: #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
+              <span style="color: #38bdf8; font-weight: 700;">📡 ความถี่วิทยุ:</span>
+              <select id="fresnel-freq-select" onchange="onFresnelFreqChange()" style="background: #1e293b; color: #f8fafc; border: 1px solid #475569; border-radius: 4px; padding: 2px 6px; font-size: 0.78rem; font-family: var(--font-mono); cursor: pointer;">
+                <option value="150">VHF 150 MHz</option>
+                <option value="400" selected>UHF / TETRA 400 MHz</option>
+                <option value="800">800 MHz</option>
+                <option value="900">900 MHz</option>
+                <option value="2400">Microwave 2.4 GHz</option>
+                <option value="5800">Microwave 5.8 GHz</option>
+                <option value="7500">Microwave 7.5 GHz</option>
+              </select>
+              <span style="color: #64748b;">|</span>
+              <span>รัศมี F1 สูงสุด: <b id="three-f1-radius" style="color: #38bdf8;">-</b> m</span>
+              <span style="color: #64748b;">(60% = <b id="three-f1-60" style="color: #fbbf24;">-</b> m)</span>
+            </div>
+
+            <!-- Right: Camera Presets -->
+            <div style="display: flex; align-items: center; gap: 6px; pointer-events: auto;">
+              <button type="button" class="btn btn-outline" onclick="setThreeCameraPreset('side')" style="font-size: 0.72rem; padding: 4px 8px; background: rgba(15, 23, 42, 0.9); border-color: #475569; color: #e2e8f0; cursor: pointer;" title="มุมมองด้านข้าง 3D">
+                🎥 ด้านข้าง
+              </button>
+              <button type="button" class="btn btn-outline" onclick="setThreeCameraPreset('tx')" style="font-size: 0.72rem; padding: 4px 8px; background: rgba(15, 23, 42, 0.9); border-color: #475569; color: #e2e8f0; cursor: pointer;" title="มุมมองจากจุด A (ต้นทาง)">
+                📡 จากจุด A
+              </button>
+              <button type="button" class="btn btn-outline" onclick="setThreeCameraPreset('rx')" style="font-size: 0.72rem; padding: 4px 8px; background: rgba(15, 23, 42, 0.9); border-color: #475569; color: #e2e8f0; cursor: pointer;" title="มุมมองจากจุด B (ปลายทาง)">
+                🗼 จากจุด B
+              </button>
+              <button type="button" class="btn btn-outline" onclick="setThreeCameraPreset('top')" style="font-size: 0.72rem; padding: 4px 8px; background: rgba(15, 23, 42, 0.9); border-color: #475569; color: #e2e8f0; cursor: pointer;" title="มุมมองมุมสูง (Bird's Eye)">
+                🦅 มุมสูง
+              </button>
+              <button type="button" class="btn btn-outline" onclick="resetThreeCamera()" style="font-size: 0.72rem; padding: 4px 8px; background: rgba(15, 23, 42, 0.9); border-color: #475569; color: #e2e8f0; cursor: pointer;" title="รีเซ็ตตำแหน่งกล้อง">
+                🔄 รีเซ็ต
+              </button>
+            </div>
+          </div>
+
+          <!-- Bottom Legend -->
+          <div style="position: absolute; bottom: 8px; left: 12px; font-size: 0.72rem; color: #cbd5e1; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(4px); padding: 4px 10px; border-radius: 6px; border: 1px solid #1e293b; pointer-events: none; z-index: 10; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+            <span><span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #38bdf8; margin-right: 4px; vertical-align: middle;"></span>1st Fresnel Zone (100%)</span>
+            <span><span style="display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: #fbbf24; margin-right: 4px; vertical-align: middle;"></span>60% Clearance Zone</span>
+            <span><span style="display: inline-block; width: 14px; height: 2px; background: #00f0ff; margin-right: 4px; vertical-align: middle;"></span>Line of Sight (LOS Ray)</span>
+            <span id="three-obstruction-legend" style="display: none; color: #f87171; font-weight: 700;">⚠️ ตรวจพบจุดรุกล้ำ Fresnel!</span>
+            <span style="color: #64748b;">(คลิกลากเมาส์หมุน 360° | เลื่อนล้อเมาส์ซูมเข้า-ออก | คลิกขวาลากเพื่อเลื่อน)</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1695,6 +1781,10 @@
 
   <!-- SheetJS for Excel (.xlsx) export -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Three.js & OrbitControls for 3D Fresnel Zone -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
   <!-- Main Calculator Logic & App Script -->
   <script>
@@ -2885,6 +2975,9 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         badge.className = 'los-badge clear';
         badge.innerHTML = '<span>รอการระบุพิกัดทั้งสองสถานี...</span>';
       }
+      if (typeof clearThreeScene === 'function') {
+        clearThreeScene();
+      }
     }
 
     async function loadElevationProfile(lat1, lon1, lat2, lon2) {
@@ -3057,6 +3150,9 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         }
 
         drawElevationProfile(currentElevProfileData, null);
+        if (typeof currentElevViewMode !== 'undefined' && currentElevViewMode === '3d') {
+          updateThreeScene();
+        }
 
       } catch (err) {
         console.error("Error loading elevation profile:", err);
@@ -3449,19 +3545,26 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
       canvas.addEventListener('touchend', resetPointerAction);
 
       // Window resize & orientation change
-      window.addEventListener('resize', () => {
+      function onWindowResizeOrRotate() {
         if (map) map.invalidateSize();
         if (currentElevProfileData) {
           drawElevationProfile(currentElevProfileData, null);
         }
-      });
-      window.addEventListener('orientationchange', () => {
-        setTimeout(() => {
-          if (map) map.invalidateSize();
-          if (currentElevProfileData) {
-            drawElevationProfile(currentElevProfileData, null);
+        if (threeRenderer && threeCamera) {
+          const container = document.getElementById('threejs-container');
+          if (container) {
+            const w = container.clientWidth || 800;
+            const h = container.clientHeight || 420;
+            threeCamera.aspect = w / h;
+            threeCamera.updateProjectionMatrix();
+            threeRenderer.setSize(w, h);
           }
-        }, 200);
+        }
+      }
+
+      window.addEventListener('resize', onWindowResizeOrRotate);
+      window.addEventListener('orientationchange', () => {
+        setTimeout(onWindowResizeOrRotate, 200);
       });
     }
 
@@ -3489,6 +3592,552 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         elevHoverMarker.setIcon(icon);
         if (!map.hasLayer(elevHoverMarker)) elevHoverMarker.addTo(map);
       }
+    }
+
+    // =========================================================================
+    // 3D FRESNEL ZONE VISUALIZATION (WebGL / Three.js)
+    // =========================================================================
+    let currentElevViewMode = '2d'; // '2d' or '3d'
+    let threeRenderer = null;
+    let threeScene = null;
+    let threeCamera = null;
+    let threeControls = null;
+    let threeAnimId = null;
+    let threeDynamicGroup = null;
+    let selectedFresnelFreqMHz = 400; // default 400 MHz (UHF/TETRA)
+    let beaconMaterial = null;
+    let beaconTime = 0;
+
+    function switchElevationView(mode) {
+      currentElevViewMode = mode;
+      const btn2d = document.getElementById('btn-view-2d');
+      const btn3d = document.getElementById('btn-view-3d');
+      const wrap2d = document.getElementById('elev-chart-wrapper');
+      const wrap3d = document.getElementById('elev-3d-wrapper');
+
+      if (mode === '3d') {
+        if (btn2d) btn2d.classList.remove('active');
+        if (btn3d) btn3d.classList.add('active');
+        if (wrap2d) wrap2d.style.display = 'none';
+        if (wrap3d) wrap3d.style.display = 'block';
+        initOrUpdateThreeScene();
+      } else {
+        if (btn3d) btn3d.classList.remove('active');
+        if (btn2d) btn2d.classList.add('active');
+        if (wrap3d) wrap3d.style.display = 'none';
+        if (wrap2d) wrap2d.style.display = 'block';
+        if (currentElevProfileData) {
+          drawElevationProfile(currentElevProfileData, null);
+        }
+      }
+    }
+
+    function onFresnelFreqChange() {
+      const sel = document.getElementById('fresnel-freq-select');
+      if (sel) {
+        selectedFresnelFreqMHz = parseFloat(sel.value) || 400;
+        if (currentElevProfileData && currentElevProfileData.points) {
+          const fGHz = selectedFresnelFreqMHz / 1000.0;
+          const totalD = currentElevProfileData.totalDistKm;
+          currentElevProfileData.points.forEach(p => {
+            const d1 = p.distKm;
+            const d2 = totalD - d1;
+            p.fresnelR = (totalD > 0 && d1 > 0 && d1 < totalD)
+              ? 17.32 * Math.sqrt((d1 * d2) / (fGHz * totalD))
+              : 0;
+          });
+        }
+        if (currentElevViewMode === '3d') {
+          updateThreeScene();
+        } else if (currentElevProfileData) {
+          drawElevationProfile(currentElevProfileData, null);
+        }
+      }
+    }
+
+    function initOrUpdateThreeScene() {
+      const container = document.getElementById('threejs-container');
+      if (!container) return;
+
+      if (typeof THREE === 'undefined') {
+        container.innerHTML = '<div style="color:#94a3b8; padding:40px; text-align:center; font-size:0.9rem;">⏳ กำลังเชื่อมต่อไลบรารี 3D (Three.js)... กรุณารอสักครู่</div>';
+        return;
+      }
+
+      if (!threeRenderer) {
+        const w = container.clientWidth || 800;
+        const h = container.clientHeight || 420;
+
+        threeScene = new THREE.Scene();
+        threeScene.background = new THREE.Color(0x070a13);
+        threeScene.fog = new THREE.FogExp2(0x070a13, 0.0025);
+
+        threeCamera = new THREE.PerspectiveCamera(45, w / h, 0.5, 2000);
+        threeCamera.position.set(0, 45, 125);
+
+        threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        threeRenderer.setSize(w, h);
+        threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+        container.innerHTML = '';
+        container.appendChild(threeRenderer.domElement);
+
+        if (typeof THREE.OrbitControls !== 'undefined') {
+          threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
+          threeControls.enableDamping = true;
+          threeControls.dampingFactor = 0.08;
+          threeControls.maxDistance = 600;
+          threeControls.minDistance = 10;
+          threeControls.maxPolarAngle = Math.PI / 2 + 0.06;
+        }
+
+        // Lighting
+        const ambLight = new THREE.AmbientLight(0xffffff, 0.7);
+        threeScene.add(ambLight);
+
+        const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.85);
+        dirLight1.position.set(60, 120, 80);
+        threeScene.add(dirLight1);
+
+        const dirLight2 = new THREE.DirectionalLight(0x38bdf8, 0.45);
+        dirLight2.position.set(-60, 40, -80);
+        threeScene.add(dirLight2);
+
+        threeDynamicGroup = new THREE.Group();
+        threeScene.add(threeDynamicGroup);
+
+        startThreeAnimationLoop();
+      } else {
+        const w = container.clientWidth || 800;
+        const h = container.clientHeight || 420;
+        threeCamera.aspect = w / h;
+        threeCamera.updateProjectionMatrix();
+        threeRenderer.setSize(w, h);
+      }
+
+      updateThreeScene();
+    }
+
+    function startThreeAnimationLoop() {
+      if (threeAnimId) cancelAnimationFrame(threeAnimId);
+
+      function animate() {
+        threeAnimId = requestAnimationFrame(animate);
+
+        beaconTime += 0.05;
+        if (beaconMaterial) {
+          beaconMaterial.opacity = 0.4 + 0.6 * Math.abs(Math.sin(beaconTime * 2.5));
+        }
+
+        if (threeControls) threeControls.update();
+        if (threeRenderer && threeScene && threeCamera) {
+          threeRenderer.render(threeScene, threeCamera);
+        }
+      }
+      animate();
+    }
+
+    function clearThreeScene() {
+      if (!threeDynamicGroup) return;
+      while (threeDynamicGroup.children.length > 0) {
+        const obj = threeDynamicGroup.children[0];
+        threeDynamicGroup.remove(obj);
+        if (obj.geometry) obj.geometry.dispose();
+        if (obj.material) {
+          if (Array.isArray(obj.material)) obj.material.forEach(m => m.dispose());
+          else obj.material.dispose();
+        }
+      }
+      const obsLegend = document.getElementById('three-obstruction-legend');
+      if (obsLegend) obsLegend.style.display = 'none';
+      const f1RadiusEl = document.getElementById('three-f1-radius');
+      if (f1RadiusEl) f1RadiusEl.innerText = '-';
+      const f160El = document.getElementById('three-f1-60');
+      if (f160El) f160El.innerText = '-';
+    }
+
+    function updateThreeScene() {
+      clearThreeScene();
+      if (!currentElevProfileData || !currentElevProfileData.points || !currentElevProfileData.points.length) {
+        return;
+      }
+
+      const data = currentElevProfileData;
+      const points = data.points;
+      const N = points.length;
+      const totalD = data.totalDistKm || 1;
+      const sub = data.subStation;
+      const master = data.masterStation;
+      const sHeight = (sub && sub.height !== undefined) ? sub.height : 15;
+      const mHeight = (master && master.height !== undefined) ? master.height : 45;
+
+      const fGHz = selectedFresnelFreqMHz / 1000.0;
+      const maxF1 = 8.66 * Math.sqrt(totalD / fGHz);
+      const maxF60 = maxF1 * 0.6;
+
+      const f1RadiusEl = document.getElementById('three-f1-radius');
+      if (f1RadiusEl) f1RadiusEl.innerText = maxF1.toFixed(1);
+      const f160El = document.getElementById('three-f1-60');
+      if (f160El) f160El.innerText = maxF60.toFixed(1);
+
+      // Scaling
+      const L_X = 140; // scene X span: from -70 to +70
+      const elevs = points.map(p => p.effectiveGround);
+      const minElev = Math.min(...elevs);
+      const maxElev = Math.max(...elevs);
+      const rayMaxY = Math.max(points[0].effectiveGround + sHeight, points[N - 1].effectiveGround + mHeight);
+      const vertSpanM = Math.max(50, (rayMaxY + maxF1) - minElev + 10);
+      const S_Y = 32.0 / vertSpanM;
+      const S_Z = S_Y; // Keep 1:1 cross-section for circular Fresnel tube!
+      const baseYOffset = minElev * S_Y;
+
+      // 1. Direct LOS Laser Ray in 3D
+      const startRayY = (points[0].effectiveGround + sHeight) * S_Y - baseYOffset;
+      const endRayY = (points[N - 1].effectiveGround + mHeight) * S_Y - baseYOffset;
+      const startPt = new THREE.Vector3(-L_X / 2, startRayY, 0);
+      const endPt = new THREE.Vector3(L_X / 2, endRayY, 0);
+
+      const rayGeo = new THREE.BufferGeometry().setFromPoints([startPt, endPt]);
+      const rayMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2 });
+      const rayLine = new THREE.Line(rayGeo, rayMat);
+      threeDynamicGroup.add(rayLine);
+
+      // 2. 1st Fresnel Zone Ellipsoid (100% and 60% Clearance Zone)
+      const numSlices = 50;
+      const numRadial = 24;
+
+      function createFresnelMesh(scaleFactor, colorHex, opacityVal, isWireframe) {
+        const positions = [];
+        const indices = [];
+
+        for (let i = 0; i <= numSlices; i++) {
+          const t = i / numSlices;
+          const curX = -L_X / 2 + t * L_X;
+          const curRayY = startRayY + t * (endRayY - startRayY);
+          const d1 = t * totalD;
+          const d2 = (1 - t) * totalD;
+          const f1RadiusM = (t > 0 && t < 1) ? 17.32 * Math.sqrt((d1 * d2) / (fGHz * totalD)) : 0;
+          const rY = f1RadiusM * scaleFactor * S_Y;
+          const rZ = f1RadiusM * scaleFactor * S_Z;
+
+          for (let j = 0; j <= numRadial; j++) {
+            const theta = (j / numRadial) * Math.PI * 2;
+            const y = curRayY + rY * Math.cos(theta);
+            const z = rZ * Math.sin(theta);
+            positions.push(curX, y, z);
+          }
+        }
+
+        for (let i = 0; i < numSlices; i++) {
+          for (let j = 0; j < numRadial; j++) {
+            const a = i * (numRadial + 1) + j;
+            const b = (i + 1) * (numRadial + 1) + j;
+            const c = (i + 1) * (numRadial + 1) + (j + 1);
+            const d = i * (numRadial + 1) + (j + 1);
+            indices.push(a, b, d);
+            indices.push(b, c, d);
+          }
+        }
+
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+        geo.setIndex(indices);
+        geo.computeVertexNormals();
+
+        const mat = new THREE.MeshPhongMaterial({
+          color: colorHex,
+          transparent: true,
+          opacity: opacityVal,
+          wireframe: isWireframe,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+          shininess: 60
+        });
+        return new THREE.Mesh(geo, mat);
+      }
+
+      // Outer 100% Fresnel Zone (Translucent Cyan + wireframe)
+      const f1OuterMesh = createFresnelMesh(1.0, 0x00b4d8, 0.22, false);
+      const f1OuterWire = createFresnelMesh(1.0, 0x38bdf8, 0.25, true);
+      threeDynamicGroup.add(f1OuterMesh);
+      threeDynamicGroup.add(f1OuterWire);
+
+      // Inner 60% Clearance Zone (Translucent Amber wireframe)
+      const f1InnerMesh = createFresnelMesh(0.6, 0xf59e0b, 0.35, true);
+      threeDynamicGroup.add(f1InnerMesh);
+
+      // 3. 3D Terrain Surface from DEM profile points
+      const terrainWidthZ = Math.max(25, maxF1 * S_Z * 2.2 + 10);
+      const zSteps = 6;
+      const terrainPositions = [];
+      const terrainColors = [];
+      const terrainIndices = [];
+
+      let hasObstruction = false;
+      let worstObstructionDist = 0;
+      let worstObstructionVal = 0;
+      let worstObPt = null;
+
+      for (let i = 0; i < N; i++) {
+        const p = points[i];
+        const t = p.distKm / totalD;
+        const x = -L_X / 2 + t * L_X;
+        const groundY = p.effectiveGround * S_Y - baseYOffset;
+        const rayY = startRayY + t * (endRayY - startRayY);
+
+        const d1 = p.distKm;
+        const d2 = totalD - d1;
+        const localF1 = (d1 > 0 && d2 > 0) ? 17.32 * Math.sqrt((d1 * d2) / (fGHz * totalD)) : 0;
+        const localF1BottomY = rayY - (localF1 * S_Y);
+        const localF60BottomY = rayY - (0.6 * localF1 * S_Y);
+
+        const isBreached = groundY > localF1BottomY;
+        const isCriticalBreach = groundY > localF60BottomY;
+
+        if (isBreached) {
+          hasObstruction = true;
+          const breachM = p.effectiveGround - (p.rayHeight - localF1);
+          if (breachM > worstObstructionVal) {
+            worstObstructionVal = breachM;
+            worstObstructionDist = p.distKm;
+            worstObPt = { x, y: groundY, distKm: p.distKm, clearanceM: p.clearance };
+          }
+        }
+
+        const elevNorm = (p.effectiveGround - minElev) / (maxElev - minElev || 1);
+
+        for (let k = 0; k <= zSteps; k++) {
+          const zFrac = (k / zSteps) * 2 - 1;
+          const z = zFrac * (terrainWidthZ / 2);
+          const sideFalloff = 1 - 0.15 * (zFrac * zFrac);
+          const y = groundY * sideFalloff;
+
+          terrainPositions.push(x, y, z);
+
+          let r, g, b;
+          if (isCriticalBreach && Math.abs(zFrac) < 0.4) {
+            r = 0.95; g = 0.15; b = 0.15;
+          } else if (isBreached && Math.abs(zFrac) < 0.4) {
+            r = 0.95; g = 0.6; b = 0.1;
+          } else {
+            r = 0.12 + 0.55 * elevNorm;
+            g = 0.28 + 0.25 * elevNorm;
+            b = 0.22 + 0.05 * elevNorm;
+          }
+          terrainColors.push(r, g, b);
+        }
+      }
+
+      for (let i = 0; i < N - 1; i++) {
+        for (let k = 0; k < zSteps; k++) {
+          const a = i * (zSteps + 1) + k;
+          const b = (i + 1) * (zSteps + 1) + k;
+          const c = (i + 1) * (zSteps + 1) + (k + 1);
+          const d = i * (zSteps + 1) + (k + 1);
+          terrainIndices.push(a, b, d);
+          terrainIndices.push(b, c, d);
+        }
+      }
+
+      const terrainGeo = new THREE.BufferGeometry();
+      terrainGeo.setAttribute('position', new THREE.Float32BufferAttribute(terrainPositions, 3));
+      terrainGeo.setAttribute('color', new THREE.Float32BufferAttribute(terrainColors, 3));
+      terrainGeo.setIndex(terrainIndices);
+      terrainGeo.computeVertexNormals();
+
+      const terrainMat = new THREE.MeshLambertMaterial({
+        vertexColors: true,
+        side: THREE.DoubleSide
+      });
+      const terrainMesh = new THREE.Mesh(terrainGeo, terrainMat);
+      threeDynamicGroup.add(terrainMesh);
+
+      // Topographic Grid Wireframe
+      const terrainWireMat = new THREE.MeshBasicMaterial({ color: 0x334155, wireframe: true, transparent: true, opacity: 0.25 });
+      const terrainWire = new THREE.Mesh(terrainGeo, terrainWireMat);
+      threeDynamicGroup.add(terrainWire);
+
+      // 4. 3D Antenna Towers (Origin & Destination)
+      beaconMaterial = new THREE.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 1.0 });
+
+      function createLatticeTower(xPos, baseGroundY, towerHeightM, towerColorHex, nameLabel, subInfo) {
+        const towerGroup = new THREE.Group();
+        towerGroup.position.set(xPos, baseGroundY, 0);
+
+        const hUnits = Math.max(3.0, towerHeightM * S_Y);
+        const wBase = 2.4;
+
+        // 4 Corner Steel Legs
+        const legGeo = new THREE.CylinderGeometry(0.12, 0.16, hUnits, 6);
+        const legMat = new THREE.MeshStandardMaterial({ color: towerColorHex, metalness: 0.6, roughness: 0.4 });
+
+        const leg1 = new THREE.Mesh(legGeo, legMat);
+        leg1.position.set(-wBase / 2, hUnits / 2, -wBase / 2);
+        towerGroup.add(leg1);
+
+        const leg2 = new THREE.Mesh(legGeo, legMat);
+        leg2.position.set(wBase / 2, hUnits / 2, -wBase / 2);
+        towerGroup.add(leg2);
+
+        const leg3 = new THREE.Mesh(legGeo, legMat);
+        leg3.position.set(wBase / 2, hUnits / 2, wBase / 2);
+        towerGroup.add(leg3);
+
+        const leg4 = new THREE.Mesh(legGeo, legMat);
+        leg4.position.set(-wBase / 2, hUnits / 2, wBase / 2);
+        towerGroup.add(leg4);
+
+        // Tower Cross Braces
+        const levels = Math.max(3, Math.floor(hUnits / 1.8));
+        for (let l = 1; l <= levels; l++) {
+          const ly = (l / levels) * hUnits;
+          const braceGeo = new THREE.BoxGeometry(wBase * 1.05, 0.12, wBase * 1.05);
+          const braceMat = new THREE.MeshBasicMaterial({ color: towerColorHex });
+          const brace = new THREE.Mesh(braceGeo, braceMat);
+          brace.position.set(0, ly, 0);
+          towerGroup.add(brace);
+        }
+
+        // Antenna Mast
+        const mastGeo = new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8);
+        const mastMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8 });
+        const mast = new THREE.Mesh(mastGeo, mastMat);
+        mast.position.set(0, hUnits + 1.25, 0);
+        towerGroup.add(mast);
+
+        // Antenna Dish / Reflector
+        const dishGeo = new THREE.CylinderGeometry(0.8, 0.8, 0.2, 16);
+        const dishMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0 });
+        const dish = new THREE.Mesh(dishGeo, dishMat);
+        dish.rotation.z = Math.PI / 2;
+        dish.position.set(xPos < 0 ? 0.6 : -0.6, hUnits, 0);
+        towerGroup.add(dish);
+
+        // Flashing Obstruction Beacon Light
+        const beaconGeo = new THREE.SphereGeometry(0.4, 12, 12);
+        const beaconMesh = new THREE.Mesh(beaconGeo, beaconMaterial);
+        beaconMesh.position.set(0, hUnits + 2.6, 0);
+        towerGroup.add(beaconMesh);
+
+        // 3D Sprite Label
+        const sprite = createTextSprite(`${nameLabel}\n(เสา ${towerHeightM}m | ผืนดิน ${subInfo}m)`);
+        sprite.position.set(0, hUnits + 5.5, 0);
+        towerGroup.add(sprite);
+
+        threeDynamicGroup.add(towerGroup);
+      }
+
+      const gY_start = points[0].effectiveGround * S_Y - baseYOffset;
+      const gY_end = points[N - 1].effectiveGround * S_Y - baseYOffset;
+
+      const subName = (sub && sub.name) ? sub.name : 'จุด A (ต้นทาง)';
+      const masterName = (master && master.name) ? master.name : 'จุด B (ปลายทาง)';
+      createLatticeTower(-L_X / 2, gY_start, sHeight, 0xfbbf24, `📡 ${subName}`, points[0].elevation);
+      createLatticeTower(L_X / 2, gY_end, mHeight, 0xf87171, `🗼 ${masterName}`, points[N - 1].elevation);
+
+      // 5. 3D Obstruction Pin & Warning Marker
+      const obsLegend = document.getElementById('three-obstruction-legend');
+      if (hasObstruction && worstObPt) {
+        if (obsLegend) {
+          obsLegend.style.display = 'inline';
+          obsLegend.innerHTML = `⚠️ ตรวจพบจุดรุกล้ำ Fresnel ที่ระยะ ${worstObstructionDist.toFixed(1)} km!`;
+        }
+
+        const pinGroup = new THREE.Group();
+        pinGroup.position.set(worstObPt.x, worstObPt.y, 0);
+
+        const pinPole = new THREE.CylinderGeometry(0.15, 0.15, 4, 8);
+        const pinMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+        const pole = new THREE.Mesh(pinPole, pinMat);
+        pole.position.set(0, 2, 0);
+        pinGroup.add(pole);
+
+        const pinSphere = new THREE.SphereGeometry(0.9, 16, 16);
+        const sphere = new THREE.Mesh(pinSphere, pinMat);
+        sphere.position.set(0, 4.4, 0);
+        pinGroup.add(sphere);
+
+        const obSprite = createTextSprite(`⚠️ สันเขาบัง Fresnel\nระยะ ${worstObstructionDist.toFixed(1)} km`);
+        obSprite.position.set(0, 6.5, 0);
+        pinGroup.add(obSprite);
+
+        threeDynamicGroup.add(pinGroup);
+      } else {
+        if (obsLegend) obsLegend.style.display = 'none';
+      }
+
+      // 6. Camera Focus
+      const midY = (startRayY + endRayY) / 2;
+      if (threeControls) {
+        threeControls.target.set(0, midY, 0);
+        threeControls.update();
+      }
+    }
+
+    function createTextSprite(text) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 100;
+      const ctx = canvas.getContext('2d');
+
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2.5;
+
+      const r = 10, x = 4, y = 4, w = 312, h = 92;
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = 'bold 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+
+      const lines = text.split('\n');
+      if (lines.length === 1) {
+        ctx.fillText(lines[0], 160, 50);
+      } else {
+        ctx.fillText(lines[0], 160, 36);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '16px sans-serif';
+        ctx.fillText(lines[1], 160, 66);
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.minFilter = THREE.LinearFilter;
+      const spriteMat = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+      const sprite = new THREE.Sprite(spriteMat);
+      sprite.scale.set(16, 5, 1);
+      return sprite;
+    }
+
+    function setThreeCameraPreset(preset) {
+      if (!threeCamera || !threeControls) return;
+      const target = threeControls.target;
+
+      if (preset === 'side') {
+        threeCamera.position.set(0, target.y + 20, 110);
+      } else if (preset === 'tx') {
+        threeCamera.position.set(-80, target.y + 12, 0.1);
+      } else if (preset === 'rx') {
+        threeCamera.position.set(80, target.y + 12, 0.1);
+      } else if (preset === 'top') {
+        threeCamera.position.set(0, target.y + 140, 0.1);
+      }
+      threeControls.update();
+    }
+
+    function resetThreeCamera() {
+      if (!threeCamera || !threeControls) return;
+      const target = threeControls.target;
+      threeCamera.position.set(0, target.y + 35, 115);
+      threeControls.update();
     }
 
     window.addEventListener('DOMContentLoaded', () => {
