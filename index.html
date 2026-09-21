@@ -1347,7 +1347,7 @@
             <div class="point-head">
               <div class="point-title">
                 <span class="point-badge">A</span>
-                <span data-i18n="point_a_title">สถานีวิทยุลูกข่าย</span>
+                <span data-i18n="point_a_title">สถานีต้นทาง</span>
               </div>
             </div>
 
@@ -1427,7 +1427,7 @@
             <div class="point-head">
               <div class="point-title">
                 <span class="point-badge">B</span>
-                <span data-i18n="point_b_title">สถานีแม่ข่าย</span>
+                <span data-i18n="point_b_title">สถานีปลายทาง</span>
               </div>
             </div>
 
@@ -1871,8 +1871,8 @@
         btn_use_location: "ตำแหน่งของฉัน ➔ กะอ์บะฮ์",
         inputs_title: "กำหนดพิกัดตำแหน่ง (Coordinates)",
         btn_swap: "สลับจุด A ⇄ B",
-        point_a_title: "สถานีวิทยุลูกข่าย",
-        point_b_title: "สถานีแม่ข่าย",
+        point_a_title: "สถานีต้นทาง",
+        point_b_title: "สถานีปลายทาง",
         lbl_lat_a: "ละติจูด (ϕ₁)",
         lbl_lon_a: "ลองจิจูด (λ₁)",
         lbl_lat_b: "ละติจูด (ϕ₂)",
@@ -1890,7 +1890,7 @@
         layer_carto: "แผนที่ Carto",
         btn_open_gmaps: "เปิดใน Google Maps",
         btn_fullscreen: "เต็มจอ",
-        map_hint: "💡 คลิกบนแผนที่เพื่อเปลี่ยนพิกัดสถานีแม่ข่าย (Point B) ความละเอียด 6 ตำแหน่งอัตโนมัติ",
+        map_hint: "💡 คลิกบนแผนที่เพื่อเปลี่ยนพิกัดสถานีปลายทาง (Point B) ความละเอียด 6 ตำแหน่งอัตโนมัติ",
         btn_copy: "คัดลอกผลลัพธ์",
         badge_click_view: "คลิกเพื่อดู",
         steps_title: "ขั้นตอนและสูตรการคำนวณอย่างละเอียด (Step-by-step Math)",
@@ -2247,8 +2247,8 @@
         markerB.setLatLng(posB);
       }
 
-      const labelA = currentLang === 'th' ? 'สถานีวิทยุลูกข่าย (Point A)' : 'Radio Substation (Point A)';
-      const labelB = currentLang === 'th' ? 'สถานีแม่ข่าย (Point B)' : 'Master Station (Point B)';
+      const labelA = currentLang === 'th' ? 'สถานีต้นทาง (Point A)' : 'Radio Substation (Point A)';
+      const labelB = currentLang === 'th' ? 'สถานีปลายทาง (Point B)' : 'Master Station (Point B)';
       const azLabel = currentLang === 'th' ? 'มุมแอซิมัท (หันทิศเสาอากาศ):' : 'Azimuth (Antenna Heading):';
 
       markerA.bindPopup(`<b>${labelA}</b><br>Lat: ${lat1.toFixed(6)}°<br>Lon: ${lon1.toFixed(6)}°`);
@@ -2582,8 +2582,8 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
       const lonB = parseFloat(document.getElementById('lon-b').value).toFixed(6);
 
       const text = `--- ผลการคำนวณมุมแอซิมัทและระยะทาง ---
-สถานีวิทยุลูกข่าย (Point A): ละติจูด ${latA}°, ลองจิจูด ${lonA}°
-สถานีแม่ข่าย (Point B): ละติจูด ${latB}°, ลองจิจูด ${lonB}°
+สถานีต้นทาง (Point A): ละติจูด ${latA}°, ลองจิจูด ${lonA}°
+สถานีปลายทาง (Point B): ละติจูด ${latB}°, ลองจิจูด ${lonB}°
 มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B): ${az}° (${dir}, ${quad})
 Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
 ระยะทางตรงบนผิวโลก: ${dist} ${unit}
@@ -2639,12 +2639,12 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
           ["วันเวลาที่ส่งออก (Export Timestamp)", timeStr],
           [""],
           ["หัวข้อ (Parameter)", "ค่าที่คำนวณได้ (Value)", "หน่วย (Unit)", "คำอธิบาย (Description)"],
-          ["สถานีวิทยุลูกข่าย (Point A) - Latitude", parseFloat(latA.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (ϕ₁)"],
-          ["สถานีวิทยุลูกข่าย (Point A) - Longitude", parseFloat(lonA.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (λ₁)"],
-          ["สถานีวิทยุลูกข่าย (Point A) - DMS", dmsA, "-", "Degrees Minutes Seconds"],
-          ["สถานีแม่ข่าย (Point B) - Latitude", parseFloat(latB.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (ϕ₂)"],
-          ["สถานีแม่ข่าย (Point B) - Longitude", parseFloat(lonB.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (λ₂)"],
-          ["สถานีแม่ข่าย (Point B) - DMS", dmsB, "-", "Degrees Minutes Seconds"],
+          ["สถานีต้นทาง (Point A) - Latitude", parseFloat(latA.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (ϕ₁)"],
+          ["สถานีต้นทาง (Point A) - Longitude", parseFloat(lonA.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (λ₁)"],
+          ["สถานีต้นทาง (Point A) - DMS", dmsA, "-", "Degrees Minutes Seconds"],
+          ["สถานีปลายทาง (Point B) - Latitude", parseFloat(latB.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (ϕ₂)"],
+          ["สถานีปลายทาง (Point B) - Longitude", parseFloat(lonB.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (λ₂)"],
+          ["สถานีปลายทาง (Point B) - DMS", dmsB, "-", "Degrees Minutes Seconds"],
           ["มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B)", parseFloat(az), "°", "วัดตามเข็มนาฬิกาจากทิศเหนือจริง (0° ถึง 360°)"],
           ["ทิศทางเข็มทิศ (Compass Direction)", dir, "-", "ทิศทาง 16 ทิศหลัก/ย่อย"],
           ["ทิศควอดรันต์ (Quadrant Bearing)", quad, "-", "Quadrant Bearing Format"],
@@ -2721,12 +2721,12 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
       csv += "หัวข้อ (Parameter),ค่าที่คำนวณได้ (Value),หน่วย (Unit),คำอธิบาย (Description)\r\n";
       csv += `"รายงานผลการคำนวณ","มุมแอซิมัทและระยะทาง (ลูกข่าย ➔ แม่ข่าย)","-",""\r\n`;
       csv += `"วันเวลาที่คำนวณ","${timeStr}","-","Local Time"\r\n`;
-      csv += `"สถานีวิทยุลูกข่าย (Point A) Latitude","${latA.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (ϕ₁)"\r\n`;
-      csv += `"สถานีวิทยุลูกข่าย (Point A) Longitude","${lonA.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (λ₁)"\r\n`;
-      csv += `"สถานีวิทยุลูกข่าย (Point A) DMS","${dmsA}","-","Degrees Minutes Seconds"\r\n`;
-      csv += `"สถานีแม่ข่าย (Point B) Latitude","${latB.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (ϕ₂)"\r\n`;
-      csv += `"สถานีแม่ข่าย (Point B) Longitude","${lonB.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (λ₂)"\r\n`;
-      csv += `"สถานีแม่ข่าย (Point B) DMS","${dmsB}","-","Degrees Minutes Seconds"\r\n`;
+      csv += `"สถานีต้นทาง (Point A) Latitude","${latA.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (ϕ₁)"\r\n`;
+      csv += `"สถานีต้นทาง (Point A) Longitude","${lonA.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (λ₁)"\r\n`;
+      csv += `"สถานีต้นทาง (Point A) DMS","${dmsA}","-","Degrees Minutes Seconds"\r\n`;
+      csv += `"สถานีปลายทาง (Point B) Latitude","${latB.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (ϕ₂)"\r\n`;
+      csv += `"สถานีปลายทาง (Point B) Longitude","${lonB.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (λ₂)"\r\n`;
+      csv += `"สถานีปลายทาง (Point B) DMS","${dmsB}","-","Degrees Minutes Seconds"\r\n`;
       csv += `"มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B)","${az}","°","วัดตามเข็มนาฬิกาจากทิศเหนือ (0° ถึง 360°)"\r\n`;
       csv += `"ทิศทางเข็มทิศ (Compass Direction)","${dir}","-","ทิศทาง 16 ทิศ"\r\n`;
       csv += `"ทิศควอดรันต์ (Quadrant Bearing)","${quad}","-","Quadrant"\r\n`;
@@ -2956,7 +2956,7 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
       ctx.font = '13px sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('กรุณาระบุพิกัดสถานีวิทยุลูกข่ายและสถานีแม่ข่ายเพื่อแสดงโพรไฟล์ความสูง', cssW / 2, cssH / 2);
+      ctx.fillText('กรุณาระบุพิกัดสถานีต้นทางและสถานีปลายทางเพื่อแสดงโพรไฟล์ความสูง', cssW / 2, cssH / 2);
       ctx.restore();
       currentElevProfileData = null;
       document.getElementById('elev-stat-min').innerText = '-';
@@ -3110,7 +3110,7 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
 
         currentElevProfileData = {
           subStation: { name: "สถานีลูกข่าย A", height: sHeight },
-          masterStation: { name: "สถานีแม่ข่าย B", height: mHeight },
+          masterStation: { name: "สถานีปลายทาง B", height: mHeight },
           totalDistKm: totalDistKm,
           points: processedPoints,
           stats: {
