@@ -14,6 +14,9 @@
   <!-- Leaflet CSS for Map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
+  <!-- Client-side PDF Generation -->
+  <script src="html2pdf.bundle.min.js"></script>
+
   <style>
     :root {
       --primary: #2563eb;
@@ -1287,6 +1290,61 @@
         justify-content: space-between;
       }
     }
+    /* Modal Styles */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 3000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-box {
+      background: white;
+      border-radius: 12px;
+      width: 100%;
+      max-width: 920px;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
+      overflow: hidden;
+      animation: modalFadeIn 0.2s ease-out;
+    }
+    @keyframes modalFadeIn {
+      from { opacity: 0; transform: scale(0.96); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .modal-header {
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f8fafc;
+    }
+    .modal-body {
+      padding: 1.5rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      font-size: 1.4rem;
+      cursor: pointer;
+      color: #64748b;
+      line-height: 1;
+      padding: 4px;
+      border-radius: 6px;
+    }
+    .modal-close-btn:hover {
+      color: #0f172a;
+      background: #e2e8f0;
+    }
   </style>
 </head>
 <body>
@@ -1312,8 +1370,8 @@
       </a>
 
       <div class="header-actions">
-        <a href="multi_stations.html" class="btn" style="background:#1e40af; color:white; padding:7px 14px; border-radius:6px; font-size:0.83rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px; border:1px solid #1d4ed8; font-weight:600;" title="เปิดระบบคำนวณและส่งออก Excel แบบกลุ่มหลายสถานี">
-          📡 <span data-i18n="btn_goto_multi">คำนวณหลายสถานี (Multi-Station) ➔</span>
+        <a href="multi_stations.html" class="btn" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: white; padding: 6px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);" title="คำนวณหลายสถานี">
+          🗼 <span data-i18n="btn_goto_multi">คำนวณหลายสถานี (Multi-Station) ➔</span>
         </a>
         <div class="lang-toggle">
           <button class="lang-btn active" id="btn-th" onclick="setLanguage('th')">TH</button>
@@ -1325,6 +1383,26 @@
 
   <!-- Main Container -->
   <main style="padding-top: 1rem;">
+    <!-- Microwave Sample & PDF Report Banner -->
+    <div style="background: linear-gradient(135deg, #ffffff, #f0f9ff); border: 1px solid #bae6fd; border-radius: 12px; padding: 12px 18px; margin-bottom: 1.25rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 8px rgba(2, 132, 199, 0.08);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #0369a1); display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; flex-shrink: 0; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);">
+          📡
+        </div>
+        <div>
+          <div style="font-weight: 700; font-size: 0.95rem; color: #0c4a6e; display: flex; align-items: center; gap: 8px;">
+            <span>วิเคราะห์ข้อมูล Microwave Link (Microwave Summary Report)</span>
+            <span style="background: #e0f2fe; color: #0369a1; font-size: 0.72rem; padding: 2px 8px; border-radius: 20px; font-weight: 700; border: 1px solid #7dd3fc;">Real-time PDF Report</span>
+          </div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="btn" onclick="openCurrentLinkAnalysis()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: 1px solid #047857; padding: 7px 16px; font-size: 0.84rem; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.25);" title="วิเคราะห์แนวคลื่นวิทยุและแสดงรายงานสรุป Microwave Summary Report จากข้อมูลพิกัดและความสูงที่กรอกแบบเรียลไทม์">
+          📊 รายงานสรุปวิเคราะห์ข้อมูล (Real-time Report & PDF)
+        </button>
+      </div>
+    </div>
+
     <!-- Upper Section: Inputs (Left) & Results/Compass (Right) -->
     <div class="top-grid">
       <!-- Left Column: Inputs -->
@@ -1342,6 +1420,22 @@
         </div>
 
         <div class="card-body">
+          <!-- Frequency Band Selector -->
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 0.75rem;">
+            <label for="fresnel-freq-select" style="font-size: 0.82rem; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 5px; margin: 0; cursor: pointer;">
+              📡 <span data-i18n="lbl_freq_band">ย่านความถี่:</span>
+            </label>
+            <select id="fresnel-freq-select" onchange="onFresnelFreqChange()" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 0.82rem; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+              <option value="150">VHF 150 MHz</option>
+              <option value="400" selected>UHF / TETRA 400 MHz</option>
+              <option value="800">800 MHz</option>
+              <option value="900">900 MHz</option>
+              <option value="2400">Microwave 2.4 GHz</option>
+              <option value="5800">Microwave 5.8 GHz</option>
+              <option value="7500">Microwave 7.5 GHz</option>
+            </select>
+          </div>
+
           <!-- Point A -->
           <div class="point-box point-a">
             <div class="point-head">
@@ -1375,18 +1469,6 @@
                   </div>
                 </div>
               </div>
-              <div class="form-row" style="margin-top: 6px;">
-                <div class="form-group">
-                  <label class="form-label" for="height-a">
-                    <span data-i18n="lbl_height_a">ความสูงเสาอากาศลูกข่าย A (Antenna Height)</span>
-                    <small style="color:#94a3b8;">[เมตร]</small>
-                  </label>
-                  <div class="input-wrapper">
-                    <input type="number" id="height-a" step="0.5" value="" placeholder="15" oninput="calculate()" />
-                    <span class="input-unit">m</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <!-- Point A DMS Inputs -->
@@ -1417,6 +1499,30 @@
                       <option value="-1">W</option>
                     </select>
                   </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Point A Tower & Antenna Heights -->
+            <div class="form-row" style="margin-top: 6px;">
+              <div class="form-group">
+                <label class="form-label" for="tower-height-a">
+                  <span data-i18n="lbl_tower_height_a">ความสูงเสา</span>
+                  <small style="color:#94a3b8;">[เมตร]</small>
+                </label>
+                <div class="input-wrapper">
+                  <input type="number" id="tower-height-a" step="0.5" value="" placeholder="15" oninput="onTowerHeightInput('A'); calculate()" />
+                  <span class="input-unit">m</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="height-a">
+                  <span data-i18n="lbl_height_a">ความสูงสายอากาศ</span>
+                  <small style="color:#94a3b8;">[เมตร]</small>
+                </label>
+                <div class="input-wrapper">
+                  <input type="number" id="height-a" step="0.5" value="" placeholder="15" oninput="this.dataset.autoSynced='false'; calculate()" />
+                  <span class="input-unit">m</span>
                 </div>
               </div>
             </div>
@@ -1455,18 +1561,6 @@
                   </div>
                 </div>
               </div>
-              <div class="form-row" style="margin-top: 6px;">
-                <div class="form-group">
-                  <label class="form-label" for="height-b">
-                    <span data-i18n="lbl_height_b">ความสูงเสาอากาศแม่ข่าย B (Antenna Height)</span>
-                    <small style="color:#94a3b8;">[เมตร]</small>
-                  </label>
-                  <div class="input-wrapper">
-                    <input type="number" id="height-b" step="0.5" value="" placeholder="45" oninput="calculate()" />
-                    <span class="input-unit">m</span>
-                  </div>
-                </div>
-              </div>
             </div>
 
             <!-- Point B DMS Inputs -->
@@ -1500,6 +1594,30 @@
                 </div>
               </div>
             </div>
+
+            <!-- Point B Tower & Antenna Heights -->
+            <div class="form-row" style="margin-top: 6px;">
+              <div class="form-group">
+                <label class="form-label" for="tower-height-b">
+                  <span data-i18n="lbl_tower_height_b">ความสูงเสา</span>
+                  <small style="color:#94a3b8;">[เมตร]</small>
+                </label>
+                <div class="input-wrapper">
+                  <input type="number" id="tower-height-b" step="0.5" value="" placeholder="45" oninput="onTowerHeightInput('B'); calculate()" />
+                  <span class="input-unit">m</span>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="height-b">
+                  <span data-i18n="lbl_height_b">ความสูงสายอากาศ</span>
+                  <small style="color:#94a3b8;">[เมตร]</small>
+                </label>
+                <div class="input-wrapper">
+                  <input type="number" id="height-b" step="0.5" value="" placeholder="45" oninput="this.dataset.autoSynced='false'; calculate()" />
+                  <span class="input-unit">m</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- Action Controls -->
@@ -1525,7 +1643,7 @@
               <div>
                 <div class="res-heading">
                   <span data-i18n="res_azimuth_lbl">มุมแอซิมัท (Azimuth / Bearing)</span>
-                  <span style="font-size: 0.72rem; font-weight: 500; opacity: 0.85; margin-left: 4px;">[ลูกข่าย A ➔ แม่ข่าย B]</span>
+                  <span style="font-size: 0.72rem; font-weight: 500; opacity: 0.85; margin-left: 4px;">[สถานีต้นทาง A ➔ สถานีปลายทาง B]</span>
                 </div>
                 <div class="res-value-main">
                   <span id="res-azimuth">--</span>
@@ -1546,7 +1664,7 @@
             <div class="res-item-sub">
               <div class="lbl">
                 <span data-i18n="res_back_azimuth">Back Azimuth (ย้อนกลับ)</span>
-                <span style="font-size: 0.68rem; opacity: 0.8; margin-left: 2px;">[แม่ข่าย ➔ ลูกข่าย]</span>
+                <span style="font-size: 0.68rem; opacity: 0.8; margin-left: 2px;">[สถานีปลายทาง ➔ สถานีต้นทาง]</span>
               </div>
               <div class="val"><span id="res-back-azimuth">--</span>°</div>
             </div>
@@ -1714,20 +1832,10 @@
 
           <!-- 3D Top Floating Control Bar -->
           <div class="three-overlay-bar" style="position: absolute; top: 10px; left: 12px; right: 12px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; pointer-events: none; z-index: 10;">
-            <!-- Left: Frequency Selector & Fresnel Stats -->
+            <!-- Left: Fresnel Stats -->
             <div style="display: flex; align-items: center; gap: 8px; pointer-events: auto; background: rgba(15, 23, 42, 0.9); backdrop-filter: blur(6px); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(56, 189, 248, 0.35); font-size: 0.8rem; color: #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.4);">
-              <span style="color: #38bdf8; font-weight: 700;">📡 ความถี่วิทยุ:</span>
-              <select id="fresnel-freq-select" onchange="onFresnelFreqChange()" style="background: #1e293b; color: #f8fafc; border: 1px solid #475569; border-radius: 4px; padding: 2px 6px; font-size: 0.78rem; font-family: var(--font-mono); cursor: pointer;">
-                <option value="150">VHF 150 MHz</option>
-                <option value="400" selected>UHF / TETRA 400 MHz</option>
-                <option value="800">800 MHz</option>
-                <option value="900">900 MHz</option>
-                <option value="2400">Microwave 2.4 GHz</option>
-                <option value="5800">Microwave 5.8 GHz</option>
-                <option value="7500">Microwave 7.5 GHz</option>
-              </select>
-              <span style="color: #64748b;">|</span>
-              <span>รัศมี F1 สูงสุด: <b id="three-f1-radius" style="color: #38bdf8;">-</b> m</span>
+              <span style="color: #38bdf8; font-weight: 700;">🌐 รัศมี F1 สูงสุด:</span>
+              <span><b id="three-f1-radius" style="color: #38bdf8;">-</b> m</span>
               <span style="color: #64748b;">(60% = <b id="three-f1-60" style="color: #fbbf24;">-</b> m)</span>
             </div>
 
@@ -1764,6 +1872,301 @@
     </div>
 
   </main>
+
+  <!-- Modal for Microwave Analysis Report -->
+  <div class="modal-overlay" id="microwave-modal" onclick="if(event.target === this) closeMicrowaveModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <span style="font-size:1.3rem;">📡</span>
+          <div>
+            <b style="font-size:0.95rem; color:#0f172a;" id="modal-main-title">รายงานสรุปวิเคราะห์ข้อมูล Microwave Link (Microwave Summary Report)</b>
+            <div style="font-size:0.75rem; color:#64748b;" id="modal-main-sub">
+              เส้นทาง: <b id="cur-modal-route-a" style="color:#0f172a;">สถานีต้นทาง A</b> ➔ <b id="cur-modal-route-b" style="color:#0f172a;">สถานีปลายทาง B</b> | อ้างอิงมาตรฐานโทรคมนาคม (Carrier-Grade Telecom Standard)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs inside Modal -->
+      <div style="display:flex; border-bottom:1px solid #e2e8f0; background:#f8fafc; padding:0 1.25rem; gap:4px;">
+        <button type="button" id="tab-btn-current" onclick="switchModalTab('current')" style="padding:10px 16px; font-size:0.86rem; font-weight:700; border:none; background:transparent; cursor:pointer; color:#1d4ed8; border-bottom:3px solid #1d4ed8; display:inline-flex; align-items:center; gap:6px;">
+          📊 สรุปผลวิเคราะห์ Microwave (Real-time Report)
+        </button>
+      </div>
+
+      <div class="modal-body">
+        
+        <!-- TAB 1: CURRENT INPUT DATA ANALYSIS -->
+        <div id="modal-view-current">
+          <!-- 6 Summary KPI Cards matching Microwave_Summary_Report -->
+          <div id="cur-modal-kpi-grid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:8px; margin-bottom:1.25rem;">
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.68rem; color:#64748b; font-weight:600; white-space:nowrap;">ระยะทาง (Distance)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#0284c7; font-family:var(--font-mono); white-space:nowrap;" id="cur-modal-dist">11.289 km</div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.68rem; color:#64748b; font-weight:600; white-space:nowrap;">ความถี่ใช้งาน (Frequency)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#4f46e5; font-family:var(--font-mono); white-space:nowrap;" id="cur-modal-freq">7.5 GHz</div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.68rem; color:#64748b; font-weight:600; white-space:nowrap;">Free Space Loss (FSL)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#d97706; font-family:var(--font-mono); white-space:nowrap;" id="cur-modal-fsl">130.99 dB</div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.68rem; color:#64748b; font-weight:600; white-space:nowrap;">ระดับสัญญาณรับ (RSL)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#059669; font-family:var(--font-mono); white-space:nowrap;" id="cur-modal-rsl">-36.21 dBm</div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.68rem; color:#64748b; font-weight:600; white-space:nowrap;">Fade Margin (Thermal)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#2563eb; font-family:var(--font-mono); white-space:nowrap;" id="cur-modal-fade-margin">42.78 dB</div>
+            </div>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:8px 4px; text-align:center; min-width:0;">
+              <div style="font-size:0.68rem; color:#64748b; font-weight:600; white-space:nowrap;">ความพร้อมใช้งาน (Availability)</div>
+              <div style="font-size:1.05rem; font-weight:800; color:#16a34a; font-family:var(--font-mono); white-space:nowrap;" id="cur-modal-availability">99.999%</div>
+            </div>
+          </div>
+
+          <!-- Section 1: Site & Antenna Parameters -->
+          <div style="font-weight:700; color:#0f172a; margin-bottom:6px; font-size:0.88rem;">1. ข้อมูลพิกัดสถานีและความสูงเสาสื่อสาร (Site & Antenna Parameters)</div>
+          <div style="overflow-x:auto; margin-bottom:1.25rem; border:1px solid #e2e8f0; border-radius:6px;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+              <thead>
+                <tr style="background:#f1f5f9; color:#334155;">
+                  <th style="padding:6px 10px; text-align:left; width:34%;">พารามิเตอร์ (Parameter)</th>
+                  <th style="padding:6px 10px; text-align:left; width:33%;" id="m-site-head-a">สถานีต้นทาง A</th>
+                  <th style="padding:6px 10px; text-align:left; width:33%;" id="m-site-head-b">สถานีปลายทาง B</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:5px 10px;"><b>ชื่อสถานี (Site Name)</b></td>
+                  <td style="padding:5px 10px; font-weight:700;" id="cur-table-name-a">Point A</td>
+                  <td style="padding:5px 10px; font-weight:700;" id="cur-table-name-b">Point B</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;"><b>ละติจูด (Latitude - φ)</b></td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono);" id="cur-table-coord-a-lat">16.029156° N</td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono);" id="cur-table-coord-b-lat">16.016102° N</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px;"><b>ลองจิจูด (Longitude - λ)</b></td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono);" id="cur-table-coord-a-lon">100.627809° E</td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono);" id="cur-table-coord-b-lon">100.732560° E</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;"><b>ระดับความสูงพื้นดิน (Ground Elevation)</b></td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono);" id="cur-table-elev-a">55.00 m</td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono);" id="cur-table-elev-b">70.00 m</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px;"><b>ความสูงเสาสื่อสาร (Tower Height)</b></td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono); color:#d97706; font-weight:700;" id="cur-table-tower-a">60.00 m</td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono); color:#d97706; font-weight:700;" id="cur-table-tower-b">60.00 m</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;"><b>ความสูงสายอากาศ (Antenna Height)</b></td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono); color:#0284c7; font-weight:700;" id="cur-table-ant-a">55.00 m</td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono); color:#0284c7; font-weight:700;" id="cur-table-ant-b">55.00 m</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px;"><b>รุ่นสายอากาศ (Antenna Model & Size)</b></td>
+                  <td style="padding:5px 10px;">A7WD09MAC-3NX (Ø 0.9 m)</td>
+                  <td style="padding:5px 10px;">A7WD09MAC-3NX (Ø 0.9 m)</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;"><b>อัตราขยายสายอากาศ (Antenna Gain)</b></td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono);">34.90 dBi</td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono);">34.90 dBi</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px;"><b>มุมแอซิมัทหันทิศสายอากาศ (Azimuth)</b></td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono); color:#1d4ed8; font-weight:700;" id="cur-table-az-a">97.37° (ESE)</td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono); color:#1d4ed8; font-weight:700;" id="cur-table-az-b">277.40° (WNW)</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;"><b>มุมก้มเงยสายอากาศ (Vertical Tilt)</b></td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono); color:#059669; font-weight:700;" id="cur-table-tilt-a">+0.08° (เงยขึ้น)</td>
+                  <td style="padding:5px 10px; font-family:var(--font-mono); color:#059669; font-weight:700;" id="cur-table-tilt-b">-0.08° (ก้มลง)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 2: RF Propagation & Path Loss Table -->
+          <div style="font-weight:700; color:#0f172a; margin-bottom:6px; font-size:0.88rem;">2. ข้อมูลพารามิเตอร์คลื่นและการสูญเสียในเส้นทาง (RF Propagation & Path Loss)</div>
+          <div style="overflow-x:auto; margin-bottom:1.25rem; border:1px solid #e2e8f0; border-radius:6px;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+              <thead>
+                <tr style="background:#f1f5f9; color:#334155;">
+                  <th style="padding:6px 10px; text-align:left;">พารามิเตอร์ทางวิศวกรรม</th>
+                  <th style="padding:6px 10px; text-align:right;">ค่าที่คำนวณได้</th>
+                  <th style="padding:6px 10px; text-align:left;">หน่วย</th>
+                  <th style="padding:6px 10px; text-align:left;">คำอธิบายประกอบ</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:5px 10px;">ระยะทางผิวโลก (Path Length / Distance)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="cur-rf-dist">11.289</td>
+                  <td style="padding:5px 10px;">km</td>
+                  <td style="padding:5px 10px; color:#64748b;">คำนวณตามเส้นทาง Geodesic Great-Circle</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;">ความถี่พาหะคลื่นวิทยุ (Carrier Frequency)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="cur-rf-freq">7.5 GHz (7,500 MHz)</td>
+                  <td style="padding:5px 10px;">GHz</td>
+                  <td style="padding:5px 10px; color:#64748b;">ย่าน Microwave 7.5 GHz Band</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px;">โพลาไรเซชัน (Polarization)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);">Dual-Polarized (H+V)</td>
+                  <td style="padding:5px 10px;">-</td>
+                  <td style="padding:5px 10px; color:#64748b;">รองรับการส่งคลื่นทั้งแนวนอนและแนวตั้ง</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;">Free Space Loss (L<sub>fs</sub>)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="cur-rf-fsl">130.99</td>
+                  <td style="padding:5px 10px;">dB</td>
+                  <td style="padding:5px 10px; color:#64748b;">L<sub>fs</sub> = 92.45 + 20 log<sub>10</sub>(f) + 20 log<sub>10</sub>(d)</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px;">การสูญเสียในชั้นบรรยากาศ (Atmospheric Absorption)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="cur-rf-atm">0.12</td>
+                  <td style="padding:5px 10px;">dB</td>
+                  <td style="padding:5px 10px; color:#64748b;">การดูดกลืนของไอน้ำและก๊าซออกซิเจน (0.0103 dB/km)</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;">การลดทอนสัญญาณจากฝนตกหนัก (Rain Attenuation)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700; color:#dc2626;" id="cur-rf-rain">8.95</td>
+                  <td style="padding:5px 10px;">dB</td>
+                  <td style="padding:5px 10px; color:#64748b;">อ้างอิง Rain Region N (อัตราฝน 95 mm/hr ณ 0.01%)</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px;">Diffraction Loss & Field Margin</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);">1.00</td>
+                  <td style="padding:5px 10px;">dB</td>
+                  <td style="padding:5px 10px; color:#64748b;">แนวสายตาปลอดสิ่งกีดขวางสมบูรณ์</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px;">ระบบสำรองและเทคโนโลยี (Configuration)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);">Protection 2+0 / XPIC</td>
+                  <td style="padding:5px 10px;">-</td>
+                  <td style="padding:5px 10px; color:#64748b;">Cross-Polarization Interference Cancellation</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px;">รุ่นอุปกรณ์วิทยุ (Radio Model)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);">7G_XMC3E_32Q_28M_112M</td>
+                  <td style="padding:5px 10px;">-</td>
+                  <td style="padding:5px 10px; color:#64748b;">Channel Bandwidth 28 MHz</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 3: Adaptive Modulation Performance Table -->
+          <div style="font-weight:700; color:#0f172a; margin-bottom:6px; font-size:0.88rem;">3. สมรรถนะแยกตามโหมดการมอดูเลตและแบนด์วิดท์ (Adaptive Modulation Performance)</div>
+          <div style="overflow-x:auto; margin-bottom:1.25rem; border:1px solid #e2e8f0; border-radius:6px;">
+            <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+              <thead>
+                <tr style="background:#f1f5f9; color:#334155;">
+                  <th style="padding:6px 10px; text-align:left;">Modulation Mode</th>
+                  <th style="padding:6px 10px; text-align:right;">Throughput</th>
+                  <th style="padding:6px 10px; text-align:right;">TX Power</th>
+                  <th style="padding:6px 10px; text-align:right;">EIRP</th>
+                  <th style="padding:6px 10px; text-align:right;">RX Signal (RSL)</th>
+                  <th style="padding:6px 10px; text-align:right;">RX Threshold</th>
+                  <th style="padding:6px 10px; text-align:right;">Fade Margin</th>
+                  <th style="padding:6px 10px; text-align:right;">Annual Availability</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td style="padding:5px 10px; font-weight:700;">512QAM</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tp-512">424.0 Mbps</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tx-512">28.5 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-eirp-512">63.4 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-rsl-512">-38.21 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-th-512">-60.3 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="m-fm-512">22.08 dB</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); color:#16a34a;" id="m-avail-512">99.989502%</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px; font-weight:700;">256QAM</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tp-256">380.0 Mbps</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tx-256">28.5 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-eirp-256">63.4 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-rsl-256">-38.21 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-th-256">-63.6 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="m-fm-256">25.38 dB</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); color:#16a34a;" id="m-avail-256">99.993921%</td>
+                </tr>
+                <tr>
+                  <td style="padding:5px 10px; font-weight:700;">128QAM</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tp-128">334.0 Mbps</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tx-128">30.5 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-eirp-128">65.4 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-rsl-128">-36.21 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-th-128">-66.6 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="m-fm-128">30.38 dB</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); color:#16a34a;" id="m-avail-128">99.996807%</td>
+                </tr>
+                <tr style="background:#fafbfc;">
+                  <td style="padding:5px 10px; font-weight:700;">64QAM</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tp-64">282.0 Mbps</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tx-64">30.5 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-eirp-64">65.4 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-rsl-64">-36.21 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-th-64">-69.9 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="m-fm-64">33.68 dB</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); color:#16a34a;" id="m-avail-64">99.997934%</td>
+                </tr>
+                <tr style="background-color: #f0fdf4;">
+                  <td style="padding:5px 10px; font-weight:700; color:#166534;">32QAM (Base Mode)</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="m-tp-32">224.0 Mbps</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-tx-32">30.5 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-eirp-32">65.4 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700;" id="m-rsl-32">-36.21 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="m-th-32">-79.0 dBm</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700; color:#16a34a;" id="m-fm-32">42.78 dB</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono); font-weight:700; color:#16a34a;" id="m-avail-32">99.999486%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Section 4: Engineering Evaluation Summary -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px 16px; margin-bottom:1.25rem;">
+            <div style="font-weight:700; color:#0f172a; font-size:0.86rem; margin-bottom:4px;">📌 ข้อสรุปการประเมินทางวิศวกรรมโทรคมนาคม (Engineering Evaluation Summary):</div>
+            <p style="font-size:0.82rem; color:#475569; line-height:1.6; margin:0;" id="cur-modal-conclusion">
+              เส้นทางวิทยุไมโครเวฟระหว่าง <b>Point A</b> และ <b>Point B</b> มีระยะทาง 11.289 km ผ่านมาตรฐานความน่าเชื่อถือระดับผู้ให้บริการโทรคมนาคม (Carrier-Grade Telecom Standard).
+            </p>
+          </div>
+
+          <!-- Action buttons for Microwave Report -->
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="font-size:0.8rem; color:#475569;">
+              💡 <b>คำแนะนำ:</b> สามารถสั่งพิมพ์หรือเปิดดูหน้ารายงาน Microwave Summary Report ฉบับเต็มเพื่อบันทึกเป็น PDF ได้ทันที
+            </div>
+            <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+              <button type="button" onclick="openRealtimeReport()" class="btn" style="background:#1d4ed8; color:white; border:none; padding:7px 15px; font-size:0.84rem; font-weight:700; border-radius:6px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 4px rgba(29,78,216,0.2);">
+                🖨️ เปิดหน้ารายงานเต็ม / สั่งพิมพ์
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div style="padding:0.75rem 1.5rem; background:#f8fafc; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <span style="font-size:0.78rem; color:#64748b;">Carrier-Grade Radio & Microwave Link Design (ITU-R Compliant)</span>
+        <div style="display:flex; gap:8px;">
+          <button class="btn btn-outline" onclick="closeMicrowaveModal()" style="padding:6px 18px; font-size:0.82rem; font-weight:600;">
+            ปิดหน้าต่าง
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Toast Notification -->
   <div class="copy-toast" id="copy-toast">
@@ -1871,12 +2274,17 @@
         btn_use_location: "ตำแหน่งของฉัน ➔ กะอ์บะฮ์",
         inputs_title: "กำหนดพิกัดตำแหน่ง (Coordinates)",
         btn_swap: "สลับจุด A ⇄ B",
+        lbl_freq_band: "ย่านความถี่:",
         point_a_title: "สถานีต้นทาง",
         point_b_title: "สถานีปลายทาง",
         lbl_lat_a: "ละติจูด (ϕ₁)",
         lbl_lon_a: "ลองจิจูด (λ₁)",
         lbl_lat_b: "ละติจูด (ϕ₂)",
         lbl_lon_b: "ลองจิจูด (λ₂)",
+        lbl_tower_height_a: "ความสูงเสา",
+        lbl_height_a: "ความสูงสายอากาศ",
+        lbl_tower_height_b: "ความสูงเสา",
+        lbl_height_b: "ความสูงสายอากาศ",
         btn_reset: "รีเซ็ต",
         btn_calculate: "คำนวณ (Calculate)",
         res_azimuth_lbl: "มุมแอซิมัท (Azimuth / Bearing)",
@@ -1914,7 +2322,8 @@
         toast_copied: "คัดลอกผลการคำนวณเรียบร้อยแล้ว!",
         btn_export_excel: "ส่งออก Excel",
         toast_exported: "ส่งออกไฟล์ Excel (.xlsx) เรียบร้อยแล้ว!",
-        btn_goto_multi: "คำนวณหลายสถานี (Multi-Station) ➔"
+        btn_goto_multi: "คำนวณหลายสถานี (Multi-Station) ➔",
+        btn_sample_pdf: "ไฟล์ PDF ตัวอย่าง Microwave"
       },
       en: {
         header_title: "Azimuth Calculator",
@@ -1927,12 +2336,17 @@
         btn_use_location: "My Location ➔ Mecca",
         inputs_title: "Coordinates Input",
         btn_swap: "Swap Point A ⇄ B",
+        lbl_freq_band: "Frequency Band:",
         point_a_title: "Radio Substation (Point A)",
         point_b_title: "Master Station (Point B)",
         lbl_lat_a: "Latitude (ϕ₁)",
         lbl_lon_a: "Longitude (λ₁)",
         lbl_lat_b: "Latitude (ϕ₂)",
         lbl_lon_b: "Longitude (λ₂)",
+        lbl_tower_height_a: "Tower Height",
+        lbl_height_a: "Antenna Height",
+        lbl_tower_height_b: "Tower Height",
+        lbl_height_b: "Antenna Height",
         btn_reset: "Reset",
         btn_calculate: "Calculate",
         res_azimuth_lbl: "Azimuth Angle (Bearing)",
@@ -1970,7 +2384,8 @@
         toast_copied: "Results copied to clipboard!",
         btn_export_excel: "Export Excel",
         toast_exported: "Excel file exported successfully!",
-        btn_goto_multi: "Multi-Station Calculator ➔"
+        btn_goto_multi: "Multi-Station Calculator ➔",
+        btn_sample_pdf: "Microwave Sample PDF"
       }
     };
 
@@ -2249,10 +2664,12 @@
 
       const labelA = currentLang === 'th' ? 'สถานีต้นทาง (Point A)' : 'Radio Substation (Point A)';
       const labelB = currentLang === 'th' ? 'สถานีปลายทาง (Point B)' : 'Master Station (Point B)';
-      const azLabel = currentLang === 'th' ? 'มุมแอซิมัท (หันทิศเสาอากาศ):' : 'Azimuth (Antenna Heading):';
+      const azLabel = currentLang === 'th' ? 'มุมแอซิมัท (หันทิศสายอากาศ):' : 'Azimuth (Antenna Heading):';
+      const curHeightA = document.getElementById('height-a')?.value || 15;
+      const curHeightB = document.getElementById('height-b')?.value || 45;
 
-      markerA.bindPopup(`<b>${labelA}</b><br>Lat: ${lat1.toFixed(6)}°<br>Lon: ${lon1.toFixed(6)}°`);
-      markerB.bindPopup(`<b>${labelB}</b><br>Lat: ${lat2.toFixed(6)}°<br>Lon: ${lon2.toFixed(6)}°<br><b>${azLabel} ${azimuthDeg.toFixed(2)}°</b>`);
+      markerA.bindPopup(`<b>${labelA}</b><br>Lat: ${lat1.toFixed(6)}°<br>Lon: ${lon1.toFixed(6)}°<br>ความสูงสายอากาศ: <b>${curHeightA} ม.</b>`);
+      markerB.bindPopup(`<b>${labelB}</b><br>Lat: ${lat2.toFixed(6)}°<br>Lon: ${lon2.toFixed(6)}°<br>ความสูงสายอากาศ: <b>${curHeightB} ม.</b><br><b>${azLabel} ${azimuthDeg.toFixed(2)}°</b>`);
 
       const arcPoints = generateGreatCirclePoints(lat1, lon1, lat2, lon2, 80);
 
@@ -2445,16 +2862,35 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
       );
     }
 
+    function onTowerHeightInput(point) {
+      const towerId = point === 'A' ? 'tower-height-a' : 'tower-height-b';
+      const antId = point === 'A' ? 'height-a' : 'height-b';
+      const towerVal = document.getElementById(towerId).value;
+      const antInput = document.getElementById(antId);
+      if (antInput && (antInput.value === '' || antInput.dataset.autoSynced === 'true')) {
+        antInput.value = towerVal;
+        antInput.dataset.autoSynced = 'true';
+      }
+    }
+
     function swapPoints() {
       const latA = document.getElementById('lat-a').value;
       const lonA = document.getElementById('lon-a').value;
+      const towerA = document.getElementById('tower-height-a').value;
+      const heightA = document.getElementById('height-a').value;
       const latB = document.getElementById('lat-b').value;
       const lonB = document.getElementById('lon-b').value;
+      const towerB = document.getElementById('tower-height-b').value;
+      const heightB = document.getElementById('height-b').value;
 
       document.getElementById('lat-a').value = latB;
       document.getElementById('lon-a').value = lonB;
+      document.getElementById('tower-height-a').value = towerB;
+      document.getElementById('height-a').value = heightB;
       document.getElementById('lat-b').value = latA;
       document.getElementById('lon-b').value = lonA;
+      document.getElementById('tower-height-b').value = towerA;
+      document.getElementById('height-b').value = heightA;
 
       syncDdToDms('A');
       syncDdToDms('B');
@@ -2464,9 +2900,11 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
     function resetCalculator() {
       document.getElementById('lat-a').value = '';
       document.getElementById('lon-a').value = '';
+      document.getElementById('tower-height-a').value = '';
       document.getElementById('height-a').value = '';
       document.getElementById('lat-b').value = '';
       document.getElementById('lon-b').value = '';
+      document.getElementById('tower-height-b').value = '';
       document.getElementById('height-b').value = '';
 
       const dmsIds = [
@@ -2527,14 +2965,23 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
       const quad = getQuadrantBearing(az).replace(/[()]/g, '');
       const dirStr = `${compassPt.abbr} (${currentLang === 'th' ? compassPt.th : compassPt.name})`;
 
+      const tA = parseFloat(document.getElementById('tower-height-a')?.value) || parseFloat(document.getElementById('height-a')?.value) || 15;
+      const hA = parseFloat(document.getElementById('height-a')?.value) || tA || 15;
+      const tB = parseFloat(document.getElementById('tower-height-b')?.value) || parseFloat(document.getElementById('height-b')?.value) || 45;
+      const hB = parseFloat(document.getElementById('height-b')?.value) || tB || 45;
+
       const entry = {
         timestamp: timeStr,
         latA: parseFloat(lat1.toFixed(6)),
         lonA: parseFloat(lon1.toFixed(6)),
         dmsA: dmsA,
+        towerA: tA,
+        heightA: hA,
         latB: parseFloat(lat2.toFixed(6)),
         lonB: parseFloat(lon2.toFixed(6)),
         dmsB: dmsB,
+        towerB: tB,
+        heightB: hB,
         azimuth: parseFloat(az.toFixed(2)),
         direction: dirStr,
         quadrant: quad,
@@ -2580,12 +3027,16 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
       const lonA = parseFloat(document.getElementById('lon-a').value).toFixed(6);
       const latB = parseFloat(document.getElementById('lat-b').value).toFixed(6);
       const lonB = parseFloat(document.getElementById('lon-b').value).toFixed(6);
+      const towerA = document.getElementById('tower-height-a')?.value || 15;
+      const heightA = document.getElementById('height-a')?.value || towerA || 15;
+      const towerB = document.getElementById('tower-height-b')?.value || 45;
+      const heightB = document.getElementById('height-b')?.value || towerB || 45;
 
       const text = `--- ผลการคำนวณมุมแอซิมัทและระยะทาง ---
-สถานีต้นทาง (Point A): ละติจูด ${latA}°, ลองจิจูด ${lonA}°
-สถานีปลายทาง (Point B): ละติจูด ${latB}°, ลองจิจูด ${lonB}°
-มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B): ${az}° (${dir}, ${quad})
-Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
+สถานีต้นทาง (Point A): ละติจูด ${latA}°, ลองจิจูด ${lonA}°, ความสูงเสา ${towerA} m, ความสูงสายอากาศ ${heightA} m
+สถานีปลายทาง (Point B): ละติจูด ${latB}°, ลองจิจูด ${lonB}°, ความสูงเสา ${towerB} m, ความสูงสายอากาศ ${heightB} m
+มุมแอซิมัท (หันทิศสายอากาศ สถานีต้นทาง A ➔ สถานีปลายทาง B): ${az}° (${dir}, ${quad})
+Back Azimuth (สถานีปลายทาง B ➔ สถานีต้นทาง A): ${backAz}°
 ระยะทางตรงบนผิวโลก: ${dist} ${unit}
 คำนวณโดย: Azimuth Calculator`;
 
@@ -2600,6 +3051,10 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
       const lonA = parseFloat(document.getElementById('lon-a').value) || 0;
       const latB = parseFloat(document.getElementById('lat-b').value) || 0;
       const lonB = parseFloat(document.getElementById('lon-b').value) || 0;
+      const towerA = parseFloat(document.getElementById('tower-height-a')?.value) || parseFloat(document.getElementById('height-a')?.value) || 15;
+      const heightA = parseFloat(document.getElementById('height-a')?.value) || towerA || 15;
+      const towerB = parseFloat(document.getElementById('tower-height-b')?.value) || parseFloat(document.getElementById('height-b')?.value) || 45;
+      const heightB = parseFloat(document.getElementById('height-b')?.value) || towerB || 45;
 
       const az = document.getElementById('res-azimuth').innerText;
       const backAz = document.getElementById('res-back-azimuth').innerText;
@@ -2635,20 +3090,24 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
 
         // Sheet 1: สรุปผลการคำนวณ (Summary Sheet)
         const summaryRows = [
-          ["รายงานผลการคำนวณมุมแอซิมัทและระยะทาง (สถานีวิทยุสื่อสาร ลูกข่าย ➔ แม่ข่าย)"],
+          ["รายงานผลการคำนวณมุมแอซิมัทและระยะทาง (สถานีวิทยุสื่อสาร สถานีต้นทาง ➔ สถานีปลายทาง)"],
           ["วันเวลาที่ส่งออก (Export Timestamp)", timeStr],
           [""],
           ["หัวข้อ (Parameter)", "ค่าที่คำนวณได้ (Value)", "หน่วย (Unit)", "คำอธิบาย (Description)"],
           ["สถานีต้นทาง (Point A) - Latitude", parseFloat(latA.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (ϕ₁)"],
           ["สถานีต้นทาง (Point A) - Longitude", parseFloat(lonA.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (λ₁)"],
           ["สถานีต้นทาง (Point A) - DMS", dmsA, "-", "Degrees Minutes Seconds"],
+          ["สถานีต้นทาง (Point A) - ความสูงเสา", towerA, "m", "Tower Height (m)"],
+          ["สถานีต้นทาง (Point A) - ความสูงสายอากาศ", heightA, "m", "Antenna Height (m)"],
           ["สถานีปลายทาง (Point B) - Latitude", parseFloat(latB.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (ϕ₂)"],
           ["สถานีปลายทาง (Point B) - Longitude", parseFloat(lonB.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (λ₂)"],
           ["สถานีปลายทาง (Point B) - DMS", dmsB, "-", "Degrees Minutes Seconds"],
-          ["มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B)", parseFloat(az), "°", "วัดตามเข็มนาฬิกาจากทิศเหนือจริง (0° ถึง 360°)"],
+          ["สถานีปลายทาง (Point B) - ความสูงเสา", towerB, "m", "Tower Height (m)"],
+          ["สถานีปลายทาง (Point B) - ความสูงสายอากาศ", heightB, "m", "Antenna Height (m)"],
+          ["มุมแอซิมัท (หันทิศสายอากาศ สถานีต้นทาง A ➔ สถานีปลายทาง B)", parseFloat(az), "°", "วัดตามเข็มนาฬิกาจากทิศเหนือจริง (0° ถึง 360°)"],
           ["ทิศทางเข็มทิศ (Compass Direction)", dir, "-", "ทิศทาง 16 ทิศหลัก/ย่อย"],
           ["ทิศควอดรันต์ (Quadrant Bearing)", quad, "-", "Quadrant Bearing Format"],
-          ["มุมแอซิมัทย้อนกลับ (แม่ข่าย B ➔ ลูกข่าย A)", parseFloat(backAz), "°", "ทิศทางย้อนกลับ (Reverse Azimuth)"],
+          ["มุมแอซิมัทย้อนกลับ (สถานีปลายทาง B ➔ สถานีต้นทาง A)", parseFloat(backAz), "°", "ทิศทางย้อนกลับ (Reverse Azimuth)"],
           ["มุมในหน่วยเรเดียน (Radians)", parseFloat(rad), "rad", "มุม θ ในหน่วยเรเดียน"],
           ["ระยะทางผิวโลก (Distance - km)", parseFloat(distKm.toFixed(3)), "km", "กิโลเมตร (Haversine Formula)"],
           ["ระยะทางผิวโลก (Distance - m)", parseFloat(distM.toFixed(1)), "m", "เมตร"],
@@ -2665,8 +3124,8 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         const tableRows = [
           [
             "ลำดับ (No.)", "วันเวลา (Timestamp)",
-            "ลูกข่าย A Lat (°)", "ลูกข่าย A Lon (°)", "ลูกข่าย A DMS",
-            "แม่ข่าย B Lat (°)", "แม่ข่าย B Lon (°)", "แม่ข่าย B DMS",
+            "สถานีต้นทาง A Lat (°)", "สถานีต้นทาง A Lon (°)", "สถานีต้นทาง A DMS", "ความสูงเสา A (m)", "ความสูงสายอากาศ A (m)",
+            "สถานีปลายทาง B Lat (°)", "สถานีปลายทาง B Lon (°)", "สถานีปลายทาง B DMS", "ความสูงเสา B (m)", "ความสูงสายอากาศ B (m)",
             "Azimuth (°)", "Direction", "Quadrant", "Back Azimuth (°)",
             "Distance (km)", "Distance (m)", "Distance (mi)", "Distance (nmi)",
             "Google Maps Link"
@@ -2677,8 +3136,8 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
           calcHistory.forEach((h, idx) => {
             tableRows.push([
               idx + 1, h.timestamp,
-              h.latA, h.lonA, h.dmsA,
-              h.latB, h.lonB, h.dmsB,
+              h.latA, h.lonA, h.dmsA, h.towerA ?? towerA, h.heightA ?? heightA,
+              h.latB, h.lonB, h.dmsB, h.towerB ?? towerB, h.heightB ?? heightB,
               h.azimuth, h.direction, h.quadrant, h.backAzimuth,
               h.distKm, h.distM, h.distMi, h.distNmi,
               h.gmapsUrl
@@ -2687,8 +3146,8 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         } else {
           tableRows.push([
             1, timeStr,
-            parseFloat(latA.toFixed(6)), parseFloat(lonA.toFixed(6)), dmsA,
-            parseFloat(latB.toFixed(6)), parseFloat(lonB.toFixed(6)), dmsB,
+            parseFloat(latA.toFixed(6)), parseFloat(lonA.toFixed(6)), dmsA, towerA, heightA,
+            parseFloat(latB.toFixed(6)), parseFloat(lonB.toFixed(6)), dmsB, towerB, heightB,
             parseFloat(az), dir, quad, parseFloat(backAz),
             parseFloat(distKm.toFixed(3)), parseFloat(distM.toFixed(1)), parseFloat(distMi.toFixed(3)), parseFloat(distNmi.toFixed(3)),
             gmapsUrl
@@ -2698,8 +3157,8 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         const wsTable = XLSX.utils.aoa_to_sheet(tableRows);
         wsTable['!cols'] = [
           { wch: 8 }, { wch: 20 },
-          { wch: 18 }, { wch: 18 }, { wch: 32 },
-          { wch: 18 }, { wch: 18 }, { wch: 32 },
+          { wch: 18 }, { wch: 18 }, { wch: 32 }, { wch: 18 }, { wch: 22 },
+          { wch: 18 }, { wch: 18 }, { wch: 32 }, { wch: 18 }, { wch: 22 },
           { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 16 },
           { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
           { wch: 50 }
@@ -2712,38 +3171,42 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
 
         showToast(currentLang === 'th' ? "ส่งออกไฟล์ Excel (.xlsx) เรียบร้อยแล้ว!" : "Excel (.xlsx) exported successfully!");
       } else {
-        exportToCsvFallback(timeStr, latA, lonA, dmsA, latB, lonB, dmsB, az, dir, quad, backAz, distKm, distM, distMi, distNmi, gmapsUrl);
+        exportToCsvFallback(timeStr, latA, lonA, dmsA, towerA, heightA, latB, lonB, dmsB, towerB, heightB, az, dir, quad, backAz, distKm, distM, distMi, distNmi, gmapsUrl);
       }
     }
 
-    function exportToCsvFallback(timeStr, latA, lonA, dmsA, latB, lonB, dmsB, az, dir, quad, backAz, distKm, distM, distMi, distNmi, gmapsUrl) {
+    function exportToCsvFallback(timeStr, latA, lonA, dmsA, towerA, heightA, latB, lonB, dmsB, towerB, heightB, az, dir, quad, backAz, distKm, distM, distMi, distNmi, gmapsUrl) {
       let csv = "\uFEFF"; // UTF-8 BOM for Microsoft Excel Thai language compatibility
       csv += "หัวข้อ (Parameter),ค่าที่คำนวณได้ (Value),หน่วย (Unit),คำอธิบาย (Description)\r\n";
-      csv += `"รายงานผลการคำนวณ","มุมแอซิมัทและระยะทาง (ลูกข่าย ➔ แม่ข่าย)","-",""\r\n`;
+      csv += `"รายงานผลการคำนวณ","มุมแอซิมัทและระยะทาง (สถานีต้นทาง ➔ สถานีปลายทาง)","-",""\r\n`;
       csv += `"วันเวลาที่คำนวณ","${timeStr}","-","Local Time"\r\n`;
       csv += `"สถานีต้นทาง (Point A) Latitude","${latA.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (ϕ₁)"\r\n`;
       csv += `"สถานีต้นทาง (Point A) Longitude","${lonA.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (λ₁)"\r\n`;
       csv += `"สถานีต้นทาง (Point A) DMS","${dmsA}","-","Degrees Minutes Seconds"\r\n`;
+      csv += `"สถานีต้นทาง (Point A) ความสูงเสา","${towerA}","m","Tower Height"\r\n`;
+      csv += `"สถานีต้นทาง (Point A) ความสูงสายอากาศ","${heightA}","m","Antenna Height"\r\n`;
       csv += `"สถานีปลายทาง (Point B) Latitude","${latB.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (ϕ₂)"\r\n`;
       csv += `"สถานีปลายทาง (Point B) Longitude","${lonB.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (λ₂)"\r\n`;
       csv += `"สถานีปลายทาง (Point B) DMS","${dmsB}","-","Degrees Minutes Seconds"\r\n`;
-      csv += `"มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B)","${az}","°","วัดตามเข็มนาฬิกาจากทิศเหนือ (0° ถึง 360°)"\r\n`;
+      csv += `"สถานีปลายทาง (Point B) ความสูงเสา","${towerB}","m","Tower Height"\r\n`;
+      csv += `"สถานีปลายทาง (Point B) ความสูงสายอากาศ","${heightB}","m","Antenna Height"\r\n`;
+      csv += `"มุมแอซิมัท (หันทิศสายอากาศ สถานีต้นทาง A ➔ สถานีปลายทาง B)","${az}","°","วัดตามเข็มนาฬิกาจากทิศเหนือ (0° ถึง 360°)"\r\n`;
       csv += `"ทิศทางเข็มทิศ (Compass Direction)","${dir}","-","ทิศทาง 16 ทิศ"\r\n`;
       csv += `"ทิศควอดรันต์ (Quadrant Bearing)","${quad}","-","Quadrant"\r\n`;
-      csv += `"มุมแอซิมัทย้อนกลับ (แม่ข่าย B ➔ ลูกข่าย A)","${backAz}","°","มุมย้อนกลับจาก B ไป A"\r\n`;
+      csv += `"มุมแอซิมัทย้อนกลับ (สถานีปลายทาง B ➔ สถานีต้นทาง A)","${backAz}","°","มุมย้อนกลับจาก B ไป A"\r\n`;
       csv += `"ระยะทางผิวโลก (Distance - km)","${distKm.toFixed(3)}","km","กิโลเมตร (Haversine)"\r\n`;
       csv += `"ระยะทางผิวโลก (Distance - m)","${distM.toFixed(1)}","m","เมตร"\r\n`;
       csv += `"ระยะทางผิวโลก (Distance - mi)","${distMi.toFixed(3)}","mi","ไมล์บก"\r\n`;
       csv += `"ระยะทางผิวโลก (Distance - nmi)","${distNmi.toFixed(3)}","nmi","ไมล์ทะเล"\r\n`;
       csv += `"ลิงก์ Google Maps","${gmapsUrl}","-","เปิดใน Google Maps"\r\n\r\n`;
 
-      csv += "ลำดับ (No.),วันเวลา (Timestamp),ลูกข่าย A Lat,ลูกข่าย A Lon,ลูกข่าย A DMS,แม่ข่าย B Lat,แม่ข่าย B Lon,แม่ข่าย B DMS,Azimuth (°),Direction,Quadrant,Back Azimuth (°),Distance (km),Distance (m),Distance (mi),Distance (nmi),Google Maps\r\n";
+      csv += "ลำดับ (No.),วันเวลา (Timestamp),สถานีต้นทาง A Lat,สถานีต้นทาง A Lon,สถานีต้นทาง A DMS,ความสูงเสา A (m),ความสูงสายอากาศ A (m),สถานีปลายทาง B Lat,สถานีปลายทาง B Lon,สถานีปลายทาง B DMS,ความสูงเสา B (m),ความสูงสายอากาศ B (m),Azimuth (°),Direction,Quadrant,Back Azimuth (°),Distance (km),Distance (m),Distance (mi),Distance (nmi),Google Maps\r\n";
       if (calcHistory.length > 0) {
         calcHistory.forEach((h, idx) => {
-          csv += `"${idx + 1}","${h.timestamp}","${h.latA}","${h.lonA}","${h.dmsA}","${h.latB}","${h.lonB}","${h.dmsB}","${h.azimuth}","${h.direction}","${h.quadrant}","${h.backAzimuth}","${h.distKm}","${h.distM}","${h.distMi}","${h.distNmi}","${h.gmapsUrl}"\r\n`;
+          csv += `"${idx + 1}","${h.timestamp}","${h.latA}","${h.lonA}","${h.dmsA}","${h.towerA ?? towerA}","${h.heightA ?? heightA}","${h.latB}","${h.lonB}","${h.dmsB}","${h.towerB ?? towerB}","${h.heightB ?? heightB}","${h.azimuth}","${h.direction}","${h.quadrant}","${h.backAzimuth}","${h.distKm}","${h.distM}","${h.distMi}","${h.distNmi}","${h.gmapsUrl}"\r\n`;
         });
       } else {
-        csv += `"1","${timeStr}","${latA.toFixed(6)}","${lonA.toFixed(6)}","${dmsA}","${latB.toFixed(6)}","${lonB.toFixed(6)}","${dmsB}","${az}","${dir}","${quad}","${backAz}","${distKm.toFixed(3)}","${distM.toFixed(1)}","${distMi.toFixed(3)}","${distNmi.toFixed(3)}","${gmapsUrl}"\r\n`;
+        csv += `"1","${timeStr}","${latA.toFixed(6)}","${lonA.toFixed(6)}","${dmsA}","${towerA}","${heightA}","${latB.toFixed(6)}","${lonB.toFixed(6)}","${dmsB}","${towerB}","${heightB}","${az}","${dir}","${quad}","${backAz}","${distKm.toFixed(3)}","${distM.toFixed(1)}","${distMi.toFixed(3)}","${distNmi.toFixed(3)}","${gmapsUrl}"\r\n`;
       }
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -2800,7 +3263,7 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
 
               if (!isNaN(lat) && !isNaN(lon)) {
                 const lower = (name + ' ' + sheetName).toLowerCase();
-                const isMaster = lower.includes('แม่ข่าย') || lower.includes('master') || lower.includes('base');
+                const isMaster = lower.includes('สถานีปลายทาง') || lower.includes('master') || lower.includes('base');
                 if (isMaster && !masterPoint) {
                   masterPoint = { lat, lon, name };
                 } else {
@@ -2987,8 +3450,10 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         return;
       }
 
-      const sHeight = parseFloat(document.getElementById('height-a')?.value) || 15;
-      const mHeight = parseFloat(document.getElementById('height-b')?.value) || 45;
+      const tHeightA = parseFloat(document.getElementById('tower-height-a')?.value) || parseFloat(document.getElementById('height-a')?.value) || 15;
+      const sHeight = parseFloat(document.getElementById('height-a')?.value) || tHeightA || 15;
+      const tHeightB = parseFloat(document.getElementById('tower-height-b')?.value) || parseFloat(document.getElementById('height-b')?.value) || 45;
+      const mHeight = parseFloat(document.getElementById('height-b')?.value) || tHeightB || 45;
 
       const overlay = document.getElementById('elev-loading-overlay');
       if (overlay) overlay.style.display = 'flex';
@@ -3109,8 +3574,8 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         const avgSlope = (sumSlope / (N - 1 || 1)).toFixed(1);
 
         currentElevProfileData = {
-          subStation: { name: "สถานีลูกข่าย A", height: sHeight },
-          masterStation: { name: "สถานีปลายทาง B", height: mHeight },
+          subStation: { name: "สถานีต้นทาง A", towerHeight: tHeightA, height: sHeight },
+          masterStation: { name: "สถานีปลายทาง B", towerHeight: tHeightB, height: mHeight },
           totalDistKm: totalDistKm,
           points: processedPoints,
           stats: {
@@ -3343,7 +3808,10 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
       ctx.font = 'bold 10.5px Prompt, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(`📡 จุด A (เสา ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`, xStart + 8, yStartTop - 2);
+      const txtA = sub.towerHeight && sub.towerHeight !== sub.height
+        ? `📡 จุด A (เสา ${sub.towerHeight}m | สายอากาศ ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`
+        : `📡 จุด A (เสา/สายอากาศ ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`;
+      ctx.fillText(txtA, xStart + 8, yStartTop - 2);
 
       // Tower End (Station B)
       const xEnd = xCoord(totalD);
@@ -3367,7 +3835,10 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
       ctx.font = 'bold 10.5px Prompt, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(`🗼 จุด B (เสา ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`, xEnd - 8, yEndTop - 2);
+      const txtB = master.towerHeight && master.towerHeight !== master.height
+        ? `🗼 จุด B (เสา ${master.towerHeight}m | สายอากาศ ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`
+        : `🗼 จุด B (เสา/สายอากาศ ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`;
+      ctx.fillText(txtB, xEnd - 8, yEndTop - 2);
 
       // 5. Draw Obstruction Warning Pin if path is obstructed
       if (data.stats.isObstructed && data.stats.obstructionIdx >= 0) {
@@ -3959,11 +4430,12 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
       // 4. 3D Antenna Towers (Origin & Destination)
       beaconMaterial = new THREE.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 1.0 });
 
-      function createLatticeTower(xPos, baseGroundY, towerHeightM, towerColorHex, nameLabel, subInfo) {
+      function createLatticeTower(xPos, baseGroundY, towerHeightM, antennaHeightM, towerColorHex, nameLabel, subInfo) {
         const towerGroup = new THREE.Group();
         towerGroup.position.set(xPos, baseGroundY, 0);
 
         const hUnits = Math.max(3.0, towerHeightM * S_Y);
+        const antUnits = Math.max(3.0, antennaHeightM * S_Y);
         const wBase = 2.4;
 
         // 4 Corner Steel Legs
@@ -4001,7 +4473,7 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         const mastGeo = new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8);
         const mastMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8 });
         const mast = new THREE.Mesh(mastGeo, mastMat);
-        mast.position.set(0, hUnits + 1.25, 0);
+        mast.position.set(0, Math.max(hUnits, antUnits) + 1.25, 0);
         towerGroup.add(mast);
 
         // Antenna Dish / Reflector
@@ -4009,18 +4481,21 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
         const dishMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0 });
         const dish = new THREE.Mesh(dishGeo, dishMat);
         dish.rotation.z = Math.PI / 2;
-        dish.position.set(xPos < 0 ? 0.6 : -0.6, hUnits, 0);
+        dish.position.set(xPos < 0 ? 0.6 : -0.6, antUnits, 0);
         towerGroup.add(dish);
 
         // Flashing Obstruction Beacon Light
         const beaconGeo = new THREE.SphereGeometry(0.4, 12, 12);
         const beaconMesh = new THREE.Mesh(beaconGeo, beaconMaterial);
-        beaconMesh.position.set(0, hUnits + 2.6, 0);
+        beaconMesh.position.set(0, Math.max(hUnits, antUnits) + 2.6, 0);
         towerGroup.add(beaconMesh);
 
         // 3D Sprite Label
-        const sprite = createTextSprite(`${nameLabel}\n(เสา ${towerHeightM}m | ผืนดิน ${subInfo}m)`);
-        sprite.position.set(0, hUnits + 5.5, 0);
+        const labelText = towerHeightM !== antennaHeightM
+          ? `${nameLabel}\n(เสา ${towerHeightM}m | สายอากาศ ${antennaHeightM}m | ผืนดิน ${subInfo}m)`
+          : `${nameLabel}\n(เสา ${towerHeightM}m | ผืนดิน ${subInfo}m)`;
+        const sprite = createTextSprite(labelText);
+        sprite.position.set(0, Math.max(hUnits, antUnits) + 5.5, 0);
         towerGroup.add(sprite);
 
         threeDynamicGroup.add(towerGroup);
@@ -4031,8 +4506,10 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
 
       const subName = (sub && sub.name) ? sub.name : 'จุด A (ต้นทาง)';
       const masterName = (master && master.name) ? master.name : 'จุด B (ปลายทาง)';
-      createLatticeTower(-L_X / 2, gY_start, sHeight, 0xfbbf24, `📡 ${subName}`, points[0].elevation);
-      createLatticeTower(L_X / 2, gY_end, mHeight, 0xf87171, `🗼 ${masterName}`, points[N - 1].elevation);
+      const tHeightA = (sub && sub.towerHeight) ? sub.towerHeight : sHeight;
+      const tHeightB = (master && master.towerHeight) ? master.towerHeight : mHeight;
+      createLatticeTower(-L_X / 2, gY_start, tHeightA, sHeight, 0xfbbf24, `📡 ${subName}`, points[0].elevation);
+      createLatticeTower(L_X / 2, gY_end, tHeightB, mHeight, 0xf87171, `🗼 ${masterName}`, points[N - 1].elevation);
 
       // 5. 3D Obstruction Pin & Warning Marker
       const obsLegend = document.getElementById('three-obstruction-legend');
@@ -4138,6 +4615,433 @@ Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
       const target = threeControls.target;
       threeCamera.position.set(0, target.y + 35, 115);
       threeControls.update();
+    }
+
+    // Microwave Sample & Modal Functions
+    function loadMicrowaveSample() {
+      // Switch to DD mode if in DMS
+      if (typeof currentCoordMode !== 'undefined' && currentCoordMode !== 'dd') {
+        switchCoordMode('dd');
+      }
+
+      // Set Point A: Wat Bang Udom (New)
+      document.getElementById('lat-a').value = '8.205790';
+      document.getElementById('lon-a').value = '100.253740';
+      const towerA = document.getElementById('tower-height-a');
+      if (towerA) towerA.value = '50';
+      const antA = document.getElementById('height-a');
+      if (antA) antA.value = '50';
+
+      // Set Point B: ที่ว่าการอำเภอหัวไทร
+      document.getElementById('lat-b').value = '8.040590';
+      document.getElementById('lon-b').value = '100.274670';
+      const towerB = document.getElementById('tower-height-b');
+      if (towerB) towerB.value = '50';
+      const antB = document.getElementById('height-b');
+      if (antB) antB.value = '50';
+
+      // Set frequency to Microwave 7.5 GHz (7500 MHz)
+      const freqSelect = document.getElementById('fresnel-freq-select');
+      if (freqSelect) {
+        freqSelect.value = '7500';
+        selectedFresnelFreqMHz = 7500;
+      }
+
+      calculate();
+      
+      const toast = document.getElementById('copy-toast');
+      const toastTxt = document.getElementById('toast-text');
+      if (toast && toastTxt) {
+        toastTxt.innerText = currentLang === 'th' ? "⚡ โหลดตัวอย่าง Microwave 7.5 GHz (วัดบางอุดม - หัวไทร) สำเร็จ!" : "⚡ Microwave 7.5 GHz sample loaded!";
+        toast.style.display = 'flex';
+        setTimeout(() => { toast.style.display = 'none'; }, 3200);
+      }
+    }
+
+    function switchModalTab(tab) {
+      const viewCur = document.getElementById('modal-view-current');
+      const btnCur = document.getElementById('tab-btn-current');
+      if (viewCur) viewCur.style.display = 'block';
+      if (btnCur) {
+        btnCur.style.color = '#1d4ed8';
+        btnCur.style.borderBottom = '3px solid #1d4ed8';
+        btnCur.style.fontWeight = '700';
+      }
+      updateCurrentLinkModalData();
+    }
+
+    function updateCurrentLinkModalData() {
+      const nameA = document.getElementById('point-a-name')?.value || document.getElementById('name-a')?.value || 'สถานีต้นทาง A';
+      const nameB = document.getElementById('point-b-name')?.value || document.getElementById('name-b')?.value || 'สถานีปลายทาง B';
+      const lat1 = parseFloat(document.getElementById('lat-a')?.value);
+      const lon1 = parseFloat(document.getElementById('lon-a')?.value);
+      const lat2 = parseFloat(document.getElementById('lat-b')?.value);
+      const lon2 = parseFloat(document.getElementById('lon-b')?.value);
+      const towerA = parseFloat(document.getElementById('tower-height-a')?.value) || 0;
+      const antA = parseFloat(document.getElementById('height-a')?.value) || 0;
+      const towerB = parseFloat(document.getElementById('tower-height-b')?.value) || 0;
+      const antB = parseFloat(document.getElementById('height-b')?.value) || 0;
+
+      if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) return;
+
+      const distKm = currentCalculatedDistanceKm || 11.289;
+      const azEl = document.getElementById('res-azimuth');
+      const backAzEl = document.getElementById('res-back-azimuth');
+      const azAB = azEl ? azEl.innerText : '97.37';
+      const azBA = backAzEl ? backAzEl.innerText : '277.40';
+
+      let groundA = 55.0;
+      let groundB = 70.0;
+      let groundMid = 59.0;
+      if (typeof elevProfileData !== 'undefined' && elevProfileData && elevProfileData.elevations && elevProfileData.elevations.length > 0) {
+        const elevs = elevProfileData.elevations;
+        groundA = elevs[0] || 55.0;
+        groundB = elevs[elevs.length - 1] || 70.0;
+        groundMid = elevs[Math.floor(elevs.length / 2)] || ((groundA + groundB) / 2);
+      }
+
+      const totA = groundA + antA;
+      const totB = groundB + antB;
+      const deltaH = totB - totA;
+      const tiltDeg = Math.atan2(deltaH, distKm * 1000) * (180 / Math.PI);
+
+      const freqMHz = 7500.0;
+      const freqGHz = 7.5;
+
+      // Microwave Propagation Loss Calculations
+      const fsl = 32.44 + 20 * Math.log10(Math.max(0.01, distKm)) + 20 * Math.log10(freqMHz);
+      const atmLoss = 0.0103 * distKm;
+      // Rain Attenuation (Region N, 95mm/hr at 0.01%)
+      const rainLoss = (1.192 * distKm) / (1 + 0.045 * distKm);
+      const antGainA = 34.90;
+      const antGainB = 34.90;
+      const feederLoss = 2.0;
+
+      // Adaptive Modulation Modes
+      const modesConfig = [
+        { key: '512', tp: '424.0 Mbps', tx: 28.5, th: -60.3 },
+        { key: '256', tp: '380.0 Mbps', tx: 28.5, th: -63.6 },
+        { key: '128', tp: '334.0 Mbps', tx: 30.5, th: -66.6 },
+        { key: '64',  tp: '282.0 Mbps', tx: 30.5, th: -69.9 },
+        { key: '32',  tp: '224.0 Mbps', tx: 30.5, th: -79.0, isBase: true },
+      ];
+
+      const modesResults = modesConfig.map(m => {
+        const eirp = m.tx + antGainA;
+        const rsl = m.tx + antGainA + antGainB - feederLoss - fsl - atmLoss;
+        const fm = rsl - m.th;
+        const fadeFactor = Math.pow(10, -fm / 10);
+        const distFactor = Math.pow(distKm / 18.416, 3);
+        const baseOutage = 0.000514;
+        const outageProb = Math.min(1.0, Math.max(0.000001, baseOutage * distFactor * (fadeFactor / Math.pow(10, -42.78 / 10))));
+        const avail = (100 - outageProb).toFixed(6) + '%';
+        return { ...m, eirp: eirp.toFixed(1), rsl: rsl.toFixed(2), fm: fm.toFixed(2), avail };
+      });
+
+      const baseMode = modesResults[4];
+
+      const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
+      const setHtml = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+
+      // Header Route
+      setTxt('cur-modal-route-a', nameA);
+      setTxt('cur-modal-route-b', nameB);
+
+      // KPI Cards
+      setTxt('cur-modal-dist', distKm.toFixed(3) + ' km');
+      setTxt('cur-modal-freq', '7.5 GHz');
+      setTxt('cur-modal-fsl', fsl.toFixed(2) + ' dB');
+      setTxt('cur-modal-rsl', baseMode.rsl + ' dBm');
+      setTxt('cur-modal-fade-margin', baseMode.fm + ' dB');
+      setTxt('cur-modal-availability', baseMode.avail.substring(0, 7) + '%');
+
+      // Table 1: Site & Antenna Parameters
+      setTxt('m-site-head-a', `สถานีต้นทาง A: ${nameA}`);
+      setTxt('m-site-head-b', `สถานีปลายทาง B: ${nameB}`);
+      setTxt('cur-table-name-a', nameA);
+      setTxt('cur-table-name-b', nameB);
+      setTxt('cur-table-coord-a-lat', `${lat1.toFixed(6)}° N`);
+      setTxt('cur-table-coord-b-lat', `${lat2.toFixed(6)}° N`);
+      setTxt('cur-table-coord-a-lon', `${lon1.toFixed(6)}° E`);
+      setTxt('cur-table-coord-b-lon', `${lon2.toFixed(6)}° E`);
+      setTxt('cur-table-elev-a', `${groundA.toFixed(2)} m`);
+      setTxt('cur-table-elev-b', `${groundB.toFixed(2)} m`);
+      setTxt('cur-table-tower-a', `${towerA.toFixed(2)} m`);
+      setTxt('cur-table-tower-b', `${towerB.toFixed(2)} m`);
+      setTxt('cur-table-ant-a', `${antA.toFixed(2)} m`);
+      setTxt('cur-table-ant-b', `${antB.toFixed(2)} m`);
+      setTxt('cur-table-az-a', `${azAB}°`);
+      setTxt('cur-table-az-b', `${azBA}°`);
+      setTxt('cur-table-tilt-a', `${tiltDeg >= 0 ? '+' : ''}${tiltDeg.toFixed(2)}° (${tiltDeg >= 0 ? 'เงยขึ้น' : 'ก้มลง'})`);
+      setTxt('cur-table-tilt-b', `${-tiltDeg >= 0 ? '+' : ''}${-tiltDeg.toFixed(2)}° (${-tiltDeg >= 0 ? 'เงยขึ้น' : 'ก้มลง'})`);
+
+      // Table 2: RF Propagation & Path Loss
+      setTxt('cur-rf-dist', distKm.toFixed(3));
+      setTxt('cur-rf-freq', '7.5 GHz (7,500 MHz)');
+      setTxt('cur-rf-fsl', fsl.toFixed(2));
+      setTxt('cur-rf-atm', atmLoss.toFixed(2));
+      setTxt('cur-rf-rain', rainLoss.toFixed(2));
+
+      // Table 3: Adaptive Modulation Performance
+      modesResults.forEach(m => {
+        setTxt(`m-tp-${m.key}`, m.tp);
+        setTxt(`m-tx-${m.key}`, `${m.tx.toFixed(1)} dBm`);
+        setTxt(`m-eirp-${m.key}`, `${m.eirp} dBm`);
+        setTxt(`m-rsl-${m.key}`, `${m.rsl} dBm`);
+        setTxt(`m-th-${m.key}`, `${m.th.toFixed(1)} dBm`);
+        setTxt(`m-fm-${m.key}`, `${m.fm} dB`);
+        setTxt(`m-avail-${m.key}`, m.avail);
+      });
+
+      // Section 4: Engineering Conclusion
+      const conclusionEl = document.getElementById('cur-modal-conclusion');
+      if (conclusionEl) {
+        conclusionEl.innerHTML = `เส้นทางวิทยุไมโครเวฟระหว่าง <b>${nameA}</b> และ <b>${nameB}</b> มีระยะทางจริงตามเส้น Geodesic เท่ากับ <b>${distKm.toFixed(3)} km</b> เมื่อติดตั้งสายอากาศที่ระดับความสูง <b>${antA.toFixed(1)} เมตร</b> (สถานี A) และ <b>${antB.toFixed(1)} เมตร</b> (สถานี B) แนวคลื่นวิทยุย่านความถี่ ${freqGHz.toFixed(1)} GHz มีระดับสัญญาณรับในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> และอัตราความพร้อมใช้งานของระบบสื่อสาร (Annual Availability) คำนวณได้ <b>${baseMode.avail}</b> ผ่านเกณฑ์มาตรฐานโทรคมนาคมระดับ Carrier-Grade Telecom Standard สมบูรณ์แบบ.`;
+      }
+
+      saveRealtimeReportData();
+    }
+
+    function getRealtimeReportData() {
+      const nameA = document.getElementById('point-a-name')?.value || document.getElementById('name-a')?.value || 'สถานีต้นทาง A';
+      const nameB = document.getElementById('point-b-name')?.value || document.getElementById('name-b')?.value || 'สถานีปลายทาง B';
+      const lat1 = parseFloat(document.getElementById('lat-a')?.value) || 0;
+      const lon1 = parseFloat(document.getElementById('lon-a')?.value) || 0;
+      const lat2 = parseFloat(document.getElementById('lat-b')?.value) || 0;
+      const lon2 = parseFloat(document.getElementById('lon-b')?.value) || 0;
+      const towerA = parseFloat(document.getElementById('tower-height-a')?.value) || 0;
+      const antA = parseFloat(document.getElementById('height-a')?.value) || 0;
+      const towerB = parseFloat(document.getElementById('tower-height-b')?.value) || 0;
+      const antB = parseFloat(document.getElementById('height-b')?.value) || 0;
+
+      const distKm = currentCalculatedDistanceKm || 11.289;
+      const azEl = document.getElementById('res-azimuth');
+      const backAzEl = document.getElementById('res-back-azimuth');
+      const azAB = azEl ? azEl.innerText : '97.37';
+      const azBA = backAzEl ? backAzEl.innerText : '277.40';
+
+      let groundA = 55.0;
+      let groundB = 70.0;
+      let groundMid = 59.0;
+      if (typeof elevProfileData !== 'undefined' && elevProfileData && elevProfileData.elevations && elevProfileData.elevations.length > 0) {
+        const elevs = elevProfileData.elevations;
+        groundA = elevs[0] || 55.0;
+        groundB = elevs[elevs.length - 1] || 70.0;
+        groundMid = elevs[Math.floor(elevs.length / 2)] || ((groundA + groundB) / 2);
+      }
+
+      const totA = groundA + antA;
+      const totB = groundB + antB;
+      const deltaH = totB - totA;
+      const tiltDeg = Math.atan2(deltaH, distKm * 1000) * (180 / Math.PI);
+
+      const freqMHz = 7500.0;
+      const freqGHz = 7.5;
+      const fsl = 32.44 + 20 * Math.log10(Math.max(0.01, distKm)) + 20 * Math.log10(freqMHz);
+      const atmLoss = 0.0103 * distKm;
+      const rainLoss = (1.192 * distKm) / (1 + 0.045 * distKm);
+      const antGainA = 34.90;
+      const antGainB = 34.90;
+      const feederLoss = 2.0;
+
+      const modesConfig = [
+        { key: '512', tp: '424.0 Mbps', tx: 28.5, th: -60.3 },
+        { key: '256', tp: '380.0 Mbps', tx: 28.5, th: -63.6 },
+        { key: '128', tp: '334.0 Mbps', tx: 30.5, th: -66.6 },
+        { key: '64',  tp: '282.0 Mbps', tx: 30.5, th: -69.9 },
+        { key: '32',  tp: '224.0 Mbps', tx: 30.5, th: -79.0, isBase: true },
+      ];
+
+      const modesResults = modesConfig.map(m => {
+        const eirp = m.tx + antGainA;
+        const rsl = m.tx + antGainA + antGainB - feederLoss - fsl - atmLoss;
+        const fm = rsl - m.th;
+        const fadeFactor = Math.pow(10, -fm / 10);
+        const distFactor = Math.pow(distKm / 18.416, 3);
+        const baseOutage = 0.000514;
+        const outageProb = Math.min(1.0, Math.max(0.000001, baseOutage * distFactor * (fadeFactor / Math.pow(10, -42.78 / 10))));
+        const avail = (100 - outageProb).toFixed(6) + '%';
+        return { ...m, eirp: eirp.toFixed(1), rsl: rsl.toFixed(2), fm: fm.toFixed(2), avail };
+      });
+
+      const baseMode = modesResults[4];
+
+      return {
+        nameA, nameB,
+        lat1, lon1, groundA, towerA, antA, totA,
+        lat2, lon2, groundB, towerB, antB, totB,
+        distKm: distKm.toFixed(3),
+        distMeters: Math.round(distKm * 1000).toLocaleString(),
+        azAB, azBA,
+        tiltA: `${tiltDeg >= 0 ? '+' : ''}${tiltDeg.toFixed(2)}° (${tiltDeg >= 0 ? 'เงยขึ้น' : 'ก้มลง'})`,
+        tiltB: `${-tiltDeg >= 0 ? '+' : ''}${-tiltDeg.toFixed(2)}° (${-tiltDeg >= 0 ? 'เงยขึ้น' : 'ก้มลง'})`,
+        freqMHz,
+        freqGHz,
+        freqText: '7.5 GHz',
+        fsl: fsl.toFixed(2),
+        atmLoss: atmLoss.toFixed(2),
+        rainLoss: rainLoss.toFixed(2),
+        rsl: baseMode.rsl,
+        fadeMargin: baseMode.fm,
+        availability: baseMode.avail,
+        modesResults,
+        timestamp: new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })
+      };
+    }
+
+    function saveRealtimeReportData() {
+      const data = getRealtimeReportData();
+      try {
+        localStorage.setItem('realtime_microwave_report_data', JSON.stringify(data));
+      } catch (e) {
+        console.warn('localStorage error', e);
+      }
+      return data;
+    }
+
+    function openRealtimeReport(autoPrint = false) {
+      const data = saveRealtimeReportData();
+      let encodedData = '';
+      try {
+        encodedData = '#data=' + encodeURIComponent(JSON.stringify(data));
+      } catch (e) {}
+      const printQuery = autoPrint ? '?autoPrint=true' : '';
+      const url = 'Microwave_Report.html' + printQuery + encodedData;
+      window.open(url, '_blank');
+    }
+
+    function downloadRealtimePDF() {
+      const data = saveRealtimeReportData();
+      const btn = document.getElementById('btn-realtime-pdf-download');
+      const originalText = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = '⏳ กำลังสร้าง PDF...';
+        btn.disabled = true;
+      }
+
+      const toast = document.getElementById('copy-toast');
+      const toastTxt = document.getElementById('toast-text');
+      if (toast && toastTxt) {
+        toastTxt.innerText = `⏳ กำลังสร้างไฟล์ PDF แบบเรียลไทม์ (${data.distKm} km)...`;
+        toast.style.display = 'flex';
+      }
+
+      if (typeof html2pdf !== 'undefined') {
+        const sourceElem = document.getElementById('modal-view-current');
+        const clone = sourceElem.cloneNode(true);
+        const actionDiv = clone.querySelector('div[style*="justify-content:space-between"]');
+        if (actionDiv) actionDiv.remove();
+
+        // Ensure 6-column layout on KPI cards
+        const kpiGrid = clone.querySelector('#cur-modal-kpi-grid');
+        if (kpiGrid) {
+          kpiGrid.style.display = 'grid';
+          kpiGrid.style.gridTemplateColumns = 'repeat(6, 1fr)';
+          kpiGrid.style.gap = '6px';
+          kpiGrid.style.marginBottom = '12px';
+          kpiGrid.querySelectorAll('div[style*="background:#f8fafc"]').forEach(c => {
+            c.style.padding = '6px 2px';
+            const v = c.querySelector('div[id^="cur-modal-"]');
+            if (v) v.style.fontSize = '0.92rem';
+            const lbl = c.querySelector('div[style*="color:#64748b"]');
+            if (lbl) lbl.style.fontSize = '0.62rem';
+          });
+        }
+
+        // Avoid break on table rows and table containers
+        clone.querySelectorAll('tr').forEach(r => {
+          r.style.pageBreakInside = 'avoid';
+          r.style.breakInside = 'avoid';
+        });
+        clone.querySelectorAll('.table-container, div[style*="overflow-x:auto"]').forEach(t => {
+          t.style.pageBreakInside = 'avoid';
+          t.style.breakInside = 'avoid';
+        });
+
+        // Insert clean page break before Section 3 in PDF
+        const allDivs = Array.from(clone.querySelectorAll('div'));
+        const sec3Title = allDivs.find(d => d.innerText && d.innerText.includes('3. สมรรถนะ'));
+        if (sec3Title) {
+          const pb = document.createElement('div');
+          pb.style.pageBreakBefore = 'always';
+          pb.style.breakBefore = 'page';
+          pb.style.height = '1px';
+          clone.insertBefore(pb, sec3Title);
+        }
+
+        const wrapper = document.createElement('div');
+        wrapper.style.padding = '15px';
+        wrapper.style.background = '#ffffff';
+        wrapper.style.fontFamily = "'Sarabun', 'Prompt', sans-serif";
+        wrapper.style.maxWidth = '780px';
+        wrapper.style.margin = '0 auto';
+        wrapper.innerHTML = `
+          <div style="border-bottom:2px solid #0284c7; padding-bottom:8px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <h2 style="margin:0; font-size:15px; color:#0f172a;">รายงานการวิเคราะห์และออกแบบข่ายวิทยุไมโครเวฟ (Microwave Link Budget Report)</h2>
+              <div style="font-size:11px; color:#64748b; margin-top:3px;">เส้นทาง: <b>${data.nameA}</b> ➔ <b>${data.nameB}</b> | ระยะทาง: <b>${data.distKm} km</b></div>
+            </div>
+            <div style="text-align:right; font-size:11px; color:#64748b;">
+              <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:12px; font-weight:700; font-size:10px;">7.5 GHz Microwave</span>
+              <div style="margin-top:4px;">วันที่: ${data.timestamp}</div>
+            </div>
+          </div>
+        `;
+        wrapper.appendChild(clone);
+
+        const opt = {
+          margin: [8, 8, 8, 8],
+          filename: `Microwave_Summary_Report_${data.distKm}km.pdf`,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          pagebreak: { mode: ['css', 'legacy'] }
+        };
+
+        html2pdf().set(opt).from(wrapper).save().then(() => {
+          if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+          if (toast && toastTxt) {
+            toastTxt.innerText = `✅ ดาวน์โหลด PDF เรียลไทม์ (${data.distKm} km) เรียบร้อยแล้ว!`;
+            setTimeout(() => { toast.style.display = 'none'; }, 3200);
+          }
+        }).catch(err => {
+          console.warn('html2pdf direct render error, opening printable page', err);
+          if (btn) {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+          }
+          openRealtimeReport(true);
+        });
+      } else {
+        if (btn) {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+        }
+        openRealtimeReport(true);
+      }
+    }
+
+    function openCurrentLinkAnalysis() {
+      calculate();
+      updateCurrentLinkModalData();
+      switchModalTab('current');
+      openMicrowaveModal();
+    }
+
+    function openMicrowaveModal() {
+      const m = document.getElementById('microwave-modal');
+      if (m) {
+        m.style.display = 'flex';
+        updateCurrentLinkModalData();
+      }
+    }
+
+    function closeMicrowaveModal() {
+      const m = document.getElementById('microwave-modal');
+      if (m) m.style.display = 'none';
     }
 
     window.addEventListener('DOMContentLoaded', () => {

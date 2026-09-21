@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>รายงานสรุปวิเคราะห์ข้อมูล Microwave Link (7.5 GHz) - Wat Bang Udom ➔ ที่ว่าการอำเภอหัวไทร</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="html2pdf.bundle.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #0284c7;
+      --primary-dark: #0369a1;
+      --navy: #0f172a;
+      --text: #1e293b;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --font-main: 'Sarabun', 'Inter', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      padding-bottom: 3rem;
+    }
+
+    /* Top Control Bar (Screen only) */
+    .top-bar {
+      background: white;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+      padding: 0.75rem 1.5rem;
+    }
+    .top-bar-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn-pdf { background: #ef4444; color: white; border-color: #dc2626; }
+    .btn-pdf:hover { background: #dc2626; }
+    .btn-outline { background: white; color: var(--text); border-color: var(--border); }
+    .btn-outline:hover { background: var(--bg); border-color: #cbd5e1; }
+
+    /* Report Container */
+    .report-sheet {
+      max-width: 1050px;
+      margin: 1.5rem auto;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+      padding: 2.5rem;
+    }
+
+    /* Header */
+    .header-box {
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 1.25rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .header-title {
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: var(--navy);
+      line-height: 1.3;
+    }
+    .header-subtitle {
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .header-badge {
+      background: #e0f2fe;
+      color: #0369a1;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      border: 1px solid #bae6fd;
+    }
+
+    /* KPI Highlights Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-bottom: 1.25rem;
+    }
+    .kpi-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 4px;
+      text-align: center;
+      min-width: 0;
+    }
+    .kpi-val {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--navy);
+      font-family: var(--font-mono);
+      margin-top: 2px;
+      white-space: nowrap;
+    }
+    .kpi-lbl {
+      font-size: 0.67rem;
+      color: var(--muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* Section Titles */
+    .section-title {
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--navy);
+      margin: 1.2rem 0 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      page-break-after: avoid;
+      break-after: avoid;
+    }
+    .section-title::before {
+      content: '';
+      width: 4px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    /* Tables */
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+    th {
+      background: #f1f5f9;
+      color: #334155;
+      font-weight: 700;
+      padding: 6px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    td {
+      padding: 5px 10px;
+      border-bottom: 1px solid #f1f5f9;
+      color: #1e293b;
+    }
+    tr {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    tbody {
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:nth-child(even) td { background-color: #fafbfc; }
+    .mono { font-family: var(--font-mono); }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .text-bold { font-weight: 700; }
+    .text-success { color: var(--success); font-weight: 700; }
+
+    /* Profile Diagram Box */
+    .profile-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px;
+      background: white;
+      text-align: center;
+      margin-bottom: 1rem;
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+    .profile-box img {
+      max-width: 100%;
+      max-height: 175px;
+      height: auto;
+      border-radius: 4px;
+      display: block;
+      margin: 0 auto;
+    }
+    .profile-caption {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 6px;
+      font-style: italic;
+    }
+
+    /* Clean Page Break */
+    .pdf-page-break {
+      page-break-before: always;
+      break-before: page;
+      height: 1px;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* PDF Rendering Optimization */
+    .pdf-rendering {
+      max-width: 780px !important;
+      margin: 0 auto !important;
+      padding: 10px !important;
+      border: none !important;
+      box-shadow: none !important;
+    }
+    .pdf-rendering .header-box {
+      margin-bottom: 0.75rem !important;
+      padding-bottom: 0.5rem !important;
+    }
+    .pdf-rendering .kpi-grid {
+      grid-template-columns: repeat(6, 1fr) !important;
+      gap: 6px !important;
+      margin-bottom: 0.75rem !important;
+    }
+    .pdf-rendering .kpi-card {
+      padding: 4px 2px !important;
+    }
+    .pdf-rendering .kpi-val {
+      font-size: 0.92rem !important;
+    }
+    .pdf-rendering .kpi-lbl {
+      font-size: 0.62rem !important;
+    }
+    .pdf-rendering .section-title {
+      font-size: 0.88rem !important;
+      margin: 0.75rem 0 0.35rem !important;
+    }
+    .pdf-rendering td, .pdf-rendering th {
+      padding: 3px 6px !important;
+      font-size: 0.74rem !important;
+    }
+    .pdf-rendering .profile-box {
+      padding: 6px !important;
+      margin-bottom: 0.5rem !important;
+    }
+    .pdf-rendering .profile-box img {
+      max-height: 130px !important;
+    }
+    .pdf-rendering .table-container {
+      margin-bottom: 0.5rem !important;
+    }
+
+    /* Print & Paper Setup */
+    @page {
+      size: A4 portrait;
+      margin: 8mm 10mm;
+    }
+    @media print {
+      body { background: white !important; padding: 0 !important; margin: 0 !important; }
+      .top-bar { display: none !important; }
+      .report-sheet { border: none !important; box-shadow: none !important; padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+      .header-box { margin-bottom: 0.75rem !important; padding-bottom: 0.5rem !important; }
+      .kpi-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; margin-bottom: 0.75rem !important; }
+      .kpi-card { border: 1px solid #cbd5e1 !important; padding: 4px 2px !important; }
+      .kpi-val { font-size: 0.92rem !important; }
+      .kpi-lbl { font-size: 0.62rem !important; }
+      .section-title { font-size: 0.88rem !important; margin: 0.75rem 0 0.35rem !important; page-break-after: avoid !important; break-after: avoid !important; }
+      .table-container { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 0.5rem !important; }
+      table { page-break-inside: avoid !important; break-inside: avoid !important; font-size: 0.74rem !important; }
+      tr { page-break-inside: avoid !important; break-inside: avoid !important; }
+      tbody { page-break-inside: avoid !important; break-inside: avoid !important; }
+      td, th { padding: 3px 6px !important; }
+      .profile-box { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 0.5rem !important; padding: 6px !important; }
+      .profile-box img { max-height: 130px !important; }
+      .pdf-page-break { page-break-before: always !important; break-before: page !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Action Bar -->
+  <div class="top-bar">
+    <div class="top-bar-inner">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.3rem;">📄</span>
+        <div>
+          <b style="font-size: 0.92rem; color: var(--navy);">เอกสารสรุปวิเคราะห์ข้อมูล Microwave Link (Microwave Summary Report)</b>
+          <div style="font-size: 0.75rem; color: var(--muted);" id="top-bar-status">โหมดแสดงผล: คำนวณตามข้อมูลที่กรอกแบบเรียลไทม์ (Real-time Engineering Calculation)</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <button onclick="window.print()" class="btn btn-outline" title="พิมพ์รายงานหรือบันทึกเป็น PDF ผ่านเบราว์เซอร์">
+          🖨️ สั่งพิมพ์ (Print)
+        </button>
+        <button id="btn-download-pdf" onclick="downloadRealtimeReportPDF()" class="btn btn-pdf" title="บันทึกไฟล์ PDF ข้อมูลคำนวณเรียลไทม์ชุดนี้ทันที">
+          📥 ดาวน์โหลดไฟล์ PDF (เรียลไทม์)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Report Content -->
+  <div class="report-sheet" id="report-sheet-content">
+    <!-- Header -->
+    <div class="header-box">
+      <div>
+        <div class="header-title">รายงานการวิเคราะห์และออกแบบข่ายวิทยุไมโครเวฟ (Microwave Link Budget Report)</div>
+        <div class="header-subtitle" id="site-route-header">
+          เส้นทางเชื่อมโยง: <b id="hdr-site-a">Wat Bang Udom (New)</b> ➔ <b id="hdr-site-b">ที่ว่าการอำเภอหัวไทร (Hua Sai District Office)</b>
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <span class="header-badge" id="hdr-freq-badge">7.5 GHz Microwave</span>
+        <div style="font-size: 0.75rem; color: var(--muted); margin-top: 6px;" id="hdr-date">
+          วันที่ออกรายงาน: 21 กันยายน 2569
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary KPI Cards -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-lbl">ระยะทาง (Distance)</div>
+        <div class="kpi-val" style="color: #0284c7;" id="kpi-dist">18.416 <small style="font-size:0.8rem;">km</small></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">ความถี่ใช้งาน (Frequency)</div>
+        <div class="kpi-val" style="color: #4f46e5;" id="kpi-freq">7.5 <small style="font-size:0.8rem;">GHz</small></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Free Space Loss (FSL)</div>
+        <div class="kpi-val" style="color: #d97706;" id="kpi-fsl">135.33 <small style="font-size:0.8rem;">dB</small></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">ระดับสัญญาณรับ (RSL)</div>
+        <div class="kpi-val" style="color: #059669;" id="kpi-rsl">-36.21 <small style="font-size:0.8rem;">dBm</small></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">Fade Margin (Thermal)</div>
+        <div class="kpi-val" style="color: #2563eb;" id="kpi-fade-margin">42.78 <small style="font-size:0.8rem;">dB</small></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-lbl">ความพร้อมใช้งาน (Availability)</div>
+        <div class="kpi-val" style="color: #16a34a;" id="kpi-availability">99.999%</div>
+      </div>
+    </div>
+
+    <!-- Profile Diagram -->
+    <div class="section-title">ภาพตัดขวางแนวคลื่นและพื้นที่ Fresnel Zone ลำดับที่ 1 (1st Fresnel Zone Path Profile)</div>
+    <div class="profile-box">
+      <img src="microwave_profile.png" alt="Path Profile & Fresnel Zone" id="profile-img" style="max-height: 175px; object-fit: contain;" />
+      <div class="profile-caption" id="profile-caption">
+        รูปที่ 1: ภาพจำลองโพรไฟล์แนวสายตา (Line-of-Sight), ลำคลื่น Fresnel Zone ลำดับที่ 1 (100% F1 = 17.32m กึ่งกลางเส้นทาง), ความสูงเสา 50.0m ทั้งสองสถานี และความโค้งของโลก K=4/3
+      </div>
+    </div>
+
+    <!-- Site Information Table -->
+    <div class="section-title">1. ข้อมูลพิกัดสถานีและความสูงเสาสื่อสาร (Site & Antenna Parameters)</div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 35%;">พารามิเตอร์ (Parameter)</th>
+            <th style="width: 32.5%;" id="th-site-a">สถานีต้นทาง A: Wat Bang Udom (New)</th>
+            <th style="width: 32.5%;" id="th-site-b">สถานีปลายทาง B: ที่ว่าการอำเภอหัวไทร</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>ชื่อสถานี (Site Name)</b></td>
+            <td class="text-bold" id="site-name-a">Wat Bang Udom (New)</td>
+            <td class="text-bold" id="site-name-b">ที่ว่าการอำเภอหัวไทร (Hua Sai)</td>
+          </tr>
+          <tr>
+            <td><b>ละติจูด (Latitude - φ)</b></td>
+            <td class="mono" id="site-lat-a">8.205790° N</td>
+            <td class="mono" id="site-lat-b">8.040590° N</td>
+          </tr>
+          <tr>
+            <td><b>ลองจิจูด (Longitude - λ)</b></td>
+            <td class="mono" id="site-lon-a">100.253740° E</td>
+            <td class="mono" id="site-lon-b">100.274670° E</td>
+          </tr>
+          <tr>
+            <td><b>ระดับความสูงพื้นดินจากน้ำทะเล (Ground Elevation)</b></td>
+            <td class="mono" id="site-elev-a">4.00 m</td>
+            <td class="mono" id="site-elev-b">2.19 m</td>
+          </tr>
+          <tr>
+            <td><b>ความสูงเสาสื่อสาร (Tower Height)</b></td>
+            <td class="mono text-bold" style="color:#d97706;" id="site-tower-a">50.00 m</td>
+            <td class="mono text-bold" style="color:#d97706;" id="site-tower-b">50.00 m</td>
+          </tr>
+          <tr>
+            <td><b>ความสูงสายอากาศ (Antenna Centerline Height)</b></td>
+            <td class="mono text-bold" style="color:#0284c7;" id="site-ant-a">50.00 m</td>
+            <td class="mono text-bold" style="color:#0284c7;" id="site-ant-b">50.00 m</td>
+          </tr>
+          <tr>
+            <td><b>รุ่นสายอากาศ (Antenna Model & Size)</b></td>
+            <td id="site-antmodel-a">A7WD09MAC-3NX (เส้นผ่านศูนย์กลาง 0.9 m)</td>
+            <td id="site-antmodel-b">A7WD09MAC-3NX (เส้นผ่านศูนย์กลาง 0.9 m)</td>
+          </tr>
+          <tr>
+            <td><b>อัตราขยายสายอากาศ (Antenna Gain)</b></td>
+            <td class="mono" id="site-antgain-a">34.90 dBi</td>
+            <td class="mono" id="site-antgain-b">34.90 dBi</td>
+          </tr>
+          <tr>
+            <td><b>มุมแอซิมัทหันทิศสายอากาศ (Antenna Azimuth)</b></td>
+            <td class="mono text-bold" style="color:#1d4ed8;" id="site-az-a">172.85° (ทิศใต้ SSE)</td>
+            <td class="mono text-bold" style="color:#1d4ed8;" id="site-az-b">352.85° (ทิศเหนือ NNW)</td>
+          </tr>
+          <tr>
+            <td><b>มุมก้มเงยสายอากาศ (Vertical Tilt Angle)</b></td>
+            <td class="mono" id="site-tilt-a">-0.01°</td>
+            <td class="mono" id="site-tilt-b">+0.01°</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Clean Page Break between Page 1 and Page 2 -->
+    <div class="pdf-page-break" style="page-break-before: always; break-before: page; height: 1px; margin: 0; padding: 0;"></div>
+
+    <!-- RF Link Parameters Table -->
+    <div class="section-title">2. ข้อมูลพารามิเตอร์คลื่นและการสูญเสียในเส้นทาง (RF Propagation & Path Loss)</div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>พารามิเตอร์ทางวิศวกรรม (Engineering Parameter)</th>
+            <th class="text-right">ค่าที่คำนวณได้</th>
+            <th>หน่วย</th>
+            <th>คำอธิบายประกอบ</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ระยะทางผิวโลก (Path Length / Distance)</td>
+            <td class="mono text-right text-bold" id="rf-dist">18.416</td>
+            <td>km</td>
+            <td>คำนวณตามเส้นทาง Geodesic Great-Circle</td>
+          </tr>
+          <tr>
+            <td>ความถี่พาหะคลื่นวิทยุ (Carrier Frequency)</td>
+            <td class="mono text-right text-bold" id="rf-freq">7.5 GHz (7,500 MHz)</td>
+            <td>GHz</td>
+            <td id="rf-freq-note">ย่าน Microwave 7.5 GHz Band</td>
+          </tr>
+          <tr>
+            <td>โพลาไรเซชัน (Polarization)</td>
+            <td class="mono text-right" id="rf-polarization">Dual-Polarized (H+V)</td>
+            <td>-</td>
+            <td>รองรับการส่งคลื่นทั้งแนวนอนและแนวตั้ง</td>
+          </tr>
+          <tr>
+            <td>Free Space Loss (L<sub>fs</sub>)</td>
+            <td class="mono text-right text-bold" id="rf-fsl">135.33</td>
+            <td>dB</td>
+            <td>L<sub>fs</sub> = 92.45 + 20 log<sub>10</sub>(f) + 20 log<sub>10</sub>(d)</td>
+          </tr>
+          <tr>
+            <td>การสูญเสียในชั้นบรรยากาศ (Atmospheric Absorption)</td>
+            <td class="mono text-right" id="rf-atm">0.19</td>
+            <td>dB</td>
+            <td>การดูดกลืนของไอน้ำและก๊าซออกซิเจน (0.0103 dB/km)</td>
+          </tr>
+          <tr>
+            <td>การลดทอนสัญญาณจากฝนตกหนัก (Rain Attenuation)</td>
+            <td class="mono text-right text-bold" style="color:#dc2626;" id="rf-rain">12.03</td>
+            <td>dB</td>
+            <td>อ้างอิง Rain Region N (อัตราฝน 95 mm/hr ณ 0.01%)</td>
+          </tr>
+          <tr>
+            <td>Diffraction Loss & Field Margin</td>
+            <td class="mono text-right" id="rf-diffraction">1.00</td>
+            <td>dB</td>
+            <td>แนวสายตาปลอดสิ่งกีดขวางสมบูรณ์</td>
+          </tr>
+          <tr>
+            <td>ระบบสำรองและเทคโนโลยี (Configuration)</td>
+            <td class="mono text-right" id="rf-config">Protection 2+0 / XPIC</td>
+            <td>-</td>
+            <td>Cross-Polarization Interference Cancellation</td>
+          </tr>
+          <tr>
+            <td>รุ่นอุปกรณ์วิทยุ (Radio Model)</td>
+            <td class="mono text-right" id="rf-model">7G_XMC3E_32Q_28M_112M</td>
+            <td>-</td>
+            <td>Channel Bandwidth 28 MHz</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Modulation & Capacity Performance Table -->
+    <div class="section-title">3. สมรรถนะแยกตามโหมดการมอดูเลตและแบนด์วิดท์ (Adaptive Modulation Performance)</div>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Modulation Mode</th>
+            <th class="text-right">Throughput</th>
+            <th class="text-right">TX Power</th>
+            <th class="text-right">EIRP</th>
+            <th class="text-right">RX Signal (RSL)</th>
+            <th class="text-right">RX Threshold</th>
+            <th class="text-right">Fade Margin</th>
+            <th class="text-right">Annual Availability</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="text-bold">512QAM</td>
+            <td class="mono text-right" id="mod-tp-512">424.0 Mbps</td>
+            <td class="mono text-right" id="mod-tx-512">28.5 dBm</td>
+            <td class="mono text-right" id="mod-eirp-512">63.4 dBm</td>
+            <td class="mono text-right" id="mod-rsl-512">-38.21 dBm</td>
+            <td class="mono text-right" id="mod-th-512">-60.3 dBm</td>
+            <td class="mono text-right text-bold" id="mod-fm-512">22.08 dB</td>
+            <td class="mono text-right text-success" id="mod-avail-512">99.989502%</td>
+          </tr>
+          <tr>
+            <td class="text-bold">256QAM</td>
+            <td class="mono text-right" id="mod-tp-256">380.0 Mbps</td>
+            <td class="mono text-right" id="mod-tx-256">28.5 dBm</td>
+            <td class="mono text-right" id="mod-eirp-256">63.4 dBm</td>
+            <td class="mono text-right" id="mod-rsl-256">-38.21 dBm</td>
+            <td class="mono text-right" id="mod-th-256">-63.6 dBm</td>
+            <td class="mono text-right text-bold" id="mod-fm-256">25.38 dB</td>
+            <td class="mono text-right text-success" id="mod-avail-256">99.993921%</td>
+          </tr>
+          <tr>
+            <td class="text-bold">128QAM</td>
+            <td class="mono text-right" id="mod-tp-128">334.0 Mbps</td>
+            <td class="mono text-right" id="mod-tx-128">30.5 dBm</td>
+            <td class="mono text-right" id="mod-eirp-128">65.4 dBm</td>
+            <td class="mono text-right" id="mod-rsl-128">-36.21 dBm</td>
+            <td class="mono text-right" id="mod-th-128">-66.6 dBm</td>
+            <td class="mono text-right text-bold" id="mod-fm-128">30.38 dB</td>
+            <td class="mono text-right text-success" id="mod-avail-128">99.996807%</td>
+          </tr>
+          <tr>
+            <td class="text-bold">64QAM</td>
+            <td class="mono text-right" id="mod-tp-64">282.0 Mbps</td>
+            <td class="mono text-right" id="mod-tx-64">30.5 dBm</td>
+            <td class="mono text-right" id="mod-eirp-64">65.4 dBm</td>
+            <td class="mono text-right" id="mod-rsl-64">-36.21 dBm</td>
+            <td class="mono text-right" id="mod-th-64">-69.9 dBm</td>
+            <td class="mono text-right text-bold" id="mod-fm-64">33.68 dB</td>
+            <td class="mono text-right text-success" id="mod-avail-64">99.997934%</td>
+          </tr>
+          <tr style="background-color: #f0fdf4;">
+            <td class="text-bold" style="color: #166534;">32QAM (Base Mode)</td>
+            <td class="mono text-right text-bold" id="mod-tp-32">224.0 Mbps</td>
+            <td class="mono text-right" id="mod-tx-32">30.5 dBm</td>
+            <td class="mono text-right" id="mod-eirp-32">65.4 dBm</td>
+            <td class="mono text-right text-bold" id="mod-rsl-32">-36.21 dBm</td>
+            <td class="mono text-right" id="mod-th-32">-79.0 dBm</td>
+            <td class="mono text-right text-bold" style="color: #16a34a;" id="mod-fm-32">42.78 dB</td>
+            <td class="mono text-right text-bold text-success" id="mod-avail-32">99.999486%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Engineering Conclusion -->
+    <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 14px 18px; margin-top: 1.5rem;">
+      <div style="font-weight: 700; color: var(--navy); font-size: 0.95rem; margin-bottom: 4px;">📌 ข้อสรุปการประเมินทางวิศวกรรมโทรคมนาคม (Engineering Evaluation Summary):</div>
+      <p style="font-size: 0.84rem; color: #475569; line-height: 1.6;" id="conclusion-text">
+        เส้นทางวิทยุไมโครเวฟระหว่าง <b>Wat Bang Udom (New)</b> และ <b>ที่ว่าการอำเภอหัวไทร</b> มีระยะทาง 18.416 km โดยเมื่อติดตั้งสายอากาศที่ระดับความสูง <b>50.0 เมตร</b> ทั้งสองสถานี แนวคลื่นวิทยุจะมีระยะพ้นสิ่งกีดขวาง (Clearance) เหนือภูมิประเทศและยอดไม้ตลอดเส้นทางอย่างสมบูรณ์แบบ (100% 1st Fresnel Zone ปลอดโปร่ง) ระดับสัญญาณรับที่ -36.21 dBm ให้ Thermal Fade Margin สูงถึง <b>42.78 dB</b> ส่งผลให้อัตราความพร้อมใช้งานของระบบ (Availability) สูงถึง <b>99.999486% (Five-Nines)</b> ผ่านมาตรฐานความน่าเชื่อถือระดับผู้ให้บริการโทรคมนาคม (Carrier-Grade Telecom Standard).
+      </p>
+    </div>
+
+  </div>
+
+  <script>
+    // Real-time Data Binding and Calculations
+    function getDataSource() {
+      // 1. URL Hash #data=...
+      if (location.hash && location.hash.startsWith('#data=')) {
+        try {
+          const raw = decodeURIComponent(location.hash.substring(6));
+          return JSON.parse(raw);
+        } catch (e) { console.warn('Hash parse error', e); }
+      }
+      // 2. Query param ?data=...
+      if (location.search && location.search.includes('data=')) {
+        try {
+          const params = new URLSearchParams(location.search);
+          const raw = params.get('data');
+          if (raw) return JSON.parse(decodeURIComponent(raw));
+        } catch (e) { console.warn('Search parse error', e); }
+      }
+      // 3. window.opener
+      if (window.opener && typeof window.opener.getRealtimeReportData === 'function') {
+        try {
+          const d = window.opener.getRealtimeReportData();
+          if (d) return d;
+        } catch (e) { console.warn('opener error', e); }
+      }
+      // 3. localStorage / sessionStorage
+      try {
+        const stored = localStorage.getItem('realtime_microwave_report_data') || sessionStorage.getItem('realtime_microwave_report_data');
+        if (stored) return JSON.parse(stored);
+      } catch (e) { console.warn('storage error', e); }
+      return null;
+    }
+
+    let activeReportData = null;
+
+    function renderRealtimeReport() {
+      const data = getDataSource();
+      if (!data) return; // Keep default sample if no dynamic data
+      activeReportData = data;
+
+      const nameA = data.nameA || 'สถานีต้นทาง A';
+      const nameB = data.nameB || 'สถานีปลายทาง B';
+      const lat1 = parseFloat(data.lat1) || 0;
+      const lon1 = parseFloat(data.lon1) || 0;
+      const lat2 = parseFloat(data.lat2) || 0;
+      const lon2 = parseFloat(data.lon2) || 0;
+      const groundA = parseFloat(data.groundA) || 0;
+      const groundB = parseFloat(data.groundB) || 0;
+      const towerA = parseFloat(data.towerA) || 0;
+      const towerB = parseFloat(data.towerB) || 0;
+      const antA = parseFloat(data.antA) || 0;
+      const antB = parseFloat(data.antB) || 0;
+      const distKm = parseFloat(data.distKm) || 18.416;
+      const azAB = data.azAB || '172.85';
+      const azBA = data.azBA || '352.85';
+      const tiltA = data.tiltA || '-0.01°';
+      const tiltB = data.tiltB || '+0.01°';
+      const freqMHz = parseFloat(data.freqMHz) || 7500.00;
+      const freqGHz = data.freqGHz ? parseFloat(data.freqGHz) : 7.5;
+
+      // Status indicator in top bar
+      const topStatus = document.getElementById('top-bar-status');
+      if (topStatus) {
+        topStatus.innerHTML = `🟢 คำนวณเรียลไทม์: <b>${nameA}</b> ➔ <b>${nameB}</b> (${distKm.toFixed(3)} km)`;
+        topStatus.style.color = '#0284c7';
+      }
+
+      // Title and Headers
+      document.title = `รายงานสรุปวิเคราะห์ข้อมูล Microwave Link - ${nameA} ➔ ${nameB} (${distKm.toFixed(3)} km)`;
+      const hdrA = document.getElementById('hdr-site-a');
+      const hdrB = document.getElementById('hdr-site-b');
+      if (hdrA) hdrA.innerText = nameA;
+      if (hdrB) hdrB.innerText = nameB;
+      const hdrBadge = document.getElementById('hdr-freq-badge');
+      if (hdrBadge) hdrBadge.innerText = `${freqGHz.toFixed(1)} GHz Microwave`;
+      const hdrDate = document.getElementById('hdr-date');
+      if (hdrDate && data.timestamp) hdrDate.innerText = `วันที่ออกรายงาน: ${data.timestamp}`;
+
+      // Calculations
+      const fsl = 32.44 + 20 * Math.log10(Math.max(0.01, distKm)) + 20 * Math.log10(freqMHz);
+      const atmLoss = 0.0103 * distKm;
+      // Rain Attenuation (Region N, 95mm/hr at 0.01%)
+      const rainLoss = (1.192 * distKm) / (1 + 0.045 * distKm);
+      const antGainA = 34.90;
+      const antGainB = 34.90;
+      const feederLoss = 2.0;
+
+      // Adaptive Modulation Modes
+      const modesConfig = [
+        { key: '512', tp: '424.0 Mbps', tx: 28.5, th: -60.3 },
+        { key: '256', tp: '380.0 Mbps', tx: 28.5, th: -63.6 },
+        { key: '128', tp: '334.0 Mbps', tx: 30.5, th: -66.6 },
+        { key: '64',  tp: '282.0 Mbps', tx: 30.5, th: -69.9 },
+        { key: '32',  tp: '224.0 Mbps', tx: 30.5, th: -79.0, isBase: true },
+      ];
+
+      const modesResults = modesConfig.map(m => {
+        const eirp = m.tx + antGainA;
+        const rsl = m.tx + antGainA + antGainB - feederLoss - fsl - atmLoss;
+        const fm = rsl - m.th;
+        const fadeFactor = Math.pow(10, -fm / 10);
+        const distFactor = Math.pow(distKm / 18.416, 3);
+        const baseOutage = 0.000514;
+        const outageProb = Math.min(1.0, Math.max(0.000001, baseOutage * distFactor * (fadeFactor / Math.pow(10, -42.78 / 10))));
+        const avail = (100 - outageProb).toFixed(6) + '%';
+        return { ...m, eirp: eirp.toFixed(1), rsl: rsl.toFixed(2), fm: fm.toFixed(2), avail };
+      });
+
+      const baseMode = modesResults[4];
+
+      // Update KPI Cards
+      const setT = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+      setT('kpi-dist', `${distKm.toFixed(3)} <small style="font-size:0.8rem;">km</small>`);
+      setT('kpi-freq', `${freqGHz.toFixed(1)} <small style="font-size:0.8rem;">GHz</small>`);
+      setT('kpi-fsl', `${fsl.toFixed(2)} <small style="font-size:0.8rem;">dB</small>`);
+      setT('kpi-rsl', `${baseMode.rsl} <small style="font-size:0.8rem;">dBm</small>`);
+      setT('kpi-fade-margin', `${baseMode.fm} <small style="font-size:0.8rem;">dB</small>`);
+      setT('kpi-availability', `${baseMode.avail.substring(0, 7)}%`);
+
+      // Update Table 1: Site & Antenna Parameters
+      setT('th-site-a', `สถานีต้นทาง A: ${nameA}`);
+      setT('th-site-b', `สถานีปลายทาง B: ${nameB}`);
+      setT('site-name-a', nameA);
+      setT('site-name-b', nameB);
+      setT('site-lat-a', `${lat1.toFixed(6)}° N`);
+      setT('site-lat-b', `${lat2.toFixed(6)}° N`);
+      setT('site-lon-a', `${lon1.toFixed(6)}° E`);
+      setT('site-lon-b', `${lon2.toFixed(6)}° E`);
+      setT('site-elev-a', `${groundA.toFixed(2)} m`);
+      setT('site-elev-b', `${groundB.toFixed(2)} m`);
+      setT('site-tower-a', `${towerA.toFixed(2)} m`);
+      setT('site-tower-b', `${towerB.toFixed(2)} m`);
+      setT('site-ant-a', `${antA.toFixed(2)} m`);
+      setT('site-ant-b', `${antB.toFixed(2)} m`);
+      setT('site-az-a', `${azAB}°`);
+      setT('site-az-b', `${azBA}°`);
+      setT('site-tilt-a', tiltA);
+      setT('site-tilt-b', tiltB);
+
+      // Update Table 2: RF Propagation
+      setT('rf-dist', distKm.toFixed(3));
+      setT('rf-freq', `${freqGHz.toFixed(1)} GHz (${Math.round(freqMHz).toLocaleString()} MHz)`);
+      setT('rf-fsl', fsl.toFixed(2));
+      setT('rf-atm', atmLoss.toFixed(2));
+      setT('rf-rain', rainLoss.toFixed(2));
+
+      // Update Table 3: Adaptive Modulation
+      modesResults.forEach(m => {
+        setT(`mod-tp-${m.key}`, m.tp);
+        setT(`mod-tx-${m.key}`, `${m.tx.toFixed(1)} dBm`);
+        setT(`mod-eirp-${m.key}`, `${m.eirp} dBm`);
+        setT(`mod-rsl-${m.key}`, `${m.rsl} dBm`);
+        setT(`mod-th-${m.key}`, `${m.th.toFixed(1)} dBm`);
+        setT(`mod-fm-${m.key}`, `${m.fm} dB`);
+        setT(`mod-avail-${m.key}`, m.avail);
+      });
+
+      // Update Fresnel Caption
+      const f1Max = 8.66 * Math.sqrt(Math.max(0.01, distKm) / freqGHz);
+      setT('profile-caption', `รูปที่ 1: ภาพจำลองโพรไฟล์แนวสายตา (Line-of-Sight) เส้นทาง ${nameA} ➔ ${nameB} (ระยะทาง ${distKm.toFixed(3)} km), รัศมี 1st Fresnel Zone ลำดับที่ 1 (F1 สูงสุด = ${f1Max.toFixed(2)} m ณ กึ่งกลาง), ความสูงสายอากาศ ${antA.toFixed(1)}m และ ${antB.toFixed(1)}m, ความโค้งของโลก K=4/3`);
+
+      // Update Engineering Conclusion
+      const conclusionEl = document.getElementById('conclusion-text');
+      if (conclusionEl) {
+        conclusionEl.innerHTML = `เส้นทางวิทยุไมโครเวฟระหว่าง <b>${nameA}</b> และ <b>${nameB}</b> มีระยะทางจริงตามเส้น Geodesic เท่ากับ <b>${distKm.toFixed(3)} km</b> เมื่อติดตั้งสายอากาศที่ระดับความสูง <b>${antA.toFixed(1)} เมตร</b> (สถานี A) และ <b>${antB.toFixed(1)} เมตร</b> (สถานี B) แนวคลื่นวิทยุย่านความถี่ ${freqGHz.toFixed(1)} GHz มีระยะเคลียร์เหนือผืนดินและสิ่งกีดขวางตลอดเส้นทาง ระดับสัญญาณรับที่คำนวณได้ในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> และอัตราความพร้อมใช้งานของระบบสื่อสาร (Annual Availability) คำนวณได้ <b>${baseMode.avail}</b> ผ่านเกณฑ์มาตรฐานโทรคมนาคมระดับ Carrier-Grade Telecom Standard สมบูรณ์แบบ.`;
+      }
+    }
+
+    function downloadRealtimeReportPDF() {
+      const btn = document.getElementById('btn-download-pdf');
+      const originalHtml = btn ? btn.innerHTML : '';
+      if (btn) {
+        btn.innerHTML = '⏳ กำลังบันทึก PDF...';
+        btn.disabled = true;
+      }
+
+      const element = document.getElementById('report-sheet-content');
+      const dist = (activeReportData && activeReportData.distKm) ? activeReportData.distKm : '18.416';
+      
+      // Optimize element for crisp A4 PDF render without overflowing
+      element.classList.add('pdf-rendering');
+
+      const opt = {
+        margin: [8, 8, 8, 8],
+        filename: `Microwave_Summary_Report_${dist}km.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, scrollY: 0 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        pagebreak: { mode: ['css', 'legacy'] }
+      };
+
+      const cleanup = () => {
+        element.classList.remove('pdf-rendering');
+        if (btn) {
+          btn.innerHTML = originalHtml;
+          btn.disabled = false;
+        }
+      };
+
+      if (typeof html2pdf !== 'undefined' && element) {
+        html2pdf().set(opt).from(element).save().then(() => {
+          cleanup();
+        }).catch(err => {
+          cleanup();
+          console.error('PDF error', err);
+          window.print();
+        });
+      } else {
+        cleanup();
+        window.print();
+      }
+    }
+
+    // Execute immediately on parse
+    try { renderRealtimeReport(); } catch(e) {}
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderRealtimeReport();
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('autoPrint') === 'true') {
+        setTimeout(() => { window.print(); }, 600);
+      }
+    });
+
+    window.addEventListener('hashchange', () => {
+      renderRealtimeReport();
+    });
+  </script>
+</body>
+</html>

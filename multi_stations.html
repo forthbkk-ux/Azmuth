@@ -279,7 +279,7 @@
     }
     .master-form-row {
       display: grid;
-      grid-template-columns: 1.4fr 1fr 1fr 0.9fr;
+      grid-template-columns: 1.3fr 1fr 1fr 0.85fr 0.85fr;
       gap: 1rem;
     }
     @media (max-width: 768px) {
@@ -1029,8 +1029,12 @@
           <input type="number" step="0.000001" id="master-lon" class="form-input" value="" placeholder="100.501765" oninput="updateAllCalculations()" />
         </div>
         <div class="form-group">
-          <label>ความสูงเสาแม่ข่าย (Antenna Height - m)</label>
-          <input type="number" step="0.5" id="master-height" class="form-input" value="" placeholder="45" oninput="updateAllCalculations()" />
+          <label>ความสูงเสาแม่ข่าย (Tower Height - m)</label>
+          <input type="number" step="0.5" id="master-tower-height" class="form-input" value="" placeholder="45" oninput="onMasterTowerHeightInput(); updateAllCalculations()" />
+        </div>
+        <div class="form-group">
+          <label>ความสูงสายอากาศแม่ข่าย (Antenna Height - m)</label>
+          <input type="number" step="0.5" id="master-height" class="form-input" value="" placeholder="45" oninput="this.dataset.autoSynced='false'; updateAllCalculations()" />
         </div>
       </div>
     </div>
@@ -1090,14 +1094,15 @@
           <thead>
             <tr>
               <th style="width: 50px; text-align: center;">ลำดับ</th>
-              <th style="min-width: 180px;">ชื่อสถานีวิทยุลูกข่าย</th>
-              <th style="min-width: 110px; text-align: right;">ละติจูด (Lat)</th>
-              <th style="min-width: 110px; text-align: right;">ลองจิจูด (Lon)</th>
+              <th style="min-width: 170px;">ชื่อสถานีวิทยุลูกข่าย</th>
+              <th style="min-width: 105px; text-align: right;">ละติจูด (Lat)</th>
+              <th style="min-width: 105px; text-align: right;">ลองจิจูด (Lon)</th>
               <th style="min-width: 110px; text-align: right;">ความสูงเสา (m)</th>
-              <th style="min-width: 140px; text-align: right;">ระยะทาง (km)</th>
-              <th style="min-width: 170px; text-align: center;">มุมแอซิมัท (ลูกข่าย ➔ แม่ข่าย)</th>
-              <th style="min-width: 90px; text-align: center;">ทิศเข็มทิศ</th>
-              <th style="min-width: 140px; text-align: right;">Back Azimuth (แม่ข่าย ➔ ลูกข่าย)</th>
+              <th style="min-width: 120px; text-align: right;">ความสูงสายอากาศ (m)</th>
+              <th style="min-width: 135px; text-align: right;">ระยะทาง (km)</th>
+              <th style="min-width: 165px; text-align: center;">มุมแอซิมัท (ลูกข่าย ➔ แม่ข่าย)</th>
+              <th style="min-width: 85px; text-align: center;">ทิศเข็มทิศ</th>
+              <th style="min-width: 135px; text-align: right;">Back Azimuth (แม่ข่าย ➔ ลูกข่าย)</th>
               <th style="min-width: 110px; text-align: center;">แผนที่ / ลบ</th>
             </tr>
           </thead>
@@ -1313,11 +1318,12 @@
         <table style="width: 100%; font-size: 0.82rem; border-collapse: collapse;">
           <thead style="background: #f1f5f9; position: sticky; top: 0; z-index: 2;">
             <tr>
-              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); width: 52px; text-align: center;">ลำดับ</th>
+              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); width: 44px; text-align: center;">ลำดับ</th>
               <th style="padding: 6px 8px; border-bottom: 1px solid var(--border);">ชื่อสถานีลูกข่าย</th>
-              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; width: 100px;">ละติจูด (Lat)</th>
-              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; width: 100px;">ลองจิจูด (Lon)</th>
-              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; width: 85px;">เสาสูง (m)</th>
+              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; width: 95px;">ละติจูด (Lat)</th>
+              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; width: 95px;">ลองจิจูด (Lon)</th>
+              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; width: 85px;">ความสูงเสา (m)</th>
+              <th style="padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; width: 85px;">สายอากาศ (m)</th>
             </tr>
           </thead>
           <tbody id="import-preview-tbody">
@@ -1476,14 +1482,26 @@
       }
     }
 
-    function addSubstationRow(name = "", lat = 13.123456, lon = 100.111111, height = 15) {
+    function onMasterTowerHeightInput() {
+      const towerVal = document.getElementById('master-tower-height').value;
+      const antInput = document.getElementById('master-height');
+      if (antInput && (antInput.value === '' || antInput.dataset.autoSynced === 'true')) {
+        antInput.value = towerVal;
+        antInput.dataset.autoSynced = 'true';
+      }
+    }
+
+    function addSubstationRow(name = "", lat = 13.123456, lon = 100.111111, towerHeight = 15, height = 15) {
       const idx = substations.length + 1;
+      const tH = parseFloat(towerHeight) || parseFloat(height) || 15;
+      const aH = parseFloat(height) || tH || 15;
       substations.push({
         id: Date.now() + Math.random(),
         name: name || `สถานีลูกข่าย ${idx}`,
         lat: parseFloat(lat),
         lon: parseFloat(lon),
-        height: parseFloat(height) || 15
+        towerHeight: tH,
+        height: aH
       });
       renderTable();
       updateMapElements();
@@ -1501,6 +1519,7 @@
         document.getElementById('master-name').value = '';
         document.getElementById('master-lat').value = '';
         document.getElementById('master-lon').value = '';
+        document.getElementById('master-tower-height').value = '';
         document.getElementById('master-height').value = '';
         renderTable();
         updateMapElements();
@@ -1513,19 +1532,21 @@
       const mNameInput = document.getElementById('master-name');
       const mLatInput = document.getElementById('master-lat');
       const mLonInput = document.getElementById('master-lon');
+      const mTowerInput = document.getElementById('master-tower-height');
       const mHeightInput = document.getElementById('master-height');
 
       if (!mNameInput.value) mNameInput.value = "ศูนย์แม่ข่ายกรุงเทพฯ";
       if (!mLatInput.value) mLatInput.value = "13.756331";
       if (!mLonInput.value) mLonInput.value = "100.501765";
+      if (mTowerInput && !mTowerInput.value) mTowerInput.value = "45";
       if (!mHeightInput.value) mHeightInput.value = "45";
 
       substations = [
-        { id: 1, name: "สถานีลูกข่าย 1 (นนทบุรี)", lat: 13.862145, lon: 100.513254, height: 18 },
-        { id: 2, name: "สถานีลูกข่าย 2 (สมุทรปราการ)", lat: 13.599142, lon: 100.596752, height: 15 },
-        { id: 3, name: "สถานีลูกข่าย 3 (ปทุมธานี)", lat: 14.020839, lon: 100.528341, height: 20 },
-        { id: 4, name: "สถานีลูกข่าย 4 (นครปฐม)", lat: 13.819612, lon: 100.060124, height: 25 },
-        { id: 5, name: "สถานีลูกข่าย 5 (ชลบุรี)", lat: 13.361143, lon: 100.984672, height: 30 }
+        { id: 1, name: "สถานีลูกข่าย 1 (นนทบุรี)", lat: 13.862145, lon: 100.513254, towerHeight: 18, height: 18 },
+        { id: 2, name: "สถานีลูกข่าย 2 (สมุทรปราการ)", lat: 13.599142, lon: 100.596752, towerHeight: 15, height: 15 },
+        { id: 3, name: "สถานีลูกข่าย 3 (ปทุมธานี)", lat: 14.020839, lon: 100.528341, towerHeight: 20, height: 20 },
+        { id: 4, name: "สถานีลูกข่าย 4 (นครปฐม)", lat: 13.819612, lon: 100.060124, towerHeight: 25, height: 25 },
+        { id: 5, name: "สถานีลูกข่าย 5 (ชลบุรี)", lat: 13.361143, lon: 100.984672, towerHeight: 30, height: 30 }
       ];
       renderTable();
       updateMapElements();
@@ -1551,8 +1572,14 @@
     function onRowChange(id, field, value) {
       const s = substations.find(x => x.id === id);
       if (s) {
-        if (field === 'lat' || field === 'lon' || field === 'height') {
+        if (field === 'lat' || field === 'lon' || field === 'height' || field === 'towerHeight') {
           s[field] = parseFloat(value) || 0;
+          if (field === 'towerHeight' && (s.height === undefined || s._autoSyncedHeight)) {
+            s.height = s.towerHeight;
+            s._autoSyncedHeight = true;
+          } else if (field === 'height') {
+            s._autoSyncedHeight = false;
+          }
         } else {
           s[field] = value;
         }
@@ -1570,7 +1597,8 @@
       const mLonRaw = document.getElementById('master-lon').value;
       const mLat = parseFloat(mLatRaw) || 0;
       const mLon = parseFloat(mLonRaw) || 0;
-      const mHeight = parseFloat(document.getElementById('master-height')?.value) || 45;
+      const mTower = parseFloat(document.getElementById('master-tower-height')?.value) || parseFloat(document.getElementById('master-height')?.value) || 45;
+      const mHeight = parseFloat(document.getElementById('master-height')?.value) || mTower || 45;
       const mName = document.getElementById('master-name').value.trim() || "-";
       document.getElementById('kpi-master-name').innerText = mName;
 
@@ -1580,7 +1608,7 @@
       if (substations.length === 0) {
         const emptyTr = document.createElement('tr');
         emptyTr.innerHTML = `
-          <td colspan="10" style="text-align: center; padding: 40px 16px; color: #94a3b8;">
+          <td colspan="11" style="text-align: center; padding: 40px 16px; color: #94a3b8;">
             <div style="font-size: 2.2rem; margin-bottom: 8px;">📡</div>
             <div style="font-weight: 600; color: #64748b; font-size: 1rem;">ยังไม่มีข้อมูลสถานีลูกข่าย</div>
             <div style="font-size: 0.84rem; margin-top: 5px; color: #94a3b8;">
@@ -1607,7 +1635,8 @@
         const azSubToMaster = calcAzimuth(s.lat, s.lon, mLat, mLon);
         const backAzMasterToSub = (azSubToMaster + 180.0) % 360.0;
         const dir = getCompassDirection(azSubToMaster);
-        const subH = s.height !== undefined ? s.height : 15;
+        const subTower = s.towerHeight !== undefined ? s.towerHeight : (s.height !== undefined ? s.height : 15);
+        const subH = s.height !== undefined ? s.height : subTower;
 
         totalDist += distKm;
         if (distKm > maxDist) maxDist = distKm;
@@ -1627,7 +1656,10 @@
             <input type="number" step="0.000001" class="coord-input" value="${s.lon.toFixed(6)}" onchange="onRowChange(${s.id}, 'lon', this.value)" />
           </td>
           <td style="text-align: right; white-space: nowrap;">
-            <input type="number" step="0.5" class="coord-input" style="width: 65px;" value="${subH}" onchange="onRowChange(${s.id}, 'height', this.value)" /> <small style="color:#64748b;">m</small>
+            <input type="number" step="0.5" class="coord-input" style="width: 58px;" value="${subTower}" onchange="onRowChange(${s.id}, 'towerHeight', this.value)" /> <small style="color:#64748b;">m</small>
+          </td>
+          <td style="text-align: right; white-space: nowrap;">
+            <input type="number" step="0.5" class="coord-input" style="width: 58px;" value="${subH}" onchange="onRowChange(${s.id}, 'height', this.value)" /> <small style="color:#64748b;">m</small>
           </td>
           <td style="text-align: right;">
             <span class="badge-dist">${distKm.toFixed(3)}</span> <small style="color:#64748b;">km</small>
@@ -1692,6 +1724,7 @@
         iconAnchor: [17, 17]
       });
 
+      const mTower = parseFloat(document.getElementById('master-tower-height')?.value) || 45;
       const mHeight = parseFloat(document.getElementById('master-height')?.value) || 45;
 
       if (!masterMarker) {
@@ -1700,7 +1733,7 @@
         masterMarker.setLatLng([mLat, mLon]);
         if (!map.hasLayer(masterMarker)) masterMarker.addTo(map);
       }
-      masterMarker.bindPopup(`<b>🗼 ${mName} (สถานีแม่ข่าย)</b><br>Lat: ${mLat.toFixed(6)}°<br>Lon: ${mLon.toFixed(6)}°<br>ความสูงเสาอากาศ: <b>${mHeight} เมตร</b>`);
+      masterMarker.bindPopup(`<b>🗼 ${mName} (สถานีแม่ข่าย)</b><br>Lat: ${mLat.toFixed(6)}°<br>Lon: ${mLon.toFixed(6)}°<br>ความสูงเสา: <b>${mTower} เมตร</b> | ความสูงสายอากาศ: <b>${mHeight} เมตร</b>`);
 
       // 3. Add substation markers and hub-and-spoke lines
       substations.forEach((s, idx) => {
@@ -1718,16 +1751,18 @@
         const dist = calcDistance(s.lat, s.lon, mLat, mLon);
         const az = calcAzimuth(s.lat, s.lon, mLat, mLon);
         const dir = getCompassDirection(az);
+        const subTower = s.towerHeight !== undefined ? s.towerHeight : (s.height !== undefined ? s.height : 15);
         const subH = s.height !== undefined ? s.height : 15;
         const radioHorizonKm = 4.12 * (Math.sqrt(mHeight) + Math.sqrt(subH));
 
         marker.bindPopup(`
           <b>📡 ${s.name} (ลูกข่ายลำดับที่ ${idx + 1})</b><br>
           พิกัด: ${s.lat.toFixed(6)}°, ${s.lon.toFixed(6)}°<br>
-          ความสูงเสาอากาศ: <b>${subH} เมตร</b> (เสาแม่ข่าย: ${mHeight} ม.)<br>
+          ความสูงเสา: <b>${subTower} เมตร</b> | ความสูงสายอากาศ: <b>${subH} เมตร</b><br>
+          (เสาแม่ข่าย: ${mTower} ม. | สายอากาศแม่ข่าย: ${mHeight} ม.)<br>
           <hr style="margin:5px 0;">
           <b>ระยะทางไปยังแม่ข่าย:</b> ${dist.toFixed(2)} km (${(dist * 1000).toLocaleString()} m)<br>
-          <b>มุมแอซิมัท (หันทิศเสาอากาศ):</b> <span style="color:#1d4ed8; font-weight:bold;">${az.toFixed(2)}° (${dir.abbr})</span><br>
+          <b>มุมแอซิมัท (หันทิศสายอากาศ):</b> <span style="color:#1d4ed8; font-weight:bold;">${az.toFixed(2)}° (${dir.abbr})</span><br>
           <b>ระยะขอบฟ้าสายตาคลื่นวิทยุ (LOS):</b> ~${radioHorizonKm.toFixed(1)} km<br>
           <button class="btn btn-outline" style="margin-top:8px; font-size:0.75rem; padding:4px 10px; width:100%; border-color:#38bdf8; color:#0284c7; font-weight:600; background:#f0f9ff;" onclick="selectElevSubstationById(${s.id})">🏔️ ดูโพรไฟล์ความสูง (Elevation Profile)</button>
         `);
@@ -1753,6 +1788,7 @@
     function exportBatchToExcel() {
       const mLat = parseFloat(document.getElementById('master-lat').value) || 0;
       const mLon = parseFloat(document.getElementById('master-lon').value) || 0;
+      const mTower = parseFloat(document.getElementById('master-tower-height')?.value) || 45;
       const mHeight = parseFloat(document.getElementById('master-height')?.value) || 45;
       const mName = document.getElementById('master-name').value || "สถานีแม่ข่าย";
 
@@ -1783,14 +1819,15 @@
         if (minDist === 999999) minDist = 0;
 
         const summaryRows = [
-          ["รายงานสรุปข่ายวิทยุสื่อสารและทิศทางเสาอากาศ (Radio Network Azimuth & Distance Report)"],
+          ["รายงานสรุปข่ายวิทยุสื่อสารและทิศทางสายอากาศ (Radio Network Azimuth & Distance Report)"],
           ["วันเวลาที่ส่งออกข้อมูล (Export Timestamp)", timeStr],
           [""],
           ["ข้อมูลสถานีแม่ข่าย (Master Station Info)", ""],
           ["ชื่อสถานีแม่ข่าย", mName],
           ["ละติจูดแม่ข่าย (Master Latitude)", parseFloat(mLat.toFixed(6))],
           ["ลองจิจูดแม่ข่าย (Master Longitude)", parseFloat(mLon.toFixed(6))],
-          ["ความสูงเสาอากาศแม่ข่าย (Master Antenna Height)", parseFloat(mHeight.toFixed(1)), "m"],
+          ["ความสูงเสาแม่ข่าย (Master Tower Height)", parseFloat(mTower.toFixed(1)), "m"],
+          ["ความสูงสายอากาศแม่ข่าย (Master Antenna Height)", parseFloat(mHeight.toFixed(1)), "m"],
           [""],
           ["สถิติโครงข่าย (Network KPI Summary)", ""],
           ["จำนวนสถานีวิทยุลูกข่ายทั้งหมด", substations.length],
@@ -1812,9 +1849,11 @@
             "ละติจูดลูกข่าย (Lat)",
             "ลองจิจูดลูกข่าย (Lon)",
             "ความสูงเสาลูกข่าย (m)",
+            "ความสูงสายอากาศลูกข่าย (m)",
             "ความสูงเสาแม่ข่าย (m)",
+            "ความสูงสายอากาศแม่ข่าย (m)",
             "ระยะทางไปยังแม่ข่าย (km)",
-            "มุมแอซิมัท หันทิศเสาอากาศ (°)",
+            "มุมแอซิมัท หันทิศสายอากาศ (°)",
             "Back Azimuth จากแม่ข่าย (°)"
           ]
         ];
@@ -1823,6 +1862,7 @@
           const distKm = calcDistance(s.lat, s.lon, mLat, mLon);
           const az = calcAzimuth(s.lat, s.lon, mLat, mLon);
           const backAz = (az + 180.0) % 360.0;
+          const subTower = s.towerHeight !== undefined ? s.towerHeight : (s.height !== undefined ? s.height : 15);
           const subH = s.height !== undefined ? s.height : 15;
 
           tableRows.push([
@@ -1830,7 +1870,9 @@
             s.name,
             parseFloat(s.lat.toFixed(6)),
             parseFloat(s.lon.toFixed(6)),
+            parseFloat(subTower.toFixed(1)),
             parseFloat(subH.toFixed(1)),
+            parseFloat(mTower.toFixed(1)),
             parseFloat(mHeight.toFixed(1)),
             parseFloat(distKm.toFixed(3)),
             parseFloat(az.toFixed(2)),
@@ -1840,14 +1882,16 @@
 
         const wsTable = XLSX.utils.aoa_to_sheet(tableRows);
         wsTable['!cols'] = [
-          { wch: 8 },   // #
+          { wch: 8 },   // ลำดับ
           { wch: 30 },  // ชื่อสถานีลูกข่าย
           { wch: 16 },  // ละติจูดลูกข่าย
           { wch: 16 },  // ลองจิจูดลูกข่าย
-          { wch: 22 },  // ความสูงเสาลูกข่าย (m)
-          { wch: 22 },  // ความสูงเสาแม่ข่าย (m)
+          { wch: 20 },  // ความสูงเสาลูกข่าย (m)
+          { wch: 22 },  // ความสูงสายอากาศลูกข่าย (m)
+          { wch: 20 },  // ความสูงเสาแม่ข่าย (m)
+          { wch: 22 },  // ความสูงสายอากาศแม่ข่าย (m)
           { wch: 24 },  // ระยะทางไปยังแม่ข่าย (km)
-          { wch: 26 },  // มุมแอซิมัท หันทิศเสาอากาศ (°)
+          { wch: 26 },  // มุมแอซิมัท หันทิศสายอากาศ (°)
           { wch: 26 }   // Back Azimuth จากแม่ข่าย (°)
         ];
         XLSX.utils.book_append_sheet(wb, wsTable, "ตารางคำนวณลูกข่ายทุกลูกข่าย");
@@ -1859,25 +1903,26 @@
         showToast(currentLang === 'th' ? `ส่งออกไฟล์ Excel (${substations.length} สถานี) สำเร็จ!` : `Excel (${substations.length} stations) exported!`);
       } else {
         // Fallback to CSV
-        exportBatchToCsvFallback(mName, mLat, mLon, mHeight, timeStr);
+        exportBatchToCsvFallback(mName, mLat, mLon, mTower, mHeight, timeStr);
       }
     }
 
-    function exportBatchToCsvFallback(mName, mLat, mLon, mHeight, timeStr) {
+    function exportBatchToCsvFallback(mName, mLat, mLon, mTower, mHeight, timeStr) {
       let csv = "\uFEFF"; // UTF-8 BOM
-      csv += `"รายงานสรุปข่ายวิทยุสื่อสารและทิศทางเสาอากาศ (Radio Network Azimuth & Distance)"\r\n`;
+      csv += `"รายงานสรุปข่ายวิทยุสื่อสารและทิศทางสายอากาศ (Radio Network Azimuth & Distance)"\r\n`;
       csv += `"วันเวลาที่ส่งออก","${timeStr}"\r\n`;
-      csv += `"สถานีแม่ข่าย","${mName}","Lat ${mLat.toFixed(6)}","Lon ${mLon.toFixed(6)}","ความสูงเสาแม่ข่าย ${mHeight.toFixed(1)} m"\r\n\r\n`;
+      csv += `"สถานีแม่ข่าย","${mName}","Lat ${mLat.toFixed(6)}","Lon ${mLon.toFixed(6)}","ความสูงเสาแม่ข่าย ${mTower.toFixed(1)} m","ความสูงสายอากาศแม่ข่าย ${mHeight.toFixed(1)} m"\r\n\r\n`;
 
-      csv += "ลำดับ,ชื่อสถานีลูกข่าย,ละติจูด,ลองจิจูด,ความสูงเสาลูกข่าย (m),ความสูงเสาแม่ข่าย (m),ระยะทางไปยังแม่ข่าย (km),มุมแอซิมัท หันทิศเสาอากาศ (°),Back Azimuth (°)\r\n";
+      csv += "ลำดับ,ชื่อสถานีลูกข่าย,ละติจูด,ลองจิจูด,ความสูงเสาลูกข่าย (m),ความสูงสายอากาศลูกข่าย (m),ความสูงเสาแม่ข่าย (m),ความสูงสายอากาศแม่ข่าย (m),ระยะทางไปยังแม่ข่าย (km),มุมแอซิมัท หันทิศสายอากาศ (°),Back Azimuth (°)\r\n";
 
       substations.forEach((s, idx) => {
         const distKm = calcDistance(s.lat, s.lon, mLat, mLon);
         const az = calcAzimuth(s.lat, s.lon, mLat, mLon);
         const backAz = (az + 180.0) % 360.0;
+        const subTower = s.towerHeight !== undefined ? s.towerHeight : (s.height !== undefined ? s.height : 15);
         const subH = s.height !== undefined ? s.height : 15;
 
-        csv += `"${idx + 1}","${s.name}","${s.lat.toFixed(6)}","${s.lon.toFixed(6)}","${subH.toFixed(1)}","${mHeight.toFixed(1)}","${distKm.toFixed(3)}","${az.toFixed(2)}","${backAz.toFixed(2)}"\r\n`;
+        csv += `"${idx + 1}","${s.name}","${s.lat.toFixed(6)}","${s.lon.toFixed(6)}","${subTower.toFixed(1)}","${subH.toFixed(1)}","${mTower.toFixed(1)}","${mHeight.toFixed(1)}","${distKm.toFixed(3)}","${az.toFixed(2)}","${backAz.toFixed(2)}"\r\n`;
       });
 
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -1923,7 +1968,24 @@
 
         // Split by tab, comma, or semicolon
         const parts = clean.split(/[\t,;]+/).map(p => p.trim());
-        if (parts.length >= 4) {
+        if (parts.length >= 5) {
+          const name = parts[0];
+          const lat = parseFloat(parts[1]);
+          const lon = parseFloat(parts[2]);
+          const towerHeight = parseFloat(parts[3]) || 15;
+          const height = parseFloat(parts[4]) || towerHeight;
+          if (!isNaN(lat) && !isNaN(lon)) {
+            substations.push({
+              id: Date.now() + Math.random(),
+              name: name,
+              lat: lat,
+              lon: lon,
+              towerHeight: towerHeight,
+              height: height
+            });
+            count++;
+          }
+        } else if (parts.length === 4) {
           const name = parts[0];
           const lat = parseFloat(parts[1]);
           const lon = parseFloat(parts[2]);
@@ -1934,6 +1996,7 @@
               name: name,
               lat: lat,
               lon: lon,
+              towerHeight: height,
               height: height
             });
             count++;
@@ -1948,6 +2011,7 @@
               name: name,
               lat: lat,
               lon: lon,
+              towerHeight: 15,
               height: 15
             });
             count++;
@@ -1963,6 +2027,7 @@
               name: `สถานีลูกข่าย ${next}`,
               lat: lat,
               lon: lon,
+              towerHeight: 15,
               height: 15
             });
             count++;
@@ -2007,17 +2072,17 @@
       // Sheet 1: Template Data
       const templateRows = [
         ["แบบฟอร์มนำเข้าพิกัดข่ายวิทยุสื่อสาร (Radio Network Coordinates Template)"],
-        ["คำแนะนำ: สามารถแก้ไขชื่อและพิกัดทศนิยม 6 ตำแหน่ง พร้อมระบุความสูงเสาอากาศ (เมตร) ได้ตามต้องการ แล้วนำไฟล์นี้กลับมาอัปโหลดที่ระบบ"],
+        ["คำแนะนำ: สามารถแก้ไขชื่อและพิกัดทศนิยม 6 ตำแหน่ง พร้อมระบุความสูงเสา และความสูงสายอากาศ (เมตร) ได้ตามต้องการ แล้วนำไฟล์นี้กลับมาอัปโหลดที่ระบบ"],
         [""],
-        ["ประเภทสถานี (Type)", "ชื่อสถานี (Station Name)", "ละติจูด (Latitude - Lat)", "ลองจิจูด (Longitude - Lon)", "ความสูงเสาอากาศ (Antenna Height - m)", "หมายเหตุ (Remarks)"],
-        ["สถานีแม่ข่าย", "ศูนย์แม่ข่ายกรุงเทพฯ (BKK Base Station)", 13.756331, 100.501765, 45, "พิกัดศูนย์กลางหลัก (Master)"],
-        ["สถานีลูกข่าย", "สถานีลูกข่าย 1 (นนทบุรี)", 13.862145, 100.513254, 18, "จุดลูกข่าย 1"],
-        ["สถานีลูกข่าย", "สถานีลูกข่าย 2 (สมุทรปราการ)", 13.599142, 100.596752, 15, "จุดลูกข่าย 2"],
-        ["สถานีลูกข่าย", "สถานีลูกข่าย 3 (ปทุมธานี)", 14.020839, 100.528341, 20, "จุดลูกข่าย 3"],
-        ["สถานีลูกข่าย", "สถานีลูกข่าย 4 (นครปฐม)", 13.819612, 100.060124, 25, "จุดลูกข่าย 4"],
-        ["สถานีลูกข่าย", "สถานีลูกข่าย 5 (ชลบุรี)", 13.361143, 100.984672, 30, "จุดลูกข่าย 5"],
-        ["สถานีลูกข่าย", "สถานีลูกข่าย 6 (ฉะเชิงเทรา)", 13.690419, 101.077960, 20, "จุดลูกข่าย 6"],
-        ["สถานีลูกข่าย", "สถานีลูกข่าย 7 (พระนครศรีอยุธยา)", 14.353211, 100.568456, 18, "จุดลูกข่าย 7"]
+        ["ประเภทสถานี (Type)", "ชื่อสถานี (Station Name)", "ละติจูด (Latitude - Lat)", "ลองจิจูด (Longitude - Lon)", "ความสูงเสา (Tower Height - m)", "ความสูงสายอากาศ (Antenna Height - m)", "หมายเหตุ (Remarks)"],
+        ["สถานีแม่ข่าย", "ศูนย์แม่ข่ายกรุงเทพฯ (BKK Base Station)", 13.756331, 100.501765, 45, 45, "พิกัดศูนย์กลางหลัก (Master)"],
+        ["สถานีลูกข่าย", "สถานีลูกข่าย 1 (นนทบุรี)", 13.862145, 100.513254, 18, 18, "จุดลูกข่าย 1"],
+        ["สถานีลูกข่าย", "สถานีลูกข่าย 2 (สมุทรปราการ)", 13.599142, 100.596752, 15, 15, "จุดลูกข่าย 2"],
+        ["สถานีลูกข่าย", "สถานีลูกข่าย 3 (ปทุมธานี)", 14.020839, 100.528341, 20, 20, "จุดลูกข่าย 3"],
+        ["สถานีลูกข่าย", "สถานีลูกข่าย 4 (นครปฐม)", 13.819612, 100.060124, 25, 25, "จุดลูกข่าย 4"],
+        ["สถานีลูกข่าย", "สถานีลูกข่าย 5 (ชลบุรี)", 13.361143, 100.984672, 30, 30, "จุดลูกข่าย 5"],
+        ["สถานีลูกข่าย", "สถานีลูกข่าย 6 (ฉะเชิงเทรา)", 13.690419, 101.077960, 20, 20, "จุดลูกข่าย 6"],
+        ["สถานีลูกข่าย", "สถานีลูกข่าย 7 (พระนครศรีอยุธยา)", 14.353211, 100.568456, 18, 18, "จุดลูกข่าย 7"]
       ];
 
       const wsTemplate = XLSX.utils.aoa_to_sheet(templateRows);
@@ -2026,6 +2091,7 @@
         { wch: 38 },
         { wch: 24 },
         { wch: 24 },
+        { wch: 26 },
         { wch: 34 },
         { wch: 30 }
       ];
@@ -2040,8 +2106,9 @@
         ["2. ชื่อสถานี (Station Name)", "ตั้งชื่อสถานี เช่น 'ศูนย์สื่อสารหลัก', 'สถานีลูกข่าย 1 นนทบุรี'"],
         ["3. ละติจูด (Latitude - Lat)", "พิกัดละติจูด ทศนิยม 6 ตำแหน่ง เช่น 13.756331 (ค่าระหว่าง -90 ถึง 90)"],
         ["4. ลองจิจูด (Longitude - Lon)", "พิกัดลองจิจูด ทศนิยม 6 ตำแหน่ง เช่น 100.501765 (ค่าระหว่าง -180 ถึง 180)"],
-        ["5. ความสูงเสาอากาศ (Antenna Height - m)", "ความสูงของเสาอากาศในหน่วยเมตร (m) เช่น 45, 30, 15"],
-        ["6. วิธีนำเข้าไฟล์", "เมื่อกรอกข้อมูลเสร็จแล้ว ให้บันทึกไฟล์ (Save) แล้วคลิกปุ่ม 'นำเข้าไฟล์ Excel' หรือลากไฟล์มาวางบนหน้าเว็บได้ทันที"]
+        ["5. ความสูงเสา (Tower Height - m)", "ความสูงโครงสร้างเสาสื่อสารในหน่วยเมตร (m) เช่น 45, 30, 18"],
+        ["6. ความสูงสายอากาศ (Antenna Height - m)", "ความสูงตำแหน่งติดตั้งสายอากาศในหน่วยเมตร (m) เช่น 45, 30, 18 (หากไม่ระบุ จะใช้ความสูงเท่ากับเสา)"],
+        ["7. วิธีนำเข้าไฟล์", "เมื่อกรอกข้อมูลเสร็จแล้ว ให้บันทึกไฟล์ (Save) แล้วคลิกปุ่ม 'นำเข้าไฟล์ Excel' หรือลากไฟล์มาวางบนหน้าเว็บได้ทันที"]
       ];
       const wsGuide = XLSX.utils.aoa_to_sheet(guideRows);
       wsGuide['!cols'] = [{ wch: 28 }, { wch: 75 }];
@@ -2140,7 +2207,14 @@
               detectedMaster.lon = val;
             }
           }
-          if (col0.includes('ความสูงเสา') || col0.includes('ความสูง') || col0.includes('antenna height') || col0.includes('tower height')) {
+          if (col0.includes('ความสูงเสาแม่ข่าย') || col0.includes('master tower height') || (col0.includes('ความสูงเสา') && !col0.includes('สายอากาศ'))) {
+            const val = parseFloat(col1);
+            if (!isNaN(val) && val > 0) {
+              if (!detectedMaster) detectedMaster = {};
+              detectedMaster.towerHeight = val;
+            }
+          }
+          if (col0.includes('ความสูงสายอากาศแม่ข่าย') || col0.includes('master antenna height') || col0.includes('antenna height') || col0.includes('ความสูง')) {
             const val = parseFloat(col1);
             if (!isNaN(val) && val > 0) {
               if (!detectedMaster) detectedMaster = {};
@@ -2165,7 +2239,7 @@
         if (!rows || rows.length === 0) continue;
 
         // Try header row detection
-        let colType = -1, colName = -1, colLat = -1, colLon = -1, colHeight = -1;
+        let colType = -1, colName = -1, colLat = -1, colLon = -1, colTower = -1, colHeight = -1;
         let headerRowIdx = -1;
 
         for (let i = 0; i < Math.min(rows.length, 10); i++) {
@@ -2178,8 +2252,11 @@
             }
             else if (str.includes('lat') || str.includes('ละติจูด') || str.includes('latitude') || str.includes('ϕ')) colLat = cIdx;
             else if (str.includes('lon') || str.includes('lng') || str.includes('ลองจิจูด') || str.includes('longitude') || str.includes('λ')) colLon = cIdx;
-            else if (str.includes('ความสูง') || str.includes('height') || str.includes('เสา') || str.includes('tower')) {
-              if (colHeight === -1 || str.includes('ลูกข่าย') || str.includes('substation')) colHeight = cIdx;
+            else if (str.includes('ความสูงเสา') || (str.includes('เสา') && !str.includes('สายอากาศ')) || str.includes('tower')) {
+              colTower = cIdx;
+            }
+            else if (str.includes('สายอากาศ') || str.includes('antenna') || str.includes('ความสูง') || str.includes('height')) {
+              colHeight = cIdx;
             }
           });
 
@@ -2199,7 +2276,10 @@
           let nameVal = colName !== -1 ? String(r[colName] || '').trim() : '';
           let latVal = colLat !== -1 ? parseFloat(r[colLat]) : NaN;
           let lonVal = colLon !== -1 ? parseFloat(r[colLon]) : NaN;
+          let towerVal = colTower !== -1 ? parseFloat(r[colTower]) : NaN;
           let heightVal = colHeight !== -1 ? parseFloat(r[colHeight]) : NaN;
+          if (isNaN(towerVal) && !isNaN(heightVal)) towerVal = heightVal;
+          if (isNaN(heightVal) && !isNaN(towerVal)) heightVal = towerVal;
 
           // If no headers matched or invalid coords, auto-detect numeric coords
           if (isNaN(latVal) || isNaN(lonVal)) {
@@ -2238,10 +2318,14 @@
               if (!nameVal && textCols.length > 0) {
                 nameVal = textCols[0].val;
               }
-              if (isNaN(heightVal)) {
-                const remainingNum = numCols.find(nc => nc.idx !== fLatIdx && nc.idx !== fLonIdx && nc.val > 0 && nc.val < 1000);
-                if (remainingNum) {
-                  heightVal = remainingNum.val;
+              if (isNaN(heightVal) && isNaN(towerVal)) {
+                const remainingNums = numCols.filter(nc => nc.idx !== fLatIdx && nc.idx !== fLonIdx && nc.val > 0 && nc.val < 1000);
+                if (remainingNums.length >= 2) {
+                  towerVal = remainingNums[0].val;
+                  heightVal = remainingNums[1].val;
+                } else if (remainingNums.length === 1) {
+                  towerVal = remainingNums[0].val;
+                  heightVal = remainingNums[0].val;
                 }
               }
             }
@@ -2254,19 +2338,24 @@
                              nameVal.toLowerCase().includes('ศูนย์แม่ข่าย');
 
             if (isMaster) {
-              const mHeight = !isNaN(heightVal) && heightVal > 0 ? heightVal : (detectedMaster && detectedMaster.height ? detectedMaster.height : 45);
+              const mTower = !isNaN(towerVal) && towerVal > 0 ? towerVal : (detectedMaster && detectedMaster.towerHeight ? detectedMaster.towerHeight : 45);
+              const mHeight = !isNaN(heightVal) && heightVal > 0 ? heightVal : (detectedMaster && detectedMaster.height ? detectedMaster.height : mTower);
               detectedMaster = {
                 name: nameVal || "ศูนย์แม่ข่าย",
                 lat: parseFloat(latVal.toFixed(6)),
                 lon: parseFloat(lonVal.toFixed(6)),
+                towerHeight: mTower,
                 height: mHeight
               };
             } else {
+              const sTower = !isNaN(towerVal) && towerVal > 0 ? towerVal : 15;
+              const sHeight = !isNaN(heightVal) && heightVal > 0 ? heightVal : sTower;
               detectedSubstations.push({
                 name: nameVal || `สถานีลูกข่าย ${detectedSubstations.length + 1}`,
                 lat: parseFloat(latVal.toFixed(6)),
                 lon: parseFloat(lonVal.toFixed(6)),
-                height: !isNaN(heightVal) && heightVal > 0 ? heightVal : 15
+                towerHeight: sTower,
+                height: sHeight
               });
             }
           }
@@ -2277,6 +2366,9 @@
 
       if (detectedMaster && (detectedMaster.height === undefined || isNaN(detectedMaster.height))) {
         detectedMaster.height = 45;
+      }
+      if (detectedMaster && (detectedMaster.towerHeight === undefined || isNaN(detectedMaster.towerHeight))) {
+        detectedMaster.towerHeight = detectedMaster.height || 45;
       }
 
       return { detectedMaster, detectedSubstations };
@@ -2325,7 +2417,9 @@
         masterBox.style.display = 'block';
         masterBox.style.background = '#fef2f2';
         masterBox.style.borderColor = '#fecaca';
-        masterInfo.innerHTML = `<b>${master.name}</b> (ละติจูด: <code>${master.lat.toFixed(6)}</code>, ลองจิจูด: <code>${master.lon.toFixed(6)}</code>, เสาสูง: <b style="color:#e11d48;">${master.height || 45} ม.</b>)`;
+        const mTower = master.towerHeight || master.height || 45;
+        const mHeight = master.height || 45;
+        masterInfo.innerHTML = `<b>${master.name}</b> (ละติจูด: <code>${master.lat.toFixed(6)}</code>, ลองจิจูด: <code>${master.lon.toFixed(6)}</code>, เสา: <b style="color:#d97706;">${mTower} ม.</b> | สายอากาศ: <b style="color:#e11d48;">${mHeight} ม.</b>)`;
         updateMasterCheckbox.checked = true;
         updateMasterCheckbox.disabled = false;
       } else {
@@ -2342,18 +2436,21 @@
       previewTbody.innerHTML = '';
 
       if (substationsList.length === 0) {
-        previewTbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:12px; color:#94a3b8;">ไม่พบสถานีลูกข่าย (มีเฉพาะสถานีแม่ข่าย)</td></tr>`;
+        previewTbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:12px; color:#94a3b8;">ไม่พบสถานีลูกข่าย (มีเฉพาะสถานีแม่ข่าย)</td></tr>`;
       } else {
         const previewList = substationsList.slice(0, 6);
         previewList.forEach((s, idx) => {
           const tr = document.createElement('tr');
           tr.style.borderBottom = '1px solid #f1f5f9';
+          const sTower = s.towerHeight !== undefined ? s.towerHeight : (s.height !== undefined ? s.height : 15);
+          const sHeight = s.height !== undefined ? s.height : 15;
           tr.innerHTML = `
             <td style="text-align:center; padding:6px 8px; color:#64748b; font-weight:600;">${idx + 1}</td>
             <td style="padding:6px 8px; font-weight:600; color:#1e293b;">${s.name}</td>
             <td style="text-align:right; padding:6px 8px; font-family:var(--font-mono);">${s.lat.toFixed(6)}</td>
             <td style="text-align:right; padding:6px 8px; font-family:var(--font-mono);">${s.lon.toFixed(6)}</td>
-            <td style="text-align:right; padding:6px 8px; font-family:var(--font-mono); color:#0284c7; font-weight:600;">${(s.height !== undefined ? s.height : 15).toFixed(1)} ม.</td>
+            <td style="text-align:right; padding:6px 8px; font-family:var(--font-mono); color:#d97706; font-weight:600;">${sTower.toFixed(1)} ม.</td>
+            <td style="text-align:right; padding:6px 8px; font-family:var(--font-mono); color:#0284c7; font-weight:600;">${sHeight.toFixed(1)} ม.</td>
           `;
           previewTbody.appendChild(tr);
         });
@@ -2361,7 +2458,7 @@
         if (substationsList.length > 6) {
           const trMore = document.createElement('tr');
           trMore.innerHTML = `
-            <td colspan="5" style="text-align:center; padding:6px; color:#64748b; font-style:italic; background:#f8fafc;">
+            <td colspan="6" style="text-align:center; padding:6px; color:#64748b; font-style:italic; background:#f8fafc;">
               ... และอีก ${substationsList.length - 6} สถานี ...
             </td>
           `;
@@ -2390,6 +2487,10 @@
         document.getElementById('master-name').value = detectedMaster.name;
         document.getElementById('master-lat').value = detectedMaster.lat.toFixed(6);
         document.getElementById('master-lon').value = detectedMaster.lon.toFixed(6);
+        if (detectedMaster.towerHeight !== undefined) {
+          const mTowerEl = document.getElementById('master-tower-height');
+          if (mTowerEl) mTowerEl.value = detectedMaster.towerHeight;
+        }
         if (detectedMaster.height !== undefined) {
           document.getElementById('master-height').value = detectedMaster.height;
         }
@@ -2403,12 +2504,15 @@
 
       let addedCount = 0;
       detectedSubstations.forEach((s) => {
+        const sTower = s.towerHeight !== undefined ? s.towerHeight : (s.height !== undefined ? s.height : 15);
+        const sHeight = s.height !== undefined ? s.height : 15;
         substations.push({
           id: Date.now() + Math.random(),
           name: s.name,
           lat: s.lat,
           lon: s.lon,
-          height: s.height !== undefined ? s.height : 15
+          towerHeight: sTower,
+          height: sHeight
         });
         addedCount++;
       });
@@ -2574,8 +2678,10 @@
 
       const mLat = parseFloat(document.getElementById('master-lat').value) || 0;
       const mLon = parseFloat(document.getElementById('master-lon').value) || 0;
+      const mTower = parseFloat(document.getElementById('master-tower-height')?.value) || 45;
       const mHeight = parseFloat(document.getElementById('master-height')?.value) || 45;
       const mName = document.getElementById('master-name').value || "ศูนย์แม่ข่าย";
+      const sTower = sub.towerHeight !== undefined ? sub.towerHeight : (sub.height !== undefined ? sub.height : 15);
       const sHeight = sub.height !== undefined ? sub.height : 15;
 
       const overlay = document.getElementById('elev-loading-overlay');
@@ -2697,8 +2803,8 @@
         const avgSlope = (sumSlope / (N - 1 || 1)).toFixed(1);
 
         currentElevProfileData = {
-          subStation: sub,
-          masterStation: { name: mName, lat: mLat, lon: mLon, height: mHeight },
+          subStation: { ...sub, towerHeight: sTower, height: sHeight },
+          masterStation: { name: mName, lat: mLat, lon: mLon, towerHeight: mTower, height: mHeight },
           totalDistKm: totalDistKm,
           points: processedPoints,
           stats: {
@@ -2969,11 +3075,13 @@
       ctx.fill();
 
       // Tower Label Start
+      const subTower = sub.towerHeight !== undefined ? sub.towerHeight : (sub.height || 15);
+      const subAnt = sub.height || 15;
       ctx.fillStyle = '#fef08a';
       ctx.font = 'bold 10.5px Prompt, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(`📡 ${sub.name} (เสา ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`, xStart + 8, yStartTop - 2);
+      ctx.fillText(`📡 ${sub.name} (เสา ${subTower}m | สายอากาศ ${subAnt}m | ระดับน้ำทะเล ${ptStart.elevation}m)`, xStart + 8, yStartTop - 2);
 
       // Tower End (Master Station)
       const xEnd = xCoord(totalD);
@@ -2993,11 +3101,13 @@
       ctx.fill();
 
       // Tower Label End
+      const masterTower = master.towerHeight !== undefined ? master.towerHeight : (master.height || 45);
+      const masterAnt = master.height || 45;
       ctx.fillStyle = '#fca5a5';
       ctx.font = 'bold 10.5px Prompt, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
-      ctx.fillText(`🗼 ${master.name} (เสา ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`, xEnd - 8, yEndTop - 2);
+      ctx.fillText(`🗼 ${master.name} (เสา ${masterTower}m | สายอากาศ ${masterAnt}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`, xEnd - 8, yEndTop - 2);
 
       // 5. Draw Obstruction Warning Pin if path is obstructed
       if (data.stats.isObstructed && data.stats.obstructionIdx >= 0) {
@@ -3589,37 +3699,38 @@
       // 4. 3D Antenna Towers (Origin & Destination)
       beaconMaterial = new THREE.MeshBasicMaterial({ color: 0xff2222, transparent: true, opacity: 1.0 });
 
-      function createLatticeTower(xPos, baseGroundY, towerHeightM, towerColorHex, nameLabel, subInfo) {
+      function createLatticeTower(xPos, baseGroundY, towerHeightM, antennaHeightM, towerColorHex, nameLabel, subInfo) {
         const towerGroup = new THREE.Group();
         towerGroup.position.set(xPos, baseGroundY, 0);
 
-        const hUnits = Math.max(3.0, towerHeightM * S_Y);
+        const hTowerUnits = Math.max(2.5, (towerHeightM || antennaHeightM) * S_Y);
+        const hAntUnits = Math.max(2.5, antennaHeightM * S_Y);
         const wBase = 2.4;
 
         // 4 Corner Steel Legs
-        const legGeo = new THREE.CylinderGeometry(0.12, 0.16, hUnits, 6);
+        const legGeo = new THREE.CylinderGeometry(0.12, 0.16, hTowerUnits, 6);
         const legMat = new THREE.MeshStandardMaterial({ color: towerColorHex, metalness: 0.6, roughness: 0.4 });
 
         const leg1 = new THREE.Mesh(legGeo, legMat);
-        leg1.position.set(-wBase / 2, hUnits / 2, -wBase / 2);
+        leg1.position.set(-wBase / 2, hTowerUnits / 2, -wBase / 2);
         towerGroup.add(leg1);
 
         const leg2 = new THREE.Mesh(legGeo, legMat);
-        leg2.position.set(wBase / 2, hUnits / 2, -wBase / 2);
+        leg2.position.set(wBase / 2, hTowerUnits / 2, -wBase / 2);
         towerGroup.add(leg2);
 
         const leg3 = new THREE.Mesh(legGeo, legMat);
-        leg3.position.set(wBase / 2, hUnits / 2, wBase / 2);
+        leg3.position.set(wBase / 2, hTowerUnits / 2, wBase / 2);
         towerGroup.add(leg3);
 
         const leg4 = new THREE.Mesh(legGeo, legMat);
-        leg4.position.set(-wBase / 2, hUnits / 2, wBase / 2);
+        leg4.position.set(-wBase / 2, hTowerUnits / 2, wBase / 2);
         towerGroup.add(leg4);
 
         // Tower Cross Braces
-        const levels = Math.max(3, Math.floor(hUnits / 1.8));
+        const levels = Math.max(3, Math.floor(hTowerUnits / 1.8));
         for (let l = 1; l <= levels; l++) {
-          const ly = (l / levels) * hUnits;
+          const ly = (l / levels) * hTowerUnits;
           const braceGeo = new THREE.BoxGeometry(wBase * 1.05, 0.12, wBase * 1.05);
           const braceMat = new THREE.MeshBasicMaterial({ color: towerColorHex });
           const brace = new THREE.Mesh(braceGeo, braceMat);
@@ -3628,10 +3739,11 @@
         }
 
         // Antenna Mast
+        const topY = Math.max(hTowerUnits, hAntUnits);
         const mastGeo = new THREE.CylinderGeometry(0.15, 0.15, 2.5, 8);
         const mastMat = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8 });
         const mast = new THREE.Mesh(mastGeo, mastMat);
-        mast.position.set(0, hUnits + 1.25, 0);
+        mast.position.set(0, topY + 1.25, 0);
         towerGroup.add(mast);
 
         // Antenna Dish / Reflector
@@ -3639,18 +3751,18 @@
         const dishMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0 });
         const dish = new THREE.Mesh(dishGeo, dishMat);
         dish.rotation.z = Math.PI / 2;
-        dish.position.set(xPos < 0 ? 0.6 : -0.6, hUnits, 0);
+        dish.position.set(xPos < 0 ? 0.6 : -0.6, hAntUnits, 0);
         towerGroup.add(dish);
 
         // Flashing Obstruction Beacon Light
         const beaconGeo = new THREE.SphereGeometry(0.4, 12, 12);
         const beaconMesh = new THREE.Mesh(beaconGeo, beaconMaterial);
-        beaconMesh.position.set(0, hUnits + 2.6, 0);
+        beaconMesh.position.set(0, topY + 2.6, 0);
         towerGroup.add(beaconMesh);
 
         // 3D Sprite Label
-        const sprite = createTextSprite(`${nameLabel}\n(เสา ${towerHeightM}m | ผืนดิน ${subInfo}m)`);
-        sprite.position.set(0, hUnits + 5.5, 0);
+        const sprite = createTextSprite(`${nameLabel}\n(เสา ${towerHeightM}m | สายอากาศ ${antennaHeightM}m | ดิน ${subInfo}m)`);
+        sprite.position.set(0, topY + 5.5, 0);
         towerGroup.add(sprite);
 
         threeDynamicGroup.add(towerGroup);
@@ -3659,8 +3771,11 @@
       const gY_start = points[0].effectiveGround * S_Y - baseYOffset;
       const gY_end = points[N - 1].effectiveGround * S_Y - baseYOffset;
 
-      createLatticeTower(-L_X / 2, gY_start, sHeight, 0xfbbf24, `📡 ${sub.name}`, points[0].elevation);
-      createLatticeTower(L_X / 2, gY_end, mHeight, 0xf87171, `🗼 ${master.name}`, points[N - 1].elevation);
+      const subTowerM = sub.towerHeight !== undefined ? sub.towerHeight : sHeight;
+      const masterTowerM = master.towerHeight !== undefined ? master.towerHeight : mHeight;
+
+      createLatticeTower(-L_X / 2, gY_start, subTowerM, sHeight, 0xfbbf24, `📡 ${sub.name}`, points[0].elevation);
+      createLatticeTower(L_X / 2, gY_end, masterTowerM, mHeight, 0xf87171, `🗼 ${master.name}`, points[N - 1].elevation);
 
       // 5. 3D Obstruction Pin & Warning Marker
       const obsLegend = document.getElementById('three-obstruction-legend');
