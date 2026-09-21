@@ -1,0 +1,3312 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Azimuth Calculator | Azimuth & Google Maps</title>
+  <meta name="description" content="คำนวณมุมแอซิมัท (Azimuth) และระยะทางระหว่างพิกัดละติจูด-ลองจิจูด ทศนิยม 6 ตำแหน่ง พร้อมเข็มทิศ แผนที่ Google Maps ขนาดใหญ่ และขั้นตอนการคำนวณอย่างละเอียด" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS for Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --accent: #7c3aed;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --border-focus: #3b82f6;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 18px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.07);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.08);
+      --font-main: 'Prompt', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-main);
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      box-shadow: var(--shadow-sm);
+    }
+    .header-container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0.85rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      text-decoration: none;
+      color: var(--text-main);
+    }
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
+    }
+    .brand-title {
+      font-weight: 700;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: block;
+      line-height: 1.1;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .lang-toggle {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 3px;
+      display: flex;
+      gap: 2px;
+    }
+    .lang-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+    .lang-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1320px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 4rem;
+      flex: 1;
+    }
+
+    /* Hero Banner */
+    .hero {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 14px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    .hero h1 {
+      font-size: 2.1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 0.3rem;
+      letter-spacing: -0.025em;
+    }
+    .hero p {
+      font-size: 0.98rem;
+      color: var(--text-muted);
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .precision-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+      padding: 5px 14px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-top: 0.4rem;
+    }
+
+    /* Preset Buttons */
+    .presets-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 1rem 0 1.5rem;
+    }
+    .preset-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-right: 0.25rem;
+    }
+    .preset-chip {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 5px 13px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-main);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .preset-chip:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-1px);
+    }
+    .preset-chip.highlight {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      font-weight: 600;
+    }
+    .preset-chip.geo-btn {
+      color: var(--accent);
+      border-color: #ddd6fe;
+      background: #f5f3ff;
+    }
+    .preset-chip.geo-btn:hover {
+      background: #ede9fe;
+    }
+
+    /* Upper Grid: Inputs (Left) & Results/Compass (Right) */
+    .top-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    @media (min-width: 1024px) {
+      .top-grid {
+        grid-template-columns: 500px 1fr;
+        align-items: stretch;
+      }
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #ffffff;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-body {
+      padding: 1.25rem;
+      flex: 1;
+    }
+
+    /* Point Inputs */
+    .point-box {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.1rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .point-box.point-a {
+      border-left: 5px solid #10b981;
+    }
+    .point-box.point-b {
+      border-left: 5px solid #ef4444;
+    }
+    .point-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .point-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .point-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
+    .point-a .point-badge { background: #10b981; }
+    .point-b .point-badge { background: #ef4444; }
+
+    .input-mode-toggle {
+      font-size: 0.78rem;
+      color: var(--primary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-decoration: underline;
+      font-weight: 500;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    @media (min-width: 480px) {
+      .form-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .form-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrapper input {
+      width: 100%;
+      padding: 9px 12px;
+      padding-right: 32px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-family: var(--font-mono);
+      background: white;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .input-wrapper input:focus {
+      outline: none;
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .input-unit {
+      position: absolute;
+      right: 10px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-family: var(--font-mono);
+      pointer-events: none;
+    }
+
+    /* DMS Inputs */
+    .dms-container {
+      display: none;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 6px;
+      align-items: center;
+    }
+    .dms-container.active {
+      display: grid;
+    }
+    .dms-container input {
+      width: 100%;
+      padding: 7px 6px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .dms-select {
+      padding: 7px 8px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: white;
+    }
+
+    /* Controls Bar */
+    .calc-controls {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 0.75rem;
+    }
+    .btn {
+      flex: 1;
+      padding: 10px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+      font-family: var(--font-main);
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+    .btn-outline {
+      background: white;
+      border-color: var(--border);
+      color: var(--text-main);
+    }
+    .btn-outline:hover {
+      background: #f1f5f9;
+    }
+    .btn-excel {
+      background: #107c41;
+      color: #ffffff;
+      border: 1px solid #0e6b37;
+    }
+    .btn-excel:hover {
+      background: #0d6534;
+      box-shadow: 0 4px 10px -2px rgba(16, 124, 65, 0.35);
+    }
+    .btn-excel-outline {
+      background: #f0fdf4;
+      color: #107c41;
+      border: 1px solid #16a34a;
+      border-radius: var(--radius-sm);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .btn-excel-outline:hover {
+      background: #107c41;
+      color: white;
+    }
+
+    /* Right Column Stack: Results & Compass Side-by-Side */
+    .results-compass-container {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.25rem;
+    }
+    @media (min-width: 640px) {
+      .results-compass-container {
+        grid-template-columns: 1fr 240px;
+      }
+    }
+
+    /* Results Hero Card */
+    .results-hero {
+      background: linear-gradient(135deg, #0f172a, #1e293b);
+      color: white;
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .results-hero::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -20%;
+      width: 280px;
+      height: 280px;
+      background: radial-gradient(circle, rgba(59, 130, 246, 0.25), transparent 70%);
+      pointer-events: none;
+    }
+    .res-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      gap: 0.75rem;
+    }
+    .res-heading {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #94a3b8;
+      margin-bottom: 0.2rem;
+    }
+    .res-value-main {
+      font-size: 2.8rem;
+      font-weight: 800;
+      line-height: 1;
+      font-family: var(--font-mono);
+      color: #38bdf8;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+    .res-value-main .unit {
+      font-size: 1.4rem;
+      color: #bae6fd;
+      font-weight: 500;
+    }
+    .res-direction-tag {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      color: #38bdf8;
+      padding: 6px 12px;
+      border-radius: 30px;
+      font-size: 0.95rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .res-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 0.75rem;
+      padding-top: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .res-item-sub {
+      background: rgba(255,255,255,0.05);
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+    }
+    .res-item-sub .lbl {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      margin-bottom: 2px;
+    }
+    .res-item-sub .val {
+      font-size: 1rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: #f8fafc;
+    }
+
+    /* Compass Box */
+    .compass-box {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+    }
+    .compass-title {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .compass-wrapper {
+      position: relative;
+      width: 170px;
+      height: 170px;
+      overflow: hidden;
+      border-radius: 50%;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .compass-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #compass-needle-group {
+      transform-box: view-box;
+      transform-origin: 100px 100px;
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* =========================================================
+       EXPANDED GOOGLE MAP SECTION (ขยายใหญ่เต็มหน้าจอ & สลับโหมด)
+       ========================================================= */
+    .big-map-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 1.5rem;
+    }
+    .big-map-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.85rem;
+    }
+    .big-map-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .map-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    .map-layer-selector {
+      display: flex;
+      gap: 3px;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .map-layer-btn {
+      border: none;
+      background: transparent;
+      padding: 5px 10px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.2s;
+    }
+    .map-layer-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .map-action-btn {
+      padding: 5px 12px;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+      cursor: pointer;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    .map-action-btn:hover {
+      background: #f8fafc;
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .map-action-btn.gmap-btn {
+      background: #ea4335;
+      border-color: #ea4335;
+      color: white;
+    }
+    .map-action-btn.gmap-btn:hover {
+      background: #dc2626;
+    }
+
+    /* Big Map Height: 520px */
+    #map {
+      width: 100%;
+      height: 520px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      z-index: 10;
+      transition: height 0.3s ease;
+    }
+    #map.fullscreen-mode {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 99999;
+      border-radius: 0;
+      border: none;
+    }
+    .map-footer-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 0.75rem;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      gap: 0.5rem;
+    }
+
+    /* Elevation Profile Card (Google Earth Pro Style) */
+    .elevation-card {
+      background: #0f172a;
+      color: #f1f5f9;
+      border-radius: var(--radius-md);
+      margin-top: 1rem;
+      overflow: hidden;
+      border: 1px solid #334155;
+      position: relative;
+    }
+    .elevation-header {
+      background: #1e293b;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 1px solid #334155;
+    }
+    .elevation-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #f8fafc;
+    }
+    .elevation-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-elev-action {
+      background: #334155;
+      color: #f8fafc;
+      border: 1px solid #475569;
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-elev-action:hover {
+      background: #475569;
+      border-color: #38bdf8;
+      color: #38bdf8;
+    }
+    .los-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+    .los-badge.clear {
+      background: rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      border: 1px solid #059669;
+    }
+    .los-badge.obstructed {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid #dc2626;
+    }
+    .elevation-stats-bar {
+      background: #090d16;
+      padding: 8px 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-size: 0.8rem;
+      border-bottom: 1px solid #1e293b;
+      color: #94a3b8;
+      font-family: var(--font-mono);
+    }
+    .elev-stat-item b {
+      color: #f8fafc;
+    }
+    .elev-chart-wrapper {
+      position: relative;
+      width: 100%;
+      height: 270px;
+      background: #0a0e17;
+      cursor: crosshair;
+      user-select: none;
+    }
+    #elevation-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .elev-tooltip {
+      position: absolute;
+      pointer-events: none;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #38bdf8;
+      color: #f8fafc;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      display: none;
+      z-index: 50;
+      white-space: nowrap;
+      font-family: var(--font-mono);
+      line-height: 1.4;
+      backdrop-filter: blur(4px);
+    }
+    .elev-loading-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 14, 23, 0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 30;
+      backdrop-filter: blur(3px);
+    }
+    .elev-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(56, 189, 248, 0.2);
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: elev-spin 0.8s linear infinite;
+    }
+    @keyframes elev-spin {
+      to { transform: rotate(360deg); }
+    }
+    .elev-hover-pin {
+      filter: drop-shadow(0 2px 6px rgba(220, 38, 38, 0.8));
+    }
+
+    /* Unit Selector */
+    .unit-selector {
+      display: flex;
+      gap: 3px;
+      background: var(--bg);
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    .unit-btn {
+      border: none;
+      background: transparent;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 4px;
+      color: var(--text-muted);
+    }
+    .unit-btn.active {
+      background: white;
+      color: var(--primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    /* =========================================================
+       ACCORDION CARDS (ซ่อน/พับเก็บไว้เป็นระเบียบ)
+       ========================================================= */
+    .accordion-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .accordion-toggle {
+      width: 100%;
+      padding: 1.1rem 1.4rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: none;
+      border: none;
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s;
+    }
+    .accordion-toggle:hover {
+      background: #f8fafc;
+    }
+    .accordion-toggle-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.02rem;
+      color: var(--text-main);
+    }
+    .accordion-badge {
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .accordion-icon {
+      font-size: 1.1rem;
+      transition: transform 0.3s;
+      color: var(--text-muted);
+    }
+    .accordion-body {
+      padding: 0 1.4rem 1.4rem;
+      display: none;
+      border-top: 1px solid var(--border);
+    }
+    .accordion-body.open {
+      display: block;
+      padding-top: 1.25rem;
+    }
+
+    /* Step-by-Step Breakdown items */
+    .step-item {
+      margin-bottom: 1.1rem;
+      padding-bottom: 1.1rem;
+      border-bottom: 1px dashed var(--border);
+    }
+    .step-item:last-child {
+      margin-bottom: 0;
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+    .step-num {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-align: center;
+      line-height: 24px;
+      margin-right: 6px;
+    }
+    .step-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+    }
+    .math-block {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.85rem 1rem;
+      font-family: var(--font-mono);
+      font-size: 0.86rem;
+      margin-top: 0.5rem;
+      overflow-x: auto;
+      color: #1e293b;
+      line-height: 1.55;
+    }
+
+    /* Article inside Accordion */
+    .guide-text h3 {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin: 1.25rem 0 0.4rem;
+    }
+    .guide-text p {
+      color: #334155;
+      margin-bottom: 0.75rem;
+      font-size: 0.93rem;
+    }
+    .guide-text ul {
+      margin-left: 1.5rem;
+      margin-bottom: 1rem;
+      color: #334155;
+      font-size: 0.93rem;
+    }
+    .guide-text li {
+      margin-bottom: 0.35rem;
+    }
+    .formula-highlight {
+      background: #f1f5f9;
+      padding: 0.9rem 1.1rem;
+      border-radius: var(--radius-sm);
+      border-left: 4px solid var(--primary);
+      margin: 0.75rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    /* FAQ Accordion */
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+    }
+    .faq-question {
+      width: 100%;
+      text-align: left;
+      padding: 0.85rem 1.1rem;
+      background: white;
+      border: none;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: var(--font-main);
+    }
+    .faq-question:hover {
+      background: #f8fafc;
+    }
+    .faq-answer {
+      padding: 0 1.1rem 0.85rem;
+      color: #475569;
+      font-size: 0.88rem;
+      display: none;
+      border-top: 1px solid #f1f5f9;
+    }
+    .faq-answer.open {
+      display: block;
+      padding-top: 0.65rem;
+    }
+
+    /* Footer */
+    footer {
+      background: white;
+      border-top: 1px solid var(--border);
+      padding: 2rem 1.5rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Copy Button Tooltip */
+    .copy-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #0f172a;
+      color: white;
+      padding: 10px 18px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      box-shadow: var(--shadow-lg);
+      display: none;
+      align-items: center;
+      gap: 8px;
+      z-index: 99999;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="header-container">
+      <a href="#" class="brand">
+        <div class="brand-icon" title="เสาสื่อสาร (Communication Tower)">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"></path>
+            <path d="M7.8 13.2a6 6 0 0 1 0-8.4"></path>
+            <circle cx="12" cy="9" r="2" fill="currentColor"></circle>
+            <path d="M16.2 4.8a6 6 0 0 1 0 8.4"></path>
+            <path d="M19.1 1.9a14.2 14.2 0 0 1 0 14.2"></path>
+            <path d="M9 22l3-11 3 11"></path>
+            <path d="M9.5 18h5"></path>
+          </svg>
+        </div>
+        <div>
+          <span class="brand-title" data-i18n="header_title">Azimuth</span>
+        </div>
+      </a>
+
+      <div class="header-actions">
+        <a href="multi_stations.html" class="btn" style="background:#1e40af; color:white; padding:7px 14px; border-radius:6px; font-size:0.83rem; text-decoration:none; display:inline-flex; align-items:center; gap:6px; border:1px solid #1d4ed8; font-weight:600;" title="เปิดระบบคำนวณและส่งออก Excel แบบกลุ่มหลายสถานี">
+          📡 <span data-i18n="btn_goto_multi">คำนวณหลายสถานี (Multi-Station) ➔</span>
+        </a>
+        <div class="lang-toggle">
+          <button class="lang-btn active" id="btn-th" onclick="setLanguage('th')">TH</button>
+          <button class="lang-btn" id="btn-en" onclick="setLanguage('en')">EN</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main style="padding-top: 1rem;">
+    <!-- Upper Section: Inputs (Left) & Results/Compass (Right) -->
+    <div class="top-grid">
+      <!-- Left Column: Inputs -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+            <span data-i18n="inputs_title">กำหนดพิกัดตำแหน่ง (Coordinates)</span>
+          </div>
+          <div style="display:flex; gap:6px; align-items:center;">
+            <button class="btn-outline" style="padding: 5px 12px; font-size: 0.82rem; border-radius: 6px; white-space: nowrap; flex-shrink: 0;" onclick="swapPoints()" title="Swap Point A and B">
+              ⇄ <span data-i18n="btn_swap">สลับจุด A ⇄ B</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-body">
+          <!-- Point A -->
+          <div class="point-box point-a">
+            <div class="point-head">
+              <div class="point-title">
+                <span class="point-badge">A</span>
+                <span data-i18n="point_a_title">สถานีวิทยุลูกข่าย</span>
+              </div>
+            </div>
+
+            <!-- Point A Decimal Inputs -->
+            <div id="dd-container-A">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="lat-a">
+                    <span data-i18n="lbl_lat_a">ละติจูด (ϕ₁)</span>
+                    <small style="color:#94a3b8;">[-90° ถึง 90°]</small>
+                  </label>
+                  <div class="input-wrapper">
+                    <input type="number" id="lat-a" step="0.000001" value="" placeholder="13.123456" oninput="calculate()" />
+                    <span class="input-unit">°</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="lon-a">
+                    <span data-i18n="lbl_lon_a">ลองจิจูด (λ₁)</span>
+                    <small style="color:#94a3b8;">[-180° ถึง 180°]</small>
+                  </label>
+                  <div class="input-wrapper">
+                    <input type="number" id="lon-a" step="0.000001" value="" placeholder="100.111111" oninput="calculate()" />
+                    <span class="input-unit">°</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row" style="margin-top: 6px;">
+                <div class="form-group">
+                  <label class="form-label" for="height-a">
+                    <span data-i18n="lbl_height_a">ความสูงเสาอากาศลูกข่าย A (Antenna Height)</span>
+                    <small style="color:#94a3b8;">[เมตร]</small>
+                  </label>
+                  <div class="input-wrapper">
+                    <input type="number" id="height-a" step="0.5" value="" placeholder="15" oninput="calculate()" />
+                    <span class="input-unit">m</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Point A DMS Inputs -->
+            <div id="dms-container-A" style="display: none;">
+              <div class="form-row" style="margin-bottom: 6px;">
+                <div class="form-group">
+                  <label class="form-label" data-i18n="lbl_lat_a">ละติจูด (ϕ₁)</label>
+                  <div class="dms-container active">
+                    <input type="number" id="dms-lat-deg-a" placeholder="องศา" oninput="syncDmsToDd('A')" />
+                    <input type="number" id="dms-lat-min-a" placeholder="ลิปดา" oninput="syncDmsToDd('A')" />
+                    <input type="number" id="dms-lat-sec-a" placeholder="ฟิลิปดา" step="0.01" oninput="syncDmsToDd('A')" />
+                    <select class="dms-select" id="dms-lat-dir-a" onchange="syncDmsToDd('A')">
+                      <option value="1">N</option>
+                      <option value="-1">S</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" data-i18n="lbl_lon_a">ลองจิจูด (λ₁)</label>
+                  <div class="dms-container active">
+                    <input type="number" id="dms-lon-deg-a" placeholder="องศา" oninput="syncDmsToDd('A')" />
+                    <input type="number" id="dms-lon-min-a" placeholder="ลิปดา" oninput="syncDmsToDd('A')" />
+                    <input type="number" id="dms-lon-sec-a" placeholder="ฟิลิปดา" step="0.01" oninput="syncDmsToDd('A')" />
+                    <select class="dms-select" id="dms-lon-dir-a" onchange="syncDmsToDd('A')">
+                      <option value="1">E</option>
+                      <option value="-1">W</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Point B -->
+          <div class="point-box point-b">
+            <div class="point-head">
+              <div class="point-title">
+                <span class="point-badge">B</span>
+                <span data-i18n="point_b_title">สถานีแม่ข่าย</span>
+              </div>
+            </div>
+
+            <!-- Point B Decimal Inputs -->
+            <div id="dd-container-B">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="lat-b">
+                    <span data-i18n="lbl_lat_b">ละติจูด (ϕ₂)</span>
+                    <small style="color:#94a3b8;">[-90° ถึง 90°]</small>
+                  </label>
+                  <div class="input-wrapper">
+                    <input type="number" id="lat-b" step="0.000001" value="" placeholder="13.756331" oninput="calculate()" />
+                    <span class="input-unit">°</span>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="lon-b">
+                    <span data-i18n="lbl_lon_b">ลองจิจูด (λ₂)</span>
+                    <small style="color:#94a3b8;">[-180° ถึง 180°]</small>
+                  </label>
+                  <div class="input-wrapper">
+                    <input type="number" id="lon-b" step="0.000001" value="" placeholder="100.501765" oninput="calculate()" />
+                    <span class="input-unit">°</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row" style="margin-top: 6px;">
+                <div class="form-group">
+                  <label class="form-label" for="height-b">
+                    <span data-i18n="lbl_height_b">ความสูงเสาอากาศแม่ข่าย B (Antenna Height)</span>
+                    <small style="color:#94a3b8;">[เมตร]</small>
+                  </label>
+                  <div class="input-wrapper">
+                    <input type="number" id="height-b" step="0.5" value="" placeholder="45" oninput="calculate()" />
+                    <span class="input-unit">m</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Point B DMS Inputs -->
+            <div id="dms-container-B" style="display: none;">
+              <div class="form-row" style="margin-bottom: 6px;">
+                <div class="form-group">
+                  <label class="form-label" data-i18n="lbl_lat_b">ละติจูด (ϕ₂)</label>
+                  <div class="dms-container active">
+                    <input type="number" id="dms-lat-deg-b" placeholder="องศา" oninput="syncDmsToDd('B')" />
+                    <input type="number" id="dms-lat-min-b" placeholder="ลิปดา" oninput="syncDmsToDd('B')" />
+                    <input type="number" id="dms-lat-sec-b" placeholder="ฟิลิปดา" step="0.01" oninput="syncDmsToDd('B')" />
+                    <select class="dms-select" id="dms-lat-dir-b" onchange="syncDmsToDd('B')">
+                      <option value="1">N</option>
+                      <option value="-1">S</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" data-i18n="lbl_lon_b">ลองจิจูด (λ₂)</label>
+                  <div class="dms-container active">
+                    <input type="number" id="dms-lon-deg-b" placeholder="องศา" oninput="syncDmsToDd('B')" />
+                    <input type="number" id="dms-lon-min-b" placeholder="ลิปดา" oninput="syncDmsToDd('B')" />
+                    <input type="number" id="dms-lon-sec-b" placeholder="ฟิลิปดา" step="0.01" oninput="syncDmsToDd('B')" />
+                    <select class="dms-select" id="dms-lon-dir-b" onchange="syncDmsToDd('B')">
+                      <option value="1">E</option>
+                      <option value="-1">W</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Controls -->
+          <div class="calc-controls">
+            <button class="btn btn-outline" onclick="resetCalculator()" style="flex: 1;" title="รีเซ็ตค่ากลับเป็นค่าเริ่มต้น">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+              <span data-i18n="btn_reset">รีเซ็ต</span>
+            </button>
+            <button class="btn btn-primary" onclick="calculate()" style="flex: 1.5;" title="คำนวณมุมแอซิมัทและระยะทาง">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+              <span data-i18n="btn_calculate">คำนวณ (Calculate)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Results & Compass (Side by Side) -->
+      <div class="results-compass-container">
+        <!-- Results Hero Banner -->
+        <div class="results-hero">
+          <div>
+            <div class="res-top">
+              <div>
+                <div class="res-heading">
+                  <span data-i18n="res_azimuth_lbl">มุมแอซิมัท (Azimuth / Bearing)</span>
+                  <span style="font-size: 0.72rem; font-weight: 500; opacity: 0.85; margin-left: 4px;">[ลูกข่าย A ➔ แม่ข่าย B]</span>
+                </div>
+                <div class="res-value-main">
+                  <span id="res-azimuth">--</span>
+                  <span class="unit">°</span>
+                </div>
+              </div>
+              <div style="text-align: right;">
+                <div class="res-direction-tag">
+                  <span id="res-compass-abbr">--</span>
+                  <span id="res-quadrant" style="font-size: 0.8rem; font-weight: normal; opacity: 0.9;">(รอการระบุพิกัด)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sub Results Grid -->
+          <div class="res-grid">
+            <div class="res-item-sub">
+              <div class="lbl">
+                <span data-i18n="res_back_azimuth">Back Azimuth (ย้อนกลับ)</span>
+                <span style="font-size: 0.68rem; opacity: 0.8; margin-left: 2px;">[แม่ข่าย ➔ ลูกข่าย]</span>
+              </div>
+              <div class="val"><span id="res-back-azimuth">--</span>°</div>
+            </div>
+            <div class="res-item-sub">
+              <div class="lbl" data-i18n="res_radians">หน่วยเรเดียน (Radians)</div>
+              <div class="val"><span id="res-radians">--</span> rad</div>
+            </div>
+            <div class="res-item-sub">
+              <div class="lbl" data-i18n="res_distance">ระยะทางผิวโลก (Distance)</div>
+              <div class="val"><span id="res-distance">--</span> <small id="res-dist-unit" style="font-size:0.75rem; font-weight:500;">km</small></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Compass Dial Card -->
+        <div class="compass-box">
+          <div class="compass-title" data-i18n="compass_title">หน้าปัดเข็มทิศ (Compass)</div>
+          <div class="compass-wrapper">
+            <svg class="compass-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="100" r="95" fill="#f8fafc" stroke="#e2e8f0" stroke-width="4"></circle>
+              <circle cx="100" cy="100" r="86" fill="white" stroke="#cbd5e1" stroke-width="1.5"></circle>
+
+              <!-- Ticks -->
+              <g stroke="#94a3b8" stroke-width="1">
+                <line x1="100" y1="14" x2="100" y2="24" stroke="#475569" stroke-width="2.5"></line>
+                <line x1="100" y1="176" x2="100" y2="186" stroke="#475569" stroke-width="2"></line>
+                <line x1="14" y1="100" x2="24" y2="100" stroke="#475569" stroke-width="2"></line>
+                <line x1="176" y1="100" x2="186" y2="100" stroke="#475569" stroke-width="2"></line>
+                
+                <line x1="143" y1="25.5" x2="138" y2="34.1"></line>
+                <line x1="174.5" y1="57" x2="165.9" y2="62"></line>
+                <line x1="174.5" y1="143" x2="165.9" y2="138"></line>
+                <line x1="143" y1="174.5" x2="138" y2="165.9"></line>
+                <line x1="57" y1="174.5" x2="62" y2="165.9"></line>
+                <line x1="25.5" y1="143" x2="34.1" y2="138"></line>
+                <line x1="25.5" y1="57" x2="34.1" y2="62"></line>
+                <line x1="57" y1="25.5" x2="62" y2="34.1"></line>
+              </g>
+
+              <!-- Cardinal Labels -->
+              <text x="100" y="32" font-size="13" font-weight="700" fill="#dc2626" text-anchor="middle">N</text>
+              <text x="172" y="104" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">E</text>
+              <text x="100" y="174" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">S</text>
+              <text x="28" y="104" font-size="12" font-weight="700" fill="#334155" text-anchor="middle">W</text>
+              
+              <!-- Azimuth Angle Arc -->
+              <path id="compass-arc" d="" fill="none" stroke="rgba(37, 99, 235, 0.35)" stroke-width="6"></path>
+
+              <!-- Rotating Needle Group -->
+              <g id="compass-needle-group" transform="rotate(30.93 100 100)">
+                <polygon points="100,28 92,100 108,100" fill="#ef4444" filter="drop-shadow(0 2px 4px rgba(239, 68, 68, 0.4))"></polygon>
+                <polygon points="100,172 92,100 108,100" fill="#334155"></polygon>
+                <circle cx="100" cy="100" r="6" fill="#0f172a"></circle>
+                <circle cx="100" cy="100" r="2.5" fill="white"></circle>
+              </g>
+            </svg>
+          </div>
+          <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 6px; text-align: center;">
+            <span id="compass-caption">ทิศทาง 30.93° จากทิศเหนือจริง</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- =========================================================
+         EXPANDED GOOGLE MAP SECTION (แผนที่ Google Maps ขยายใหญ่)
+         ========================================================= -->
+    <div class="big-map-card">
+      <div class="big-map-header">
+        <div class="big-map-title">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="m4.93 4.93 4.24 4.24"></path><path d="m14.83 9.17 4.24-4.24"></path><path d="m14.83 14.83 4.24 4.24"></path><path d="m9.17 14.83-4.24 4.24"></path></svg>
+          <span data-i18n="map_title_expanded">แผนที่แสดงเส้นทาง Geodesic & Google Maps</span>
+        </div>
+
+        <div class="map-toolbar">
+          <!-- Layer Switcher (Google Satellite / Google Roadmap / CartoDB) -->
+          <div class="map-layer-selector">
+            <button class="map-layer-btn active" id="layer-g-hybrid" onclick="switchMapLayer('g_hybrid')">
+              🛰️ <span data-i18n="layer_sat">Google ดาวเทียม</span>
+            </button>
+            <button class="map-layer-btn" id="layer-g-roads" onclick="switchMapLayer('g_roads')">
+              🗺️ <span data-i18n="layer_roads">Google แผนที่ถนน</span>
+            </button>
+            <button class="map-layer-btn" id="layer-carto" onclick="switchMapLayer('carto')">
+              🌍 <span data-i18n="layer_carto">แผนที่ Carto</span>
+            </button>
+          </div>
+
+          <!-- Unit Selector -->
+          <div class="unit-selector">
+            <button class="unit-btn active" id="unit-km" onclick="setDistanceUnit('km')">km</button>
+            <button class="unit-btn" id="unit-mi" onclick="setDistanceUnit('mi')">mi</button>
+            <button class="unit-btn" id="unit-nmi" onclick="setDistanceUnit('nmi')">nmi</button>
+            <button class="unit-btn" id="unit-m" onclick="setDistanceUnit('m')">m</button>
+          </div>
+
+          <!-- Direct Google Maps Button -->
+          <button class="map-action-btn gmap-btn" onclick="openInGoogleMaps()" title="เปิดเส้นทางนี้ใน Google Maps โดยตรง">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+            <span data-i18n="btn_open_gmaps">เปิดใน Google Maps</span>
+          </button>
+
+          <!-- Fullscreen Toggle Button -->
+          <button class="map-action-btn" onclick="toggleMapFullscreen()" id="btn-fullscreen">
+            ⛶ <span data-i18n="btn_fullscreen">เต็มจอ</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Map Element (Big 520px) -->
+      <div id="map"></div>
+
+      <!-- Elevation Profile & Radio Line-of-Sight Section (Google Earth Pro Style) -->
+      <div class="elevation-card" id="elevation-card">
+        <div class="elevation-header">
+          <div class="elevation-title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.2"><path d="m2 20 7-10 5 6 3-4 5 8H2z"></path></svg>
+            <span data-i18n="elev_title">โพรไฟล์ความสูงภูมิประเทศ & แนวคลื่นวิทยุ (Elevation Profile & Line-of-Sight: A ➔ B)</span>
+          </div>
+          <div class="elevation-controls">
+            <button class="btn-elev-action" onclick="refreshElevationProfile()" title="ดึงข้อมูลความสูงใหม่">
+              🔄 <span data-i18n="elev_refresh">รีเฟรช</span>
+            </button>
+            <div id="elev-los-badge" class="los-badge clear">
+              <span>กำลังวิเคราะห์...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Google Earth Pro Style Stats Bar -->
+        <div class="elevation-stats-bar">
+          <div class="elev-stat-item">Graph: <span>Elev: </span><b id="elev-stat-min">-</b>, <b id="elev-stat-avg">-</b>, <b id="elev-stat-max">-</b> m</div>
+          <div class="elev-stat-item">Range Totals: <span>Distance: </span><b id="elev-stat-dist">-</b> km</div>
+          <div class="elev-stat-item">Elev Gain/Loss: <b id="elev-stat-gain" style="color:#34d399;">-</b> / <b id="elev-stat-loss" style="color:#f87171;">-</b></div>
+          <div class="elev-stat-item">Max Slope: <b id="elev-stat-maxslope">-</b> | Avg Slope: <b id="elev-stat-avgslope">-</b></div>
+          <div class="elev-stat-item">ระดับความสูงน้ำทะเล: <span style="color:#fbbf24;">จุด A <b id="elev-stat-a-msl">-</b> m</span> | <span style="color:#f87171;">จุด B <b id="elev-stat-b-msl">-</b> m</span><span id="elev-stat-cursor-msl" style="display:none; color:#38bdf8; margin-left:6px;"></span></div>
+          <div class="elev-stat-item" style="margin-left:auto; font-size:0.75rem; color:#60a5fa;">
+            📡 Earth Curvature (K=4/3) &bull; DEM (SRTM/Copernicus 90m)
+          </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="elev-chart-wrapper" id="elev-chart-wrapper">
+          <canvas id="elevation-canvas"></canvas>
+          <div id="elev-tooltip" class="elev-tooltip"></div>
+          <div id="elev-loading-overlay" class="elev-loading-overlay" style="display: none;">
+            <div class="elev-spinner"></div>
+            <span style="font-size: 0.85rem; color: #94a3b8; margin-top: 10px;">กำลังดึงข้อมูลความสูงภูมิประเทศจริงตามแนวเส้นทาง...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Toast Notification -->
+  <div class="copy-toast" id="copy-toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+    <span id="toast-text" data-i18n="toast_copied">คัดลอกผลการคำนวณเรียบร้อยแล้ว!</span>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p>Azimuth Calculator & Geodesic Tool &bull; High Precision (6 Decimals) &bull; Google Maps Integration</p>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- SheetJS for Excel (.xlsx) export -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+  <!-- Main Calculator Logic & App Script -->
+  <script>
+    const EARTH_RADIUS_KM = 6371.0;
+
+    const DISTANCE_FACTORS = {
+      km: 1.0,
+      m: 1000.0,
+      mi: 0.62137119,
+      nmi: 0.5399568,
+      ft: 3280.8399
+    };
+
+    let currentDistanceUnit = 'km';
+    let currentCalculatedDistanceKm = 0;
+    let currentLang = 'th';
+
+    // Compass 16 Directions Lookup
+    const COMPASS_POINTS_16 = [
+      { name: "North", th: "เหนือ (N)", abbr: "N", min: 348.75, max: 11.25 },
+      { name: "North-Northeast", th: "เหนือ-ตะวันออกเฉียงเหนือ (NNE)", abbr: "NNE", min: 11.25, max: 33.75 },
+      { name: "Northeast", th: "ตะวันออกเฉียงเหนือ (NE)", abbr: "NE", min: 33.75, max: 56.25 },
+      { name: "East-Northeast", th: "ตะวันออก-ตะวันออกเฉียงเหนือ (ENE)", abbr: "ENE", min: 56.25, max: 78.75 },
+      { name: "East", th: "ตะวันออก (E)", abbr: "E", min: 78.75, max: 101.25 },
+      { name: "East-Southeast", th: "ตะวันออก-ตะวันออกเฉียงใต้ (ESE)", abbr: "ESE", min: 101.25, max: 123.75 },
+      { name: "Southeast", th: "ตะวันออกเฉียงใต้ (SE)", abbr: "SE", min: 123.75, max: 146.25 },
+      { name: "South-Southeast", th: "ใต้-ตะวันออกเฉียงใต้ (SSE)", abbr: "SSE", min: 146.25, max: 168.75 },
+      { name: "South", th: "ใต้ (S)", abbr: "S", min: 168.75, max: 191.25 },
+      { name: "South-Southwest", th: "ใต้-ตะวันตกเฉียงใต้ (SSW)", abbr: "SSW", min: 191.25, max: 213.75 },
+      { name: "Southwest", th: "ตะวันตกเฉียงใต้ (SW)", abbr: "SW", min: 213.75, max: 236.25 },
+      { name: "West-Southwest", th: "ตะวันตก-ตะวันตกเฉียงใต้ (WSW)", abbr: "WSW", min: 236.25, max: 258.75 },
+      { name: "West", th: "ตะวันตก (W)", abbr: "W", min: 258.75, max: 281.25 },
+      { name: "West-Northwest", th: "ตะวันตก-ตะวันตกเฉียงเหนือ (WNW)", abbr: "WNW", min: 281.25, max: 303.75 },
+      { name: "Northwest", th: "ตะวันตกเฉียงเหนือ (NW)", abbr: "NW", min: 303.75, max: 326.25 },
+      { name: "North-Northwest", th: "เหนือ-ตะวันตกเฉียงเหนือ (NNW)", abbr: "NNW", min: 326.25, max: 348.75 }
+    ];
+
+    // Presets database with 6 decimal places
+    const PRESETS = {
+      thai_custom: { latA: 13.123456, lonA: 100.111111, latB: 13.756331, lonB: 100.501765, nameA: "Point A (13.123456, 100.111111)", nameB: "Bangkok" },
+      london_rio: { latA: 51.500000, lonA: 0.000000, latB: -22.970000, lonB: -43.180000, nameA: "London", nameB: "Rio de Janeiro" },
+      bkk_tokyo: { latA: 13.756331, lonA: 100.501765, latB: 35.676192, lonB: 139.650311, nameA: "Bangkok", nameB: "Tokyo" },
+      nyc_paris: { latA: 40.712776, lonA: -74.005974, latB: 48.856614, lonB: 2.352222, nameA: "New York", nameB: "Paris" },
+      mecca: { latB: 21.422487, lonB: 39.826206, nameB: "Mecca (Kaaba)" }
+    };
+
+    // Leaflet map & layer objects
+    let map = null;
+    let markerA = null;
+    let markerB = null;
+    let pathLine = null;
+    let isFullscreen = false;
+
+    // Tile Layers: Google Hybrid, Google Roads, CartoDB
+    let currentTileLayer = null;
+    const tileLayers = {
+      g_hybrid: L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: '&copy; Google Maps'
+      }),
+      g_roads: L.tileLayer('https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: '&copy; Google Maps'
+      }),
+      carto: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        subdomains: 'abcd',
+        attribution: '&copy; CARTO &copy; OpenStreetMap'
+      })
+    };
+
+    // Translations Dictionary
+    const I18N = {
+      th: {
+        header_title: "Azimuth",
+        header_sub: "Azimuth & Google Maps (ทศนิยม 6 ตำแหน่ง)",
+        badge_text: "Navigation & Geodesy Tool",
+        hero_title: "Azimuth Calculator",
+        hero_desc: "คำนวณมุมแอซิมัท (Azimuth / Bearing) จากพิกัดละติจูดและลองจิจูดของจุดเริ่มต้นไปยังจุดปลายทาง พร้อมระยะทาง Great-circle และทิศทางเข็มทิศ",
+        precision_desc: "พิกัดทศนิยม 6 ตำแหน่ง (ความแม่นยำสูงระดับ ~0.1 เมตร / 10 ซม.)",
+        preset_label: "ตัวอย่างพิกัด:",
+        btn_use_location: "ตำแหน่งของฉัน ➔ กะอ์บะฮ์",
+        inputs_title: "กำหนดพิกัดตำแหน่ง (Coordinates)",
+        btn_swap: "สลับจุด A ⇄ B",
+        point_a_title: "สถานีวิทยุลูกข่าย",
+        point_b_title: "สถานีแม่ข่าย",
+        lbl_lat_a: "ละติจูด (ϕ₁)",
+        lbl_lon_a: "ลองจิจูด (λ₁)",
+        lbl_lat_b: "ละติจูด (ϕ₂)",
+        lbl_lon_b: "ลองจิจูด (λ₂)",
+        btn_reset: "รีเซ็ต",
+        btn_calculate: "คำนวณ (Calculate)",
+        res_azimuth_lbl: "มุมแอซิมัท (Azimuth / Bearing)",
+        res_back_azimuth: "Back Azimuth (ย้อนกลับ)",
+        res_radians: "หน่วยเรเดียน (Radians)",
+        res_distance: "ระยะทางผิวโลก (Distance)",
+        compass_title: "หน้าปัดเข็มทิศ (Compass)",
+        map_title_expanded: "แผนที่แสดงเส้นทาง Geodesic & Google Maps",
+        layer_sat: "Google ดาวเทียม",
+        layer_roads: "Google แผนที่ถนน",
+        layer_carto: "แผนที่ Carto",
+        btn_open_gmaps: "เปิดใน Google Maps",
+        btn_fullscreen: "เต็มจอ",
+        map_hint: "💡 คลิกบนแผนที่เพื่อเปลี่ยนพิกัดสถานีแม่ข่าย (Point B) ความละเอียด 6 ตำแหน่งอัตโนมัติ",
+        btn_copy: "คัดลอกผลลัพธ์",
+        badge_click_view: "คลิกเพื่อดู",
+        steps_title: "ขั้นตอนและสูตรการคำนวณอย่างละเอียด (Step-by-step Math)",
+        step1_title: "คำนวณผลต่างของละติจูดและลองจิจูด (Δϕ และ Δλ)",
+        step2_title: "คำนวณตัวแปรเวกเตอร์ทรงกลม x และ y",
+        step3_title: "หามุมแอซิมัทด้วยฟังก์ชัน atan2(x, y)",
+        step4_title: "คำนวณระยะทางผิวโลกด้วย Haversine Formula",
+        art_heading: "คู่มือและหลักการคำนวณมุมแอซิมัท (Azimuth Guide & FAQ)",
+        sec1_title: "1. มุมแอซิมัท (Azimuth) คืออะไร?",
+        sec1_p1: "ตามนิยามมาตรฐานทางภูมิศาสตร์และการทหาร มุมแอซิมัท (Azimuth) คือ มุมในแนวราบที่ทำมุมระหว่างเส้นตรงที่เชื่อมตำแหน่งปัจจุบันของคุณไปยัง ขั้วโลกเหนือจริง (True North) กับเส้นตรงที่เชื่อมตำแหน่งปัจจุบันไปยังจุดหมายปลายทาง โดยมุมแอซิมัทจะวัด เวียนตามเข็มนาฬิกา (Clockwise) เสมอ โดยมีค่าตั้งแต่ 0° ถึง 360°",
+        sec2_title: "2. สูตรการคำนวณมุมแอซิมัทจากละติจูดและลองจิจูด",
+        sec2_p1: "กำหนดให้จุดเริ่มต้นมีพิกัด (ϕ₁, λ₁) และจุดปลายทางมีพิกัด (ϕ₂, λ₂) เมื่อ ϕ คือละติจูด และ λ คือลองจิจูด ในหน่วยเรเดียน:",
+        sec2_p2: "หลังจากได้ค่ามุม θ ในหน่วยเรเดียนแล้ว เราสามารถแปลงเป็นองศาได้โดยคูณด้วย 180/π และหากค่าที่ได้ติดลบ ให้นำไปบวกด้วย 360° เพื่อให้ได้มุมระหว่าง 0° ถึง 360° เสมอ",
+        faq_title: "คำถามที่พบบ่อย (Frequently Asked Questions)",
+        faq1_q: "มุมแอซิมัท แตกต่างจากมุมแบริ่ง (Bearing) อย่างไร?",
+        faq1_a: "ในทางปฏิบัติ คำว่า Azimuth และ Bearing มักถูกใช้แทนกันสำหรับการบอกทิศทางการเดินทางบนพื้นโลก แต่โดยละเอียดแล้ว Azimuth จะวัดตามเข็มนาฬิกาจากทิศเหนือเสมอ 0° ถึง 360° ส่วน Bearing อาจถูกระบุในรูป Quadrant Bearing เช่น N 45° E หรือ S 30° W ได้",
+        faq2_q: "Back Azimuth (มุมแอซิมัทย้อนกลับ) คืออะไร?",
+        faq2_a: "Back Azimuth คือทิศทางตรงกันข้าม (180 องศา) หรือมุมจากจุดปลายทางเล็งกลับมายังจุดเริ่มต้น หากมุมเดิมน้อยกว่า 180° ให้นำไปบวก 180° แต่หากมุมเดิมมากกว่า 180° ให้นำไปลบด้วย 180°",
+        faq3_q: "ทำไมระยะทางจึงใช้สูตร Haversine?",
+        faq3_a: "เนื่องจากผิวโลกมีความโค้งเป็นทรงกลม การลากเส้นตรงแบบ Euclidean บนระนาบแบนจะเกิดความคลาดเคลื่อนสูงมาก สูตร Haversine จึงถูกใช้คำนวณ Great-circle distance ซึ่งเป็นเส้นทางที่สั้นที่สุดบนพื้นผิวทรงกลม",
+        toast_copied: "คัดลอกผลการคำนวณเรียบร้อยแล้ว!",
+        btn_export_excel: "ส่งออก Excel",
+        toast_exported: "ส่งออกไฟล์ Excel (.xlsx) เรียบร้อยแล้ว!",
+        btn_goto_multi: "คำนวณหลายสถานี (Multi-Station) ➔"
+      },
+      en: {
+        header_title: "Azimuth Calculator",
+        header_sub: "Azimuth Calculator & Google Maps (6 Decimals)",
+        badge_text: "Navigation & Geodesy Tool",
+        hero_title: "Azimuth Calculator",
+        hero_desc: "Calculate the azimuth (bearing) and great-circle distance between two points given their latitude and longitude coordinates, complete with interactive compass and map.",
+        precision_desc: "Supports 6 decimal places coordinate precision (~0.1 meter / 10 cm high precision)",
+        preset_label: "Presets:",
+        btn_use_location: "My Location ➔ Mecca",
+        inputs_title: "Coordinates Input",
+        btn_swap: "Swap Point A ⇄ B",
+        point_a_title: "Radio Substation (Point A)",
+        point_b_title: "Master Station (Point B)",
+        lbl_lat_a: "Latitude (ϕ₁)",
+        lbl_lon_a: "Longitude (λ₁)",
+        lbl_lat_b: "Latitude (ϕ₂)",
+        lbl_lon_b: "Longitude (λ₂)",
+        btn_reset: "Reset",
+        btn_calculate: "Calculate",
+        res_azimuth_lbl: "Azimuth Angle (Bearing)",
+        res_back_azimuth: "Back / Reverse Azimuth",
+        res_radians: "Angle in Radians",
+        res_distance: "Great-Circle Distance",
+        compass_title: "Compass Heading",
+        map_title_expanded: "Geodesic Path & Google Maps",
+        layer_sat: "Google Satellite",
+        layer_roads: "Google Roads",
+        layer_carto: "Carto Map",
+        btn_open_gmaps: "Open in Google Maps",
+        btn_fullscreen: "Fullscreen",
+        map_hint: "💡 Click anywhere on the map to set Master Station (Point B) coordinates",
+        btn_copy: "Copy Results",
+        badge_click_view: "Click to view",
+        steps_title: "Step-by-step Mathematical Breakdown",
+        step1_title: "Calculate differences in coordinates (Δϕ and Δλ)",
+        step2_title: "Compute spherical components x and y",
+        step3_title: "Calculate azimuth using atan2(x, y)",
+        step4_title: "Calculate great-circle distance via Haversine formula",
+        art_heading: "Comprehensive Azimuth Guide & Theory",
+        sec1_title: "1. What is an Azimuth?",
+        sec1_p1: "By standard geographic and military definitions, the term azimuth describes the horizontal angle between true north and the line pointing towards the destination point. Azimuth is always measured clockwise from 0° to 360°.",
+        sec2_title: "2. How to calculate azimuth from latitude and longitude",
+        sec2_p1: "Given initial point (ϕ₁, λ₁) and destination point (ϕ₂, λ₂) where ϕ represents latitude and λ represents longitude in radians (positive for North/East, negative for South/West):",
+        sec2_p2: "Once the angle θ is calculated using atan2(x, y) in radians, it is converted to degrees by multiplying by 180/π. If negative, add 360° to obtain a positive bearing between 0° and 360°.",
+        faq_title: "Frequently Asked Questions",
+        faq1_q: "What is the difference between Azimuth and Bearing?",
+        faq1_a: "In practical terms, azimuth and bearing are often used interchangeably. Specifically, azimuth is always measured clockwise from True North (0° to 360°), whereas bearings can be expressed in quadrant notation (such as S 39° W).",
+        faq2_q: "What is a Back Azimuth?",
+        faq2_a: "The back azimuth is the reciprocal direction from the final point back to the starting point. It differs by 180° from the forward azimuth.",
+        faq3_q: "Why use the Haversine formula for distance?",
+        faq3_a: "Because Earth is a spherical body, planar Euclidean formulas cause massive errors over long distances. The Haversine formula computes the true great-circle distance across the spherical earth surface.",
+        toast_copied: "Results copied to clipboard!",
+        btn_export_excel: "Export Excel",
+        toast_exported: "Excel file exported successfully!",
+        btn_goto_multi: "Multi-Station Calculator ➔"
+      }
+    };
+
+    function toRad(deg) { return (deg * Math.PI) / 180.0; }
+    function toDeg(rad) { return (rad * 180.0) / Math.PI; }
+
+    function ddToDms(dd) {
+      const absVal = Math.abs(dd);
+      const deg = Math.floor(absVal);
+      const minFloat = (absVal - deg) * 60;
+      const min = Math.floor(minFloat);
+      const sec = ((minFloat - min) * 60).toFixed(4);
+      return { deg, min, sec, sign: dd >= 0 ? 1 : -1 };
+    }
+
+    function getCompassDirection(azimuthDeg) {
+      const normalized = ((azimuthDeg % 360) + 360) % 360;
+      for (const pt of COMPASS_POINTS_16) {
+        if (pt.min > pt.max) {
+          if (normalized >= pt.min || normalized < pt.max) return pt;
+        } else {
+          if (normalized >= pt.min && normalized < pt.max) return pt;
+        }
+      }
+      return COMPASS_POINTS_16[0];
+    }
+
+    function getQuadrantBearing(azimuthDeg) {
+      const az = ((azimuthDeg % 360) + 360) % 360;
+      if (Math.abs(az - 0) < 0.001 || Math.abs(az - 360) < 0.001) return "Due North";
+      if (Math.abs(az - 90) < 0.001) return "Due East";
+      if (Math.abs(az - 180) < 0.001) return "Due South";
+      if (Math.abs(az - 270) < 0.001) return "Due West";
+
+      if (az > 0 && az < 90) return `N ${az.toFixed(2)}° E`;
+      if (az > 90 && az < 180) return `S ${(180 - az).toFixed(2)}° E`;
+      if (az > 180 && az < 270) return `S ${(az - 180).toFixed(2)}° W`;
+      return `N ${(360 - az).toFixed(2)}° W`;
+    }
+
+    // Main Calculate function
+    function calculate() {
+      const lat1Deg = parseFloat(document.getElementById('lat-a').value);
+      const lon1Deg = parseFloat(document.getElementById('lon-a').value);
+      const lat2Deg = parseFloat(document.getElementById('lat-b').value);
+      const lon2Deg = parseFloat(document.getElementById('lon-b').value);
+
+      if (isNaN(lat1Deg) || isNaN(lon1Deg) || isNaN(lat2Deg) || isNaN(lon2Deg)) {
+        document.getElementById('res-azimuth').innerText = '--';
+        document.getElementById('res-back-azimuth').innerText = '--';
+        document.getElementById('res-radians').innerText = '--';
+        const abbrEl = document.getElementById('res-compass-abbr');
+        if (abbrEl) abbrEl.innerText = '--';
+        const quadEl = document.getElementById('res-quadrant');
+        if (quadEl) quadEl.innerText = '(รอการระบุพิกัด)';
+        document.getElementById('res-distance').innerText = '--';
+
+        const needle = document.getElementById('compass-needle-group');
+        if (needle) {
+          needle.setAttribute('transform', 'rotate(0 100 100)');
+          needle.style.transform = 'rotate(0deg)';
+        }
+        const arcPath = document.getElementById('compass-arc');
+        if (arcPath) arcPath.setAttribute('d', '');
+        const caption = document.getElementById('compass-caption');
+        if (caption) caption.innerText = currentLang === 'th' ? 'รอการระบุพิกัด' : 'Awaiting coordinates';
+
+        if (markerA && map && map.hasLayer(markerA)) map.removeLayer(markerA);
+        if (markerB && map && map.hasLayer(markerB)) map.removeLayer(markerB);
+        if (pathLine && map && map.hasLayer(pathLine)) map.removeLayer(pathLine);
+        markerA = null;
+        markerB = null;
+        pathLine = null;
+        if (elevHoverMarker && map && map.hasLayer(elevHoverMarker)) map.removeLayer(elevHoverMarker);
+        elevHoverMarker = null;
+
+        if (typeof clearElevationCanvas === 'function') clearElevationCanvas();
+        return;
+      }
+
+      const phi1 = toRad(lat1Deg);
+      const lam1 = toRad(lon1Deg);
+      const phi2 = toRad(lat2Deg);
+      const lam2 = toRad(lon2Deg);
+
+      const deltaPhi = phi2 - phi1;
+      const deltaLam = lam2 - lam1;
+
+      const x = Math.sin(deltaLam) * Math.cos(phi2);
+      const y = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLam);
+
+      const thetaRad = Math.atan2(x, y);
+      let azimuthDeg = (toDeg(thetaRad) + 360.0) % 360.0;
+      const backAzimuthDeg = (azimuthDeg + 180.0) % 360.0;
+
+      const a = Math.sin(deltaPhi / 2.0) ** 2 +
+                Math.cos(phi1) * Math.cos(phi2) * (Math.sin(deltaLam / 2.0) ** 2);
+      const c = 2.0 * Math.atan2(Math.sqrt(a), Math.sqrt(Math.max(0, 1.0 - a)));
+      currentCalculatedDistanceKm = EARTH_RADIUS_KM * c;
+
+      // Update Outputs
+      document.getElementById('res-azimuth').innerText = azimuthDeg.toFixed(2);
+      document.getElementById('res-back-azimuth').innerText = backAzimuthDeg.toFixed(2);
+      document.getElementById('res-radians').innerText = thetaRad.toFixed(3);
+
+      const compassPt = getCompassDirection(azimuthDeg);
+      document.getElementById('res-compass-abbr').innerText = compassPt.abbr;
+      document.getElementById('res-quadrant').innerText = `(${getQuadrantBearing(azimuthDeg)})`;
+
+      updateDistanceDisplay();
+      updateCompass(azimuthDeg);
+      updateMap(lat1Deg, lon1Deg, lat2Deg, lon2Deg, azimuthDeg);
+
+      updateStepBreakdown({
+        lat1Deg, lon1Deg, lat2Deg, lon2Deg,
+        deltaPhi, deltaLam,
+        x, y,
+        thetaRad, azimuthDeg,
+        a, distanceKm: currentCalculatedDistanceKm
+      });
+
+      recordHistoryPoint(lat1Deg, lon1Deg, lat2Deg, lon2Deg, azimuthDeg, backAzimuthDeg, compassPt, currentCalculatedDistanceKm);
+      scheduleElevationProfileUpdate(lat1Deg, lon1Deg, lat2Deg, lon2Deg);
+    }
+
+    function updateDistanceDisplay() {
+      const factor = DISTANCE_FACTORS[currentDistanceUnit] || 1.0;
+      const dist = currentCalculatedDistanceKm * factor;
+      let formatted = dist.toLocaleString('en-US', {
+        minimumFractionDigits: currentDistanceUnit === 'm' || currentDistanceUnit === 'ft' ? 1 : 2,
+        maximumFractionDigits: currentDistanceUnit === 'm' || currentDistanceUnit === 'ft' ? 1 : 2
+      });
+      document.getElementById('res-distance').innerText = formatted;
+      document.getElementById('res-dist-unit').innerText = currentDistanceUnit;
+    }
+
+    function setDistanceUnit(unit) {
+      currentDistanceUnit = unit;
+      ['km', 'mi', 'nmi', 'm'].forEach(u => {
+        const el = document.getElementById('unit-' + u);
+        if (el) el.classList.toggle('active', u === unit);
+      });
+      updateDistanceDisplay();
+    }
+
+    function updateCompass(azimuthDeg) {
+      const needle = document.getElementById('compass-needle-group');
+      if (needle) {
+        needle.setAttribute('transform', `rotate(${azimuthDeg} 100 100)`);
+        needle.style.transform = `rotate(${azimuthDeg}deg)`;
+        needle.style.transformOrigin = '100px 100px';
+      }
+
+      const arcPath = document.getElementById('compass-arc');
+      if (arcPath) {
+        const radius = 62;
+        const cx = 100, cy = 100;
+        const startAngleRad = -Math.PI / 2;
+        const endAngleRad = startAngleRad + toRad(azimuthDeg);
+
+        const x1 = cx + radius * Math.cos(startAngleRad);
+        const y1 = cy + radius * Math.sin(startAngleRad);
+        const x2 = cx + radius * Math.cos(endAngleRad);
+        const y2 = cy + radius * Math.sin(endAngleRad);
+
+        const largeArc = azimuthDeg > 180 ? 1 : 0;
+        if (azimuthDeg > 0.5 && azimuthDeg < 359.5) {
+          arcPath.setAttribute('d', `M ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}`);
+        } else {
+          arcPath.setAttribute('d', '');
+        }
+      }
+
+      const caption = document.getElementById('compass-caption');
+      if (caption) {
+        const dir = getCompassDirection(azimuthDeg);
+        const dirText = currentLang === 'th' ? dir.th : dir.name;
+        caption.innerText = currentLang === 'th'
+          ? `ทิศ ${dirText} (${azimuthDeg.toFixed(2)}° จากทิศเหนือจริง)`
+          : `Heading ${dirText} (${azimuthDeg.toFixed(2)}° from True North)`;
+      }
+    }
+
+    // Map initialization with Google Hybrid as default layer
+    function initMap() {
+      if (map) return;
+      map = L.map('map', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView([13.5, 100.3], 9);
+
+      // Default to Google Satellite Hybrid
+      currentTileLayer = tileLayers.g_hybrid.addTo(map);
+
+      map.on('click', function(e) {
+        document.getElementById('lat-b').value = e.latlng.lat.toFixed(6);
+        document.getElementById('lon-b').value = e.latlng.lng.toFixed(6);
+        syncDdToDms('B');
+        calculate();
+      });
+    }
+
+    // Switch between Google Hybrid, Google Roads, and CartoDB
+    function switchMapLayer(layerKey) {
+      if (!map) return;
+      if (currentTileLayer) {
+        map.removeLayer(currentTileLayer);
+      }
+      currentTileLayer = tileLayers[layerKey].addTo(map);
+
+      // Update button states
+      document.getElementById('layer-g-hybrid').classList.toggle('active', layerKey === 'g_hybrid');
+      document.getElementById('layer-g-roads').classList.toggle('active', layerKey === 'g_roads');
+      document.getElementById('layer-carto').classList.toggle('active', layerKey === 'carto');
+    }
+
+    // Toggle Map Fullscreen
+    function toggleMapFullscreen() {
+      const mapEl = document.getElementById('map');
+      const btn = document.getElementById('btn-fullscreen');
+      isFullscreen = !isFullscreen;
+      mapEl.classList.toggle('fullscreen-mode', isFullscreen);
+
+      if (btn) {
+        btn.innerHTML = isFullscreen 
+          ? `✕ ${currentLang === 'th' ? 'ย่อหน้าจอ' : 'Exit Fullscreen'}` 
+          : `⛶ ${currentLang === 'th' ? 'เต็มจอ' : 'Fullscreen'}`;
+      }
+
+      setTimeout(() => {
+        map.invalidateSize();
+      }, 300);
+    }
+
+    // Open directly in Google Maps website
+    function openInGoogleMaps() {
+      const latA = document.getElementById('lat-a').value;
+      const lonA = document.getElementById('lon-a').value;
+      const latB = document.getElementById('lat-b').value;
+      const lonB = document.getElementById('lon-b').value;
+      const url = `https://www.google.com/maps/dir/?api=1&origin=${latA},${lonA}&destination=${latB},${lonB}`;
+      window.open(url, '_blank');
+    }
+
+    function updateMap(lat1, lon1, lat2, lon2, azimuthDeg) {
+      if (!map) initMap();
+
+      const posA = [lat1, lon1];
+      const posB = [lat2, lon2];
+
+      const iconA = L.divIcon({
+        className: 'custom-map-icon',
+        html: `<div style="background:#10b981; color:white; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:13px; box-shadow:0 3px 8px rgba(0,0,0,0.4);">A</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      const iconB = L.divIcon({
+        className: 'custom-map-icon',
+        html: `<div style="background:#ef4444; color:white; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:13px; box-shadow:0 3px 8px rgba(0,0,0,0.4);">B</div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14]
+      });
+
+      if (!markerA) {
+        markerA = L.marker(posA, { icon: iconA }).addTo(map);
+      } else {
+        markerA.setLatLng(posA);
+      }
+
+      if (!markerB) {
+        markerB = L.marker(posB, { icon: iconB }).addTo(map);
+      } else {
+        markerB.setLatLng(posB);
+      }
+
+      const labelA = currentLang === 'th' ? 'สถานีวิทยุลูกข่าย (Point A)' : 'Radio Substation (Point A)';
+      const labelB = currentLang === 'th' ? 'สถานีแม่ข่าย (Point B)' : 'Master Station (Point B)';
+      const azLabel = currentLang === 'th' ? 'มุมแอซิมัท (หันทิศเสาอากาศ):' : 'Azimuth (Antenna Heading):';
+
+      markerA.bindPopup(`<b>${labelA}</b><br>Lat: ${lat1.toFixed(6)}°<br>Lon: ${lon1.toFixed(6)}°`);
+      markerB.bindPopup(`<b>${labelB}</b><br>Lat: ${lat2.toFixed(6)}°<br>Lon: ${lon2.toFixed(6)}°<br><b>${azLabel} ${azimuthDeg.toFixed(2)}°</b>`);
+
+      const arcPoints = generateGreatCirclePoints(lat1, lon1, lat2, lon2, 80);
+
+      if (pathLine) {
+        map.removeLayer(pathLine);
+      }
+
+      pathLine = L.polyline(arcPoints, {
+        color: '#38bdf8',
+        weight: 4,
+        opacity: 0.95,
+        dashArray: '6, 6'
+      }).addTo(map);
+
+      const bounds = L.latLngBounds([posA, posB]);
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+    }
+
+    function generateGreatCirclePoints(lat1, lon1, lat2, lon2, numPoints) {
+      const p1 = { lat: toRad(lat1), lon: toRad(lon1) };
+      const p2 = { lat: toRad(lat2), lon: toRad(lon2) };
+
+      const d = 2 * Math.asin(Math.sqrt(
+        Math.sin((p1.lat - p2.lat) / 2) ** 2 +
+        Math.cos(p1.lat) * Math.cos(p2.lat) * Math.sin((p1.lon - p2.lon) / 2) ** 2
+      ));
+
+      if (d < 1e-6) return [[lat1, lon1], [lat2, lon2]];
+
+      const points = [];
+      for (let i = 0; i <= numPoints; i++) {
+        const f = i / numPoints;
+        const A = Math.sin((1 - f) * d) / Math.sin(d);
+        const B = Math.sin(f * d) / Math.sin(d);
+
+        const x = A * Math.cos(p1.lat) * Math.cos(p1.lon) + B * Math.cos(p2.lat) * Math.cos(p2.lon);
+        const y = A * Math.cos(p1.lat) * Math.sin(p1.lon) + B * Math.cos(p2.lat) * Math.sin(p2.lon);
+        const z = A * Math.sin(p1.lat) + B * Math.sin(p2.lat);
+
+        const lat = toDeg(Math.atan2(z, Math.sqrt(x * x + y * y)));
+        const lon = toDeg(Math.atan2(y, x));
+        points.push([lat, lon]);
+      }
+      return points;
+    }
+
+    function updateStepBreakdown(data) {
+      const { lat1Deg, lon1Deg, lat2Deg, lon2Deg, deltaPhi, deltaLam, x, y, thetaRad, azimuthDeg, a, distanceKm } = data;
+      const compassPt = getCompassDirection(azimuthDeg);
+
+      const s1 = document.getElementById('step1-math');
+      if (s1) {
+        s1.innerHTML = `
+Δϕ = ϕ₂ - ϕ₁ = ${lat2Deg.toFixed(6)}° - ${lat1Deg.toFixed(6)}° = <strong>${(lat2Deg - lat1Deg).toFixed(6)}°</strong> (${deltaPhi.toFixed(6)} rad)<br>
+Δλ = λ₂ - λ₁ = ${lon2Deg.toFixed(6)}° - ${lon1Deg.toFixed(6)}° = <strong>${(lon2Deg - lon1Deg).toFixed(6)}°</strong> (${deltaLam.toFixed(6)} rad)
+        `;
+      }
+
+      const s2 = document.getElementById('step2-math');
+      if (s2) {
+        s2.innerHTML = `
+x = sin(Δλ) × cos(ϕ₂)<br>
+&nbsp;&nbsp;= sin(${toDeg(deltaLam).toFixed(6)}°) × cos(${lat2Deg.toFixed(6)}°) = <strong>${x.toFixed(6)}</strong><br><br>
+y = cos(ϕ₁) × sin(ϕ₂) - sin(ϕ₁) × cos(ϕ₂) × cos(Δλ)<br>
+&nbsp;&nbsp;= cos(${lat1Deg.toFixed(6)}°) × sin(${lat2Deg.toFixed(6)}°) - sin(${lat1Deg.toFixed(6)}°) × cos(${lat2Deg.toFixed(6)}°) × cos(${toDeg(deltaLam).toFixed(6)}°)<br>
+&nbsp;&nbsp;= <strong>${y.toFixed(6)}</strong>
+        `;
+      }
+
+      const s3 = document.getElementById('step3-math');
+      if (s3) {
+        s3.innerHTML = `
+θ (rad) = atan2(x, y) = atan2(${x.toFixed(6)}, ${y.toFixed(6)}) = <strong>${thetaRad.toFixed(6)} rad</strong> (${toDeg(thetaRad).toFixed(4)}°)<br>
+ปรับให้อยู่ในช่วงบวกเวียนตามเข็มนาฬิกา (0° ถึง 360°):<br>
+θ = (${toDeg(thetaRad).toFixed(4)}° + 360°) mod 360° = <strong>${azimuthDeg.toFixed(2)}°</strong> (ทิศทาง ${compassPt.abbr})
+        `;
+      }
+
+      const s4 = document.getElementById('step4-math');
+      if (s4) {
+        s4.innerHTML = `
+a = sin²(Δϕ / 2) + cos(ϕ₁) × cos(ϕ₂) × sin²(Δλ / 2) = <strong>${a.toFixed(7)}</strong><br>
+d = 2R × atan2(√a, √(1 - a)) โดยที่ รัศมีเฉลี่ยของโลก R = 6,371 km<br>
+d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)}) = <strong>${distanceKm.toFixed(3)} km</strong> (${(distanceKm * 1000).toLocaleString('en-US', {maximumFractionDigits: 1})} m)
+        `;
+      }
+    }
+
+    function toggleInputMode(point) {
+      const ddBox = document.getElementById(`dd-container-${point}`);
+      const dmsBox = document.getElementById(`dms-container-${point}`);
+      const btn = document.getElementById(`toggle-${point.toLowerCase()}`);
+
+      if (ddBox.style.display === 'none') {
+        ddBox.style.display = 'block';
+        dmsBox.style.display = 'none';
+        btn.innerText = 'DMS Format';
+      } else {
+        ddBox.style.display = 'none';
+        dmsBox.style.display = 'block';
+        btn.innerText = 'Decimal (DD)';
+        syncDdToDms(point);
+      }
+    }
+
+    function syncDdToDms(point) {
+      const lat = parseFloat(document.getElementById(`lat-${point.toLowerCase()}`).value) || 0;
+      const lon = parseFloat(document.getElementById(`lon-${point.toLowerCase()}`).value) || 0;
+
+      const latDms = ddToDms(lat);
+      const lonDms = ddToDms(lon);
+
+      document.getElementById(`dms-lat-deg-${point.toLowerCase()}`).value = latDms.deg;
+      document.getElementById(`dms-lat-min-${point.toLowerCase()}`).value = latDms.min;
+      document.getElementById(`dms-lat-sec-${point.toLowerCase()}`).value = latDms.sec;
+      document.getElementById(`dms-lat-dir-${point.toLowerCase()}`).value = latDms.sign;
+
+      document.getElementById(`dms-lon-deg-${point.toLowerCase()}`).value = lonDms.deg;
+      document.getElementById(`dms-lon-min-${point.toLowerCase()}`).value = lonDms.min;
+      document.getElementById(`dms-lon-sec-${point.toLowerCase()}`).value = lonDms.sec;
+      document.getElementById(`dms-lon-dir-${point.toLowerCase()}`).value = lonDms.sign;
+    }
+
+    function syncDmsToDd(point) {
+      const p = point.toLowerCase();
+      const latDeg = parseFloat(document.getElementById(`dms-lat-deg-${p}`).value) || 0;
+      const latMin = parseFloat(document.getElementById(`dms-lat-min-${p}`).value) || 0;
+      const latSec = parseFloat(document.getElementById(`dms-lat-sec-${p}`).value) || 0;
+      const latDir = parseFloat(document.getElementById(`dms-lat-dir-${p}`).value) || 1;
+
+      const lonDeg = parseFloat(document.getElementById(`dms-lon-deg-${p}`).value) || 0;
+      const lonMin = parseFloat(document.getElementById(`dms-lon-min-${p}`).value) || 0;
+      const lonSec = parseFloat(document.getElementById(`dms-lon-sec-${p}`).value) || 0;
+      const lonDir = parseFloat(document.getElementById(`dms-lon-dir-${p}`).value) || 1;
+
+      const latDd = (latDeg + latMin / 60 + latSec / 3600) * latDir;
+      const lonDd = (lonDeg + lonMin / 60 + lonSec / 3600) * lonDir;
+
+      document.getElementById(`lat-${p}`).value = latDd.toFixed(6);
+      document.getElementById(`lon-${p}`).value = lonDd.toFixed(6);
+
+      calculate();
+    }
+
+    function loadPreset(key) {
+      const p = PRESETS[key];
+      if (!p) return;
+
+      ['A', 'B'].forEach(pt => {
+        const ddBox = document.getElementById(`dd-container-${pt}`);
+        const dmsBox = document.getElementById(`dms-container-${pt}`);
+        const btn = document.getElementById(`toggle-${pt.toLowerCase()}`);
+        if (ddBox && dmsBox) {
+          ddBox.style.display = 'block';
+          dmsBox.style.display = 'none';
+          btn.innerText = 'DMS Format';
+        }
+      });
+
+      document.getElementById('lat-a').value = p.latA.toFixed(6);
+      document.getElementById('lon-a').value = p.lonA.toFixed(6);
+      document.getElementById('lat-b').value = p.latB.toFixed(6);
+      document.getElementById('lon-b').value = p.lonB.toFixed(6);
+
+      syncDdToDms('A');
+      syncDdToDms('B');
+      calculate();
+    }
+
+    function useCurrentLocation() {
+      if (!navigator.geolocation) {
+        alert(currentLang === 'th' ? "เบราว์เซอร์ไม่รองรับการระบุตำแหน่ง" : "Geolocation is not supported by your browser");
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('lat-a').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('lon-a').value = pos.coords.longitude.toFixed(6);
+          document.getElementById('lat-b').value = PRESETS.mecca.latB.toFixed(6);
+          document.getElementById('lon-b').value = PRESETS.mecca.lonB.toFixed(6);
+
+          syncDdToDms('A');
+          syncDdToDms('B');
+          calculate();
+        },
+        (err) => {
+          alert((currentLang === 'th' ? "ไม่สามารถดึงตำแหน่งปัจจุบันได้: " : "Unable to retrieve location: ") + err.message);
+        }
+      );
+    }
+
+    function swapPoints() {
+      const latA = document.getElementById('lat-a').value;
+      const lonA = document.getElementById('lon-a').value;
+      const latB = document.getElementById('lat-b').value;
+      const lonB = document.getElementById('lon-b').value;
+
+      document.getElementById('lat-a').value = latB;
+      document.getElementById('lon-a').value = lonB;
+      document.getElementById('lat-b').value = latA;
+      document.getElementById('lon-b').value = lonA;
+
+      syncDdToDms('A');
+      syncDdToDms('B');
+      calculate();
+    }
+
+    function resetCalculator() {
+      document.getElementById('lat-a').value = '';
+      document.getElementById('lon-a').value = '';
+      document.getElementById('height-a').value = '';
+      document.getElementById('lat-b').value = '';
+      document.getElementById('lon-b').value = '';
+      document.getElementById('height-b').value = '';
+
+      const dmsIds = [
+        'dms-lat-deg-a', 'dms-lat-min-a', 'dms-lat-sec-a',
+        'dms-lon-deg-a', 'dms-lon-min-a', 'dms-lon-sec-a',
+        'dms-lat-deg-b', 'dms-lat-min-b', 'dms-lat-sec-b',
+        'dms-lon-deg-b', 'dms-lon-min-b', 'dms-lon-sec-b'
+      ];
+      dmsIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
+
+      calculate();
+    }
+
+    // Generic Accordion Toggle (ซ่อน/เปิด)
+    function toggleAccordion(name) {
+      const body = document.getElementById(`content-${name}`);
+      const icon = document.getElementById(`icon-${name}`);
+      if (body) {
+        body.classList.toggle('open');
+        icon.style.transform = body.classList.contains('open') ? 'rotate(180deg)' : 'rotate(0)';
+      }
+    }
+
+    function toggleFaq(btn) {
+      const ans = btn.nextElementSibling;
+      const icon = btn.querySelector('span:last-child');
+      if (ans) {
+        ans.classList.toggle('open');
+        icon.innerText = ans.classList.contains('open') ? '−' : '+';
+      }
+    }
+
+    // Session history array for Excel export
+    let calcHistory = [];
+
+    function recordHistoryPoint(lat1, lon1, lat2, lon2, az, backAz, compassPt, distKm) {
+      if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) return;
+
+      const now = new Date();
+      const timeStr = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+
+      const dmsAObj = ddToDms(lat1);
+      const dmsLonAObj = ddToDms(lon1);
+      const dmsBObj = ddToDms(lat2);
+      const dmsLonBObj = ddToDms(lon2);
+
+      const dmsA = `${dmsAObj.deg}° ${dmsAObj.min}' ${dmsAObj.sec}" ${dmsAObj.sign === 1 ? 'N' : 'S'}, ${dmsLonAObj.deg}° ${dmsLonAObj.min}' ${dmsLonAObj.sec}" ${dmsLonAObj.sign === 1 ? 'E' : 'W'}`;
+      const dmsB = `${dmsBObj.deg}° ${dmsBObj.min}' ${dmsBObj.sec}" ${dmsBObj.sign === 1 ? 'N' : 'S'}, ${dmsLonBObj.deg}° ${dmsLonBObj.min}' ${dmsLonBObj.sec}" ${dmsLonBObj.sign === 1 ? 'E' : 'W'}`;
+
+      const quad = getQuadrantBearing(az).replace(/[()]/g, '');
+      const dirStr = `${compassPt.abbr} (${currentLang === 'th' ? compassPt.th : compassPt.name})`;
+
+      const entry = {
+        timestamp: timeStr,
+        latA: parseFloat(lat1.toFixed(6)),
+        lonA: parseFloat(lon1.toFixed(6)),
+        dmsA: dmsA,
+        latB: parseFloat(lat2.toFixed(6)),
+        lonB: parseFloat(lon2.toFixed(6)),
+        dmsB: dmsB,
+        azimuth: parseFloat(az.toFixed(2)),
+        direction: dirStr,
+        quadrant: quad,
+        backAzimuth: parseFloat(backAz.toFixed(2)),
+        distKm: parseFloat(distKm.toFixed(3)),
+        distM: parseFloat((distKm * 1000).toFixed(1)),
+        distMi: parseFloat((distKm * DISTANCE_FACTORS.mi).toFixed(3)),
+        distNmi: parseFloat((distKm * DISTANCE_FACTORS.nmi).toFixed(3)),
+        gmapsUrl: `https://www.google.com/maps/dir/?api=1&origin=${lat1.toFixed(6)},${lon1.toFixed(6)}&destination=${lat2.toFixed(6)},${lon2.toFixed(6)}`
+      };
+
+      if (calcHistory.length > 0) {
+        const last = calcHistory[calcHistory.length - 1];
+        if (last.latA === entry.latA && last.lonA === entry.lonA &&
+            last.latB === entry.latB && last.lonB === entry.lonB &&
+            last.azimuth === entry.azimuth) {
+          return;
+        }
+      }
+      calcHistory.push(entry);
+      if (calcHistory.length > 150) calcHistory.shift();
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('copy-toast');
+      const toastText = document.getElementById('toast-text');
+      if (toast) {
+        if (toastText && msg) toastText.innerText = msg;
+        toast.style.display = 'flex';
+        setTimeout(() => { toast.style.display = 'none'; }, 2800);
+      }
+    }
+
+    function copyResults() {
+      const az = document.getElementById('res-azimuth').innerText;
+      const backAz = document.getElementById('res-back-azimuth').innerText;
+      const dir = document.getElementById('res-compass-abbr').innerText;
+      const quad = document.getElementById('res-quadrant').innerText;
+      const dist = document.getElementById('res-distance').innerText;
+      const unit = document.getElementById('res-dist-unit').innerText;
+
+      const latA = parseFloat(document.getElementById('lat-a').value).toFixed(6);
+      const lonA = parseFloat(document.getElementById('lon-a').value).toFixed(6);
+      const latB = parseFloat(document.getElementById('lat-b').value).toFixed(6);
+      const lonB = parseFloat(document.getElementById('lon-b').value).toFixed(6);
+
+      const text = `--- ผลการคำนวณมุมแอซิมัทและระยะทาง ---
+สถานีวิทยุลูกข่าย (Point A): ละติจูด ${latA}°, ลองจิจูด ${lonA}°
+สถานีแม่ข่าย (Point B): ละติจูด ${latB}°, ลองจิจูด ${lonB}°
+มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B): ${az}° (${dir}, ${quad})
+Back Azimuth (แม่ข่าย B ➔ ลูกข่าย A): ${backAz}°
+ระยะทางตรงบนผิวโลก: ${dist} ${unit}
+คำนวณโดย: Azimuth Calculator`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(currentLang === 'th' ? "คัดลอกผลการคำนวณเรียบร้อยแล้ว!" : "Results copied to clipboard!");
+      });
+    }
+
+    // Export to Excel (.xlsx) or CSV Fallback
+    function exportToExcel() {
+      const latA = parseFloat(document.getElementById('lat-a').value) || 0;
+      const lonA = parseFloat(document.getElementById('lon-a').value) || 0;
+      const latB = parseFloat(document.getElementById('lat-b').value) || 0;
+      const lonB = parseFloat(document.getElementById('lon-b').value) || 0;
+
+      const az = document.getElementById('res-azimuth').innerText;
+      const backAz = document.getElementById('res-back-azimuth').innerText;
+      const dir = document.getElementById('res-compass-abbr').innerText;
+      const quad = document.getElementById('res-quadrant').innerText.replace(/[()]/g, '');
+      const rad = document.getElementById('res-radians').innerText;
+
+      const dmsAObj = ddToDms(latA);
+      const dmsLonAObj = ddToDms(lonA);
+      const dmsBObj = ddToDms(latB);
+      const dmsLonBObj = ddToDms(lonB);
+
+      const dmsA = `${dmsAObj.deg}° ${dmsAObj.min}' ${dmsAObj.sec}" ${dmsAObj.sign === 1 ? 'N' : 'S'}, ${dmsLonAObj.deg}° ${dmsLonAObj.min}' ${dmsLonAObj.sec}" ${dmsLonAObj.sign === 1 ? 'E' : 'W'}`;
+      const dmsB = `${dmsBObj.deg}° ${dmsBObj.min}' ${dmsBObj.sec}" ${dmsBObj.sign === 1 ? 'N' : 'S'}, ${dmsLonBObj.deg}° ${dmsLonBObj.min}' ${dmsLonBObj.sec}" ${dmsLonBObj.sign === 1 ? 'E' : 'W'}`;
+
+      const now = new Date();
+      const timeStr = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+
+      const distKm = currentCalculatedDistanceKm;
+      const distM = distKm * 1000;
+      const distMi = distKm * DISTANCE_FACTORS.mi;
+      const distNmi = distKm * DISTANCE_FACTORS.nmi;
+
+      const gmapsUrl = `https://www.google.com/maps/dir/?api=1&origin=${latA.toFixed(6)},${lonA.toFixed(6)}&destination=${latB.toFixed(6)},${lonB.toFixed(6)}`;
+
+      if (typeof XLSX !== 'undefined') {
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: สรุปผลการคำนวณ (Summary Sheet)
+        const summaryRows = [
+          ["รายงานผลการคำนวณมุมแอซิมัทและระยะทาง (สถานีวิทยุสื่อสาร ลูกข่าย ➔ แม่ข่าย)"],
+          ["วันเวลาที่ส่งออก (Export Timestamp)", timeStr],
+          [""],
+          ["หัวข้อ (Parameter)", "ค่าที่คำนวณได้ (Value)", "หน่วย (Unit)", "คำอธิบาย (Description)"],
+          ["สถานีวิทยุลูกข่าย (Point A) - Latitude", parseFloat(latA.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (ϕ₁)"],
+          ["สถานีวิทยุลูกข่าย (Point A) - Longitude", parseFloat(lonA.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (λ₁)"],
+          ["สถานีวิทยุลูกข่าย (Point A) - DMS", dmsA, "-", "Degrees Minutes Seconds"],
+          ["สถานีแม่ข่าย (Point B) - Latitude", parseFloat(latB.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (ϕ₂)"],
+          ["สถานีแม่ข่าย (Point B) - Longitude", parseFloat(lonB.toFixed(6)), "°", "พิกัดทศนิยม 6 ตำแหน่ง (λ₂)"],
+          ["สถานีแม่ข่าย (Point B) - DMS", dmsB, "-", "Degrees Minutes Seconds"],
+          ["มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B)", parseFloat(az), "°", "วัดตามเข็มนาฬิกาจากทิศเหนือจริง (0° ถึง 360°)"],
+          ["ทิศทางเข็มทิศ (Compass Direction)", dir, "-", "ทิศทาง 16 ทิศหลัก/ย่อย"],
+          ["ทิศควอดรันต์ (Quadrant Bearing)", quad, "-", "Quadrant Bearing Format"],
+          ["มุมแอซิมัทย้อนกลับ (แม่ข่าย B ➔ ลูกข่าย A)", parseFloat(backAz), "°", "ทิศทางย้อนกลับ (Reverse Azimuth)"],
+          ["มุมในหน่วยเรเดียน (Radians)", parseFloat(rad), "rad", "มุม θ ในหน่วยเรเดียน"],
+          ["ระยะทางผิวโลก (Distance - km)", parseFloat(distKm.toFixed(3)), "km", "กิโลเมตร (Haversine Formula)"],
+          ["ระยะทางผิวโลก (Distance - m)", parseFloat(distM.toFixed(1)), "m", "เมตร"],
+          ["ระยะทางผิวโลก (Distance - mi)", parseFloat(distMi.toFixed(3)), "mi", "ไมล์บก (Statute Miles)"],
+          ["ระยะทางผิวโลก (Distance - nmi)", parseFloat(distNmi.toFixed(3)), "nmi", "ไมล์ทะเล (Nautical Miles)"],
+          ["ลิงก์ Google Maps", gmapsUrl, "-", "คลิกเปิดเส้นทางบน Google Maps"]
+        ];
+
+        const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+        wsSummary['!cols'] = [{ wch: 48 }, { wch: 30 }, { wch: 10 }, { wch: 48 }];
+        XLSX.utils.book_append_sheet(wb, wsSummary, "สรุปผลการคำนวณ");
+
+        // Sheet 2: ตารางพิกัดประวัติการคำนวณ (Coordinates Log)
+        const tableRows = [
+          [
+            "ลำดับ (No.)", "วันเวลา (Timestamp)",
+            "ลูกข่าย A Lat (°)", "ลูกข่าย A Lon (°)", "ลูกข่าย A DMS",
+            "แม่ข่าย B Lat (°)", "แม่ข่าย B Lon (°)", "แม่ข่าย B DMS",
+            "Azimuth (°)", "Direction", "Quadrant", "Back Azimuth (°)",
+            "Distance (km)", "Distance (m)", "Distance (mi)", "Distance (nmi)",
+            "Google Maps Link"
+          ]
+        ];
+
+        if (calcHistory.length > 0) {
+          calcHistory.forEach((h, idx) => {
+            tableRows.push([
+              idx + 1, h.timestamp,
+              h.latA, h.lonA, h.dmsA,
+              h.latB, h.lonB, h.dmsB,
+              h.azimuth, h.direction, h.quadrant, h.backAzimuth,
+              h.distKm, h.distM, h.distMi, h.distNmi,
+              h.gmapsUrl
+            ]);
+          });
+        } else {
+          tableRows.push([
+            1, timeStr,
+            parseFloat(latA.toFixed(6)), parseFloat(lonA.toFixed(6)), dmsA,
+            parseFloat(latB.toFixed(6)), parseFloat(lonB.toFixed(6)), dmsB,
+            parseFloat(az), dir, quad, parseFloat(backAz),
+            parseFloat(distKm.toFixed(3)), parseFloat(distM.toFixed(1)), parseFloat(distMi.toFixed(3)), parseFloat(distNmi.toFixed(3)),
+            gmapsUrl
+          ]);
+        }
+
+        const wsTable = XLSX.utils.aoa_to_sheet(tableRows);
+        wsTable['!cols'] = [
+          { wch: 8 }, { wch: 20 },
+          { wch: 18 }, { wch: 18 }, { wch: 32 },
+          { wch: 18 }, { wch: 18 }, { wch: 32 },
+          { wch: 14 }, { wch: 18 }, { wch: 18 }, { wch: 16 },
+          { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+          { wch: 50 }
+        ];
+        XLSX.utils.book_append_sheet(wb, wsTable, "ตารางพิกัด (Coordinates Log)");
+
+        const dateCompact = timeStr.replace(/[- :]/g, '').slice(0, 14);
+        const filename = `Radio_Azimuth_Substation_${latA.toFixed(4)}_Master_${latB.toFixed(4)}_${dateCompact}.xlsx`;
+        XLSX.writeFile(wb, filename);
+
+        showToast(currentLang === 'th' ? "ส่งออกไฟล์ Excel (.xlsx) เรียบร้อยแล้ว!" : "Excel (.xlsx) exported successfully!");
+      } else {
+        exportToCsvFallback(timeStr, latA, lonA, dmsA, latB, lonB, dmsB, az, dir, quad, backAz, distKm, distM, distMi, distNmi, gmapsUrl);
+      }
+    }
+
+    function exportToCsvFallback(timeStr, latA, lonA, dmsA, latB, lonB, dmsB, az, dir, quad, backAz, distKm, distM, distMi, distNmi, gmapsUrl) {
+      let csv = "\uFEFF"; // UTF-8 BOM for Microsoft Excel Thai language compatibility
+      csv += "หัวข้อ (Parameter),ค่าที่คำนวณได้ (Value),หน่วย (Unit),คำอธิบาย (Description)\r\n";
+      csv += `"รายงานผลการคำนวณ","มุมแอซิมัทและระยะทาง (ลูกข่าย ➔ แม่ข่าย)","-",""\r\n`;
+      csv += `"วันเวลาที่คำนวณ","${timeStr}","-","Local Time"\r\n`;
+      csv += `"สถานีวิทยุลูกข่าย (Point A) Latitude","${latA.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (ϕ₁)"\r\n`;
+      csv += `"สถานีวิทยุลูกข่าย (Point A) Longitude","${lonA.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (λ₁)"\r\n`;
+      csv += `"สถานีวิทยุลูกข่าย (Point A) DMS","${dmsA}","-","Degrees Minutes Seconds"\r\n`;
+      csv += `"สถานีแม่ข่าย (Point B) Latitude","${latB.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (ϕ₂)"\r\n`;
+      csv += `"สถานีแม่ข่าย (Point B) Longitude","${lonB.toFixed(6)}","°","พิกัดทศนิยม 6 ตำแหน่ง (λ₂)"\r\n`;
+      csv += `"สถานีแม่ข่าย (Point B) DMS","${dmsB}","-","Degrees Minutes Seconds"\r\n`;
+      csv += `"มุมแอซิมัท (หันทิศเสาอากาศ ลูกข่าย A ➔ แม่ข่าย B)","${az}","°","วัดตามเข็มนาฬิกาจากทิศเหนือ (0° ถึง 360°)"\r\n`;
+      csv += `"ทิศทางเข็มทิศ (Compass Direction)","${dir}","-","ทิศทาง 16 ทิศ"\r\n`;
+      csv += `"ทิศควอดรันต์ (Quadrant Bearing)","${quad}","-","Quadrant"\r\n`;
+      csv += `"มุมแอซิมัทย้อนกลับ (แม่ข่าย B ➔ ลูกข่าย A)","${backAz}","°","มุมย้อนกลับจาก B ไป A"\r\n`;
+      csv += `"ระยะทางผิวโลก (Distance - km)","${distKm.toFixed(3)}","km","กิโลเมตร (Haversine)"\r\n`;
+      csv += `"ระยะทางผิวโลก (Distance - m)","${distM.toFixed(1)}","m","เมตร"\r\n`;
+      csv += `"ระยะทางผิวโลก (Distance - mi)","${distMi.toFixed(3)}","mi","ไมล์บก"\r\n`;
+      csv += `"ระยะทางผิวโลก (Distance - nmi)","${distNmi.toFixed(3)}","nmi","ไมล์ทะเล"\r\n`;
+      csv += `"ลิงก์ Google Maps","${gmapsUrl}","-","เปิดใน Google Maps"\r\n\r\n`;
+
+      csv += "ลำดับ (No.),วันเวลา (Timestamp),ลูกข่าย A Lat,ลูกข่าย A Lon,ลูกข่าย A DMS,แม่ข่าย B Lat,แม่ข่าย B Lon,แม่ข่าย B DMS,Azimuth (°),Direction,Quadrant,Back Azimuth (°),Distance (km),Distance (m),Distance (mi),Distance (nmi),Google Maps\r\n";
+      if (calcHistory.length > 0) {
+        calcHistory.forEach((h, idx) => {
+          csv += `"${idx + 1}","${h.timestamp}","${h.latA}","${h.lonA}","${h.dmsA}","${h.latB}","${h.lonB}","${h.dmsB}","${h.azimuth}","${h.direction}","${h.quadrant}","${h.backAzimuth}","${h.distKm}","${h.distM}","${h.distMi}","${h.distNmi}","${h.gmapsUrl}"\r\n`;
+        });
+      } else {
+        csv += `"1","${timeStr}","${latA.toFixed(6)}","${lonA.toFixed(6)}","${dmsA}","${latB.toFixed(6)}","${lonB.toFixed(6)}","${dmsB}","${az}","${dir}","${quad}","${backAz}","${distKm.toFixed(3)}","${distM.toFixed(1)}","${distMi.toFixed(3)}","${distNmi.toFixed(3)}","${gmapsUrl}"\r\n`;
+      }
+
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `Radio_Azimuth_Substation_${latA.toFixed(4)}_Master_${latB.toFixed(4)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast(currentLang === 'th' ? "ส่งออกไฟล์ข้อมูล Excel (.csv) เรียบร้อยแล้ว!" : "Excel (.csv) exported successfully!");
+    }
+
+    // Import Coordinates from Excel (.xlsx / .xls / .csv) for Single Mode
+    function handleSingleExcelUpload(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      if (typeof XLSX === 'undefined') {
+        alert("กำลังโหลดโมดูล Excel กรุณารอสักครู่");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const wb = XLSX.read(e.target.result, { type: 'array' });
+          let masterPoint = null;
+          let subPoints = [];
+
+          wb.SheetNames.forEach(sheetName => {
+            const ws = wb.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+            rows.forEach(r => {
+              let name = '', lat = NaN, lon = NaN;
+              let numCols = [];
+              r.forEach((c) => {
+                const n = typeof c === 'number' ? c : parseFloat(String(c).trim());
+                if (!isNaN(n) && typeof c !== 'boolean') numCols.push(n);
+                else if (String(c).trim().length > 0 && !name) name = String(c).trim();
+              });
+
+              for (let i = 0; i < numCols.length; i++) {
+                for (let j = i + 1; j < numCols.length; j++) {
+                  if (Math.abs(numCols[i]) <= 90 && Math.abs(numCols[j]) <= 180) {
+                    lat = numCols[i];
+                    lon = numCols[j];
+                    break;
+                  }
+                }
+                if (!isNaN(lat)) break;
+              }
+
+              if (!isNaN(lat) && !isNaN(lon)) {
+                const lower = (name + ' ' + sheetName).toLowerCase();
+                const isMaster = lower.includes('แม่ข่าย') || lower.includes('master') || lower.includes('base');
+                if (isMaster && !masterPoint) {
+                  masterPoint = { lat, lon, name };
+                } else {
+                  subPoints.push({ lat, lon, name });
+                }
+              }
+            });
+          });
+
+          if (masterPoint) {
+            document.getElementById('lat-b').value = masterPoint.lat.toFixed(6);
+            document.getElementById('lon-b').value = masterPoint.lon.toFixed(6);
+          } else if (subPoints.length >= 2) {
+            const b = subPoints.pop();
+            document.getElementById('lat-b').value = b.lat.toFixed(6);
+            document.getElementById('lon-b').value = b.lon.toFixed(6);
+          }
+
+          if (subPoints.length >= 1) {
+            const a = subPoints[0];
+            document.getElementById('lat-a').value = a.lat.toFixed(6);
+            document.getElementById('lon-a').value = a.lon.toFixed(6);
+          }
+
+          calculate();
+          showToast(currentLang === 'th' ? "นำเข้าพิกัดจากไฟล์ Excel สำเร็จ!" : "Coordinates imported from Excel!");
+        } catch (err) {
+          alert("ไม่สามารถอ่านไฟล์ Excel ได้: " + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+      event.target.value = '';
+    }
+
+    function setLanguage(lang) {
+      currentLang = lang;
+      document.getElementById('btn-th').classList.toggle('active', lang === 'th');
+      document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+      document.documentElement.lang = lang;
+
+      const dict = I18N[lang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key]) {
+          el.innerText = dict[key];
+        }
+      });
+
+      calculate();
+    }
+
+    // =========================================================================
+    // ELEVATION PROFILE & RADIO LINE-OF-SIGHT (LOS) ENGINE (Google Earth Pro Style)
+    // =========================================================================
+    let currentElevProfileData = null;
+    let elevHoverMarker = null;
+    let isElevLoading = false;
+    let elevUpdateTimeout = null;
+    const elevProfileCache = new Map();
+
+    function scheduleElevationProfileUpdate(lat1, lon1, lat2, lon2) {
+      if (elevUpdateTimeout) clearTimeout(elevUpdateTimeout);
+      elevUpdateTimeout = setTimeout(() => {
+        loadElevationProfile(lat1, lon1, lat2, lon2);
+      }, 350);
+    }
+
+    function refreshElevationProfile() {
+      const lat1 = parseFloat(document.getElementById('lat-a').value);
+      const lon1 = parseFloat(document.getElementById('lon-a').value);
+      const lat2 = parseFloat(document.getElementById('lat-b').value);
+      const lon2 = parseFloat(document.getElementById('lon-b').value);
+      const cacheKey = `${lat1.toFixed(4)},${lon1.toFixed(4)}-${lat2.toFixed(4)},${lon2.toFixed(4)}`;
+      elevProfileCache.delete(cacheKey);
+      loadElevationProfile(lat1, lon1, lat2, lon2);
+    }
+
+    // Geodesic Interpolation (Great Circle)
+    function calcGeodesicPoints(lat1, lon1, lat2, lon2, numPoints = 65) {
+      const toRad = Math.PI / 180;
+      const toDeg = 180 / Math.PI;
+      const p1 = lat1 * toRad, l1 = lon1 * toRad;
+      const p2 = lat2 * toRad, l2 = lon2 * toRad;
+
+      const d = 2 * Math.asin(Math.sqrt(
+        Math.sin((p2 - p1) / 2) ** 2 +
+        Math.cos(p1) * Math.cos(p2) * Math.sin((l2 - l1) / 2) ** 2
+      ));
+
+      const totalDistKm = d * EARTH_RADIUS_KM;
+      const points = [];
+
+      if (d < 1e-7) {
+        for (let i = 0; i < numPoints; i++) {
+          points.push({ lat: lat1, lon: lon1, distKm: 0 });
+        }
+        return { points, totalDistKm: 0 };
+      }
+
+      const sinD = Math.sin(d);
+
+      for (let i = 0; i < numPoints; i++) {
+        const f = i / (numPoints - 1);
+        const A = Math.sin((1 - f) * d) / sinD;
+        const B = Math.sin(f * d) / sinD;
+
+        const x = A * Math.cos(p1) * Math.cos(l1) + B * Math.cos(p2) * Math.cos(l2);
+        const y = A * Math.cos(p1) * Math.sin(l1) + B * Math.cos(p2) * Math.sin(l2);
+        const z = A * Math.sin(p1) + B * Math.sin(p2);
+
+        const lat = Math.atan2(z, Math.sqrt(x * x + y * y)) * toDeg;
+        const lon = Math.atan2(y, x) * toDeg;
+        const distKm = f * totalDistKm;
+
+        points.push({ lat: parseFloat(lat.toFixed(6)), lon: parseFloat(lon.toFixed(6)), distKm });
+      }
+
+      return { points, totalDistKm };
+    }
+
+    // Fallback synthetic elevation (realistic terrain topography when offline or API limit)
+    function generateSyntheticElevation(points, totalDistKm, lat1, lon1, lat2, lon2) {
+      const seed = Math.abs(Math.sin(lat1 * 12.9898 + lon1 * 78.233 + lat2 * 37.719 + lon2 * 45.17) * 43758.5453);
+      const baseElev = 80 + (seed % 150);
+      const numPoints = points.length;
+
+      return points.map((p, i) => {
+        const f = i / (numPoints - 1);
+        const wave1 = Math.sin(f * Math.PI * 2 + seed) * 45;
+        const wave2 = Math.sin(f * Math.PI * 6 + seed * 2) * 25;
+        const wave3 = Math.cos(f * Math.PI * 11 + seed * 3) * 12;
+        const hill = Math.exp(-Math.pow((f - 0.45) * 4, 2)) * 60;
+        const elev = Math.max(10, Math.round(baseElev + wave1 + wave2 + wave3 + hill));
+        return elev;
+      });
+    }
+
+    function clearElevationCanvas() {
+      const canvas = document.getElementById('elevation-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const cssW = rect.width || canvas.parentElement.clientWidth || 800;
+      const cssH = rect.height || 270;
+      canvas.width = cssW * dpr;
+      canvas.height = cssH * dpr;
+      ctx.save();
+      ctx.scale(dpr, dpr);
+      ctx.fillStyle = '#0a0e17';
+      ctx.fillRect(0, 0, cssW, cssH);
+      ctx.fillStyle = '#64748b';
+      ctx.font = '13px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('กรุณาระบุพิกัดสถานีวิทยุลูกข่ายและสถานีแม่ข่ายเพื่อแสดงโพรไฟล์ความสูง', cssW / 2, cssH / 2);
+      ctx.restore();
+      currentElevProfileData = null;
+      document.getElementById('elev-stat-min').innerText = '-';
+      document.getElementById('elev-stat-avg').innerText = '-';
+      document.getElementById('elev-stat-max').innerText = '-';
+      document.getElementById('elev-stat-dist').innerText = '-';
+      document.getElementById('elev-stat-gain').innerText = '-';
+      document.getElementById('elev-stat-loss').innerText = '-';
+      document.getElementById('elev-stat-maxslope').innerText = '-';
+      document.getElementById('elev-stat-avgslope').innerText = '-';
+      if (document.getElementById('elev-stat-a-msl')) document.getElementById('elev-stat-a-msl').innerText = '-';
+      if (document.getElementById('elev-stat-b-msl')) document.getElementById('elev-stat-b-msl').innerText = '-';
+      if (document.getElementById('elev-stat-cursor-msl')) document.getElementById('elev-stat-cursor-msl').style.display = 'none';
+      const badge = document.getElementById('elev-los-badge');
+      if (badge) {
+        badge.className = 'los-badge clear';
+        badge.innerHTML = '<span>รอการระบุพิกัดทั้งสองสถานี...</span>';
+      }
+    }
+
+    async function loadElevationProfile(lat1, lon1, lat2, lon2) {
+      if (isElevLoading) return;
+      if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) {
+        clearElevationCanvas();
+        return;
+      }
+
+      const sHeight = parseFloat(document.getElementById('height-a')?.value) || 15;
+      const mHeight = parseFloat(document.getElementById('height-b')?.value) || 45;
+
+      const overlay = document.getElementById('elev-loading-overlay');
+      if (overlay) overlay.style.display = 'flex';
+      isElevLoading = true;
+
+      try {
+        const { points, totalDistKm } = calcGeodesicPoints(lat1, lon1, lat2, lon2, 65);
+        const cacheKey = `${lat1.toFixed(4)},${lon1.toFixed(4)}-${lat2.toFixed(4)},${lon2.toFixed(4)}`;
+
+        let rawElevations = elevProfileCache.get(cacheKey);
+
+        if (!rawElevations) {
+          try {
+            const lats = points.map(p => p.lat.toFixed(5)).join(',');
+            const lons = points.map(p => p.lon.toFixed(5)).join(',');
+            const apiUrl = `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lons}`;
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+            const resp = await fetch(apiUrl, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (resp.ok) {
+              const json = await resp.json();
+              if (json.elevation && json.elevation.length === points.length) {
+                rawElevations = json.elevation.map(e => (typeof e === 'number' && !isNaN(e)) ? Math.round(e) : 100);
+                elevProfileCache.set(cacheKey, rawElevations);
+              }
+            }
+          } catch (fetchErr) {
+            console.warn("Open-Meteo elevation fetch failed, using fallback:", fetchErr.message);
+          }
+
+          if (!rawElevations) {
+            rawElevations = generateSyntheticElevation(points, totalDistKm, lat1, lon1, lat2, lon2);
+            elevProfileCache.set(cacheKey, rawElevations);
+          }
+        }
+
+        // Process data points with Earth Curvature and Radio Line-of-Sight
+        const N = points.length;
+        const processedPoints = [];
+        let totalGain = 0;
+        let totalLoss = 0;
+        let maxSlope = 0;
+        let sumSlope = 0;
+
+        const elev0 = rawElevations[0];
+        const elevEnd = rawElevations[N - 1];
+        const antennaTopStart = elev0 + sHeight;
+        const antennaTopEnd = elevEnd + mHeight;
+
+        let worstClearance = Infinity;
+        let isObstructed = false;
+        let obstructionIdx = -1;
+
+        for (let i = 0; i < N; i++) {
+          const pt = points[i];
+          const groundElev = rawElevations[i];
+          const d_i = pt.distKm;
+          const f = totalDistKm > 0 ? d_i / totalDistKm : 0;
+
+          // Earth Bulge in Standard Atmosphere (K=4/3): h = (d1 * d2) / 12.74 (meters)
+          const earthBulge = totalDistKm > 0 ? (d_i * (totalDistKm - d_i)) / 12.74 : 0;
+          const effectiveGround = groundElev + earthBulge;
+
+          // Direct line connecting start antenna to end antenna
+          const rayHeight = antennaTopStart + f * (antennaTopEnd - antennaTopStart);
+
+          // Clearance: ray minus effective ground
+          const clearance = rayHeight - effectiveGround;
+
+          // 1st Fresnel Zone radius at 400 MHz (UHF): F1 = 17.32 * sqrt( (d1 * d2) / (0.4 * D) )
+          const fresnelR = (totalDistKm > 0 && d_i > 0 && d_i < totalDistKm)
+            ? 17.32 * Math.sqrt((d_i * (totalDistKm - d_i)) / (0.4 * totalDistKm))
+            : 0;
+
+          // Slope %
+          let slope = 0;
+          if (i > 0) {
+            const distStepM = (d_i - points[i - 1].distKm) * 1000;
+            if (distStepM > 0) {
+              const elevDiff = groundElev - rawElevations[i - 1];
+              slope = (elevDiff / distStepM) * 100;
+              if (elevDiff > 0) totalGain += elevDiff;
+              else totalLoss += Math.abs(elevDiff);
+            }
+          }
+          if (Math.abs(slope) > maxSlope) maxSlope = Math.abs(slope);
+          sumSlope += Math.abs(slope);
+
+          if (clearance < worstClearance) {
+            worstClearance = clearance;
+            if (clearance < 0) {
+              isObstructed = true;
+              obstructionIdx = i;
+            }
+          }
+
+          processedPoints.push({
+            lat: pt.lat,
+            lon: pt.lon,
+            distKm: d_i,
+            elevation: groundElev,
+            effectiveGround: effectiveGround,
+            earthBulge: earthBulge,
+            rayHeight: rayHeight,
+            clearance: clearance,
+            fresnelR: fresnelR,
+            slope: slope
+          });
+        }
+
+        const minElev = Math.min(...rawElevations);
+        const maxElev = Math.max(...rawElevations);
+        const avgElev = Math.round(rawElevations.reduce((a, b) => a + b, 0) / N);
+        const avgSlope = (sumSlope / (N - 1 || 1)).toFixed(1);
+
+        currentElevProfileData = {
+          subStation: { name: "สถานีลูกข่าย A", height: sHeight },
+          masterStation: { name: "สถานีแม่ข่าย B", height: mHeight },
+          totalDistKm: totalDistKm,
+          points: processedPoints,
+          stats: {
+            minElev, maxElev, avgElev,
+            totalGain: Math.round(totalGain),
+            totalLoss: Math.round(totalLoss),
+            maxSlope: maxSlope.toFixed(1),
+            avgSlope,
+            worstClearance: worstClearance.toFixed(1),
+            isObstructed,
+            obstructionIdx
+          }
+        };
+
+        // Update UI Stats
+        document.getElementById('elev-stat-min').innerText = minElev;
+        document.getElementById('elev-stat-avg').innerText = avgElev;
+        document.getElementById('elev-stat-max').innerText = maxElev;
+        document.getElementById('elev-stat-dist').innerText = totalDistKm.toFixed(1);
+        document.getElementById('elev-stat-gain').innerText = `+${Math.round(totalGain)} m`;
+        document.getElementById('elev-stat-loss').innerText = `-${Math.round(totalLoss)} m`;
+        document.getElementById('elev-stat-maxslope').innerText = `${maxSlope.toFixed(1)}%`;
+        document.getElementById('elev-stat-avgslope').innerText = `${avgSlope}%`;
+        if (document.getElementById('elev-stat-a-msl')) document.getElementById('elev-stat-a-msl').innerText = elev0;
+        if (document.getElementById('elev-stat-b-msl')) document.getElementById('elev-stat-b-msl').innerText = elevEnd;
+
+        // Update LOS Badge
+        const badge = document.getElementById('elev-los-badge');
+        if (badge) {
+          if (!isObstructed) {
+            badge.className = 'los-badge clear';
+            badge.innerHTML = `✅ Line-of-Sight (มองเห็นโดยตรง +${worstClearance.toFixed(1)} m)`;
+          } else {
+            badge.className = 'los-badge obstructed';
+            badge.innerHTML = `⚠️ มีสิ่งกีดขวาง (สันเขาบังคลื่น ${Math.abs(worstClearance).toFixed(1)} m)`;
+          }
+        }
+
+        drawElevationProfile(currentElevProfileData, null);
+
+      } catch (err) {
+        console.error("Error loading elevation profile:", err);
+      } finally {
+        if (overlay) overlay.style.display = 'none';
+        isElevLoading = false;
+      }
+    }
+
+    function drawElevationProfile(data, hoverDistKm = null) {
+      const canvas = document.getElementById('elevation-canvas');
+      if (!canvas || !data) return;
+
+      const ctx = canvas.getContext('2d');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const cssW = rect.width || canvas.parentElement.clientWidth || 800;
+      const cssH = rect.height || 270;
+
+      if (canvas.width !== cssW * dpr || canvas.height !== cssH * dpr) {
+        canvas.width = cssW * dpr;
+        canvas.height = cssH * dpr;
+      }
+
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      const W = cssW;
+      const H = cssH;
+
+      // Layout margins
+      const padLeft = 55;
+      const padRight = 35;
+      const padTop = 32;
+      const padBottom = 32;
+      const plotW = Math.max(10, W - padLeft - padRight);
+      const plotH = Math.max(10, H - padTop - padBottom);
+
+      // Background (Google Earth Dark Style)
+      ctx.fillStyle = '#0a0e17';
+      ctx.fillRect(0, 0, W, H);
+
+      const points = data.points;
+      const totalD = data.totalDistKm || 1;
+
+      // Find Y bounds (Elevation)
+      let minE = Infinity;
+      let maxE = -Infinity;
+      points.forEach(p => {
+        if (p.effectiveGround < minE) minE = p.effectiveGround;
+        if (p.effectiveGround > maxE) maxE = p.effectiveGround;
+        if (p.rayHeight > maxE) maxE = p.rayHeight;
+        if (p.rayHeight < minE) minE = p.rayHeight;
+      });
+
+      // Buffer top and bottom, round to 25m intervals
+      const yMin = Math.floor(Math.max(0, minE - 20) / 25) * 25;
+      const yMax = Math.ceil((maxE + 30) / 25) * 25;
+      const yRange = (yMax - yMin) || 100;
+
+      function xCoord(d) {
+        return padLeft + (d / totalD) * plotW;
+      }
+      function yCoord(elev) {
+        return (H - padBottom) - ((elev - yMin) / yRange) * plotH;
+      }
+
+      // Grid Lines: Horizontal (Elevation)
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#1e293b';
+      ctx.fillStyle = '#64748b';
+      ctx.font = '11px Fira Code, monospace';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+
+      const numYSteps = 5;
+      const stepYVal = yRange / numYSteps;
+      for (let i = 0; i <= numYSteps; i++) {
+        const val = Math.round(yMin + i * stepYVal);
+        const y = yCoord(val);
+        ctx.beginPath();
+        ctx.moveTo(padLeft, y);
+        ctx.lineTo(W - padRight, y);
+        ctx.stroke();
+
+        ctx.fillText(`${val} m`, padLeft - 8, y);
+      }
+
+      // Grid Lines: Vertical (Distance)
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      const numXSteps = Math.min(8, Math.max(3, Math.floor(plotW / 90)));
+      for (let i = 0; i <= numXSteps; i++) {
+        const d = (i / numXSteps) * totalD;
+        const x = xCoord(d);
+
+        ctx.beginPath();
+        ctx.moveTo(x, padTop);
+        ctx.lineTo(x, H - padBottom);
+        ctx.stroke();
+
+        ctx.fillText(`${d.toFixed(1)} km`, x, H - padBottom + 8);
+      }
+
+      // 1. Draw 1st Fresnel Zone Ellipse Band (Translucent Cyan)
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const yTop = yCoord(p.rayHeight + p.fresnelR * 0.6);
+        const x = xCoord(p.distKm);
+        if (i === 0) ctx.moveTo(x, yTop);
+        else ctx.lineTo(x, yTop);
+      }
+      for (let i = points.length - 1; i >= 0; i--) {
+        const p = points[i];
+        const yBottom = yCoord(p.rayHeight - p.fresnelR * 0.6);
+        const x = xCoord(p.distKm);
+        ctx.lineTo(x, yBottom);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+      ctx.fill();
+
+      // 2. Draw Terrain Area (Google Earth Pro Red/Coral Gradient Fill)
+      ctx.beginPath();
+      ctx.moveTo(xCoord(0), H - padBottom);
+      for (let i = 0; i < points.length; i++) {
+        ctx.lineTo(xCoord(points[i].distKm), yCoord(points[i].effectiveGround));
+      }
+      ctx.lineTo(xCoord(totalD), H - padBottom);
+      ctx.closePath();
+
+      const terrainGrad = ctx.createLinearGradient(0, padTop, 0, H - padBottom);
+      terrainGrad.addColorStop(0, 'rgba(239, 68, 68, 0.5)');
+      terrainGrad.addColorStop(0.7, 'rgba(239, 68, 68, 0.2)');
+      terrainGrad.addColorStop(1, 'rgba(239, 68, 68, 0.03)');
+      ctx.fillStyle = terrainGrad;
+      ctx.fill();
+
+      // Terrain Outline Stroke
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const x = xCoord(points[i].distKm);
+        const y = yCoord(points[i].effectiveGround);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2.2;
+      ctx.stroke();
+
+      // 3. Draw Direct Radio Line-of-Sight (LOS) Ray
+      ctx.save();
+      ctx.beginPath();
+      ctx.setLineDash([6, 5]);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.moveTo(xCoord(0), yCoord(points[0].rayHeight));
+      ctx.lineTo(xCoord(totalD), yCoord(points[points.length - 1].rayHeight));
+      ctx.stroke();
+      ctx.restore();
+
+      // 4. Draw Antenna Towers at Both Ends
+      const sub = data.subStation;
+      const master = data.masterStation;
+      const ptStart = points[0];
+      const ptEnd = points[points.length - 1];
+
+      // Tower Start (Station A)
+      const xStart = xCoord(0);
+      const yStartBase = yCoord(ptStart.effectiveGround);
+      const yStartTop = yCoord(ptStart.rayHeight);
+
+      ctx.beginPath();
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 3.5;
+      ctx.moveTo(xStart, yStartBase);
+      ctx.lineTo(xStart, yStartTop);
+      ctx.stroke();
+
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath();
+      ctx.arc(xStart, yStartTop, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tower Label Start
+      ctx.fillStyle = '#fef08a';
+      ctx.font = 'bold 10.5px Prompt, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`📡 จุด A (เสา ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`, xStart + 8, yStartTop - 2);
+
+      // Tower End (Station B)
+      const xEnd = xCoord(totalD);
+      const yEndBase = yCoord(ptEnd.effectiveGround);
+      const yEndTop = yCoord(ptEnd.rayHeight);
+
+      ctx.beginPath();
+      ctx.strokeStyle = '#f87171';
+      ctx.lineWidth = 3.5;
+      ctx.moveTo(xEnd, yEndBase);
+      ctx.lineTo(xEnd, yEndTop);
+      ctx.stroke();
+
+      ctx.fillStyle = '#f87171';
+      ctx.beginPath();
+      ctx.arc(xEnd, yEndTop, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Tower Label End
+      ctx.fillStyle = '#fca5a5';
+      ctx.font = 'bold 10.5px Prompt, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText(`🗼 จุด B (เสา ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`, xEnd - 8, yEndTop - 2);
+
+      // 5. Draw Obstruction Warning Pin if path is obstructed
+      if (data.stats.isObstructed && data.stats.obstructionIdx >= 0) {
+        const obPt = points[data.stats.obstructionIdx];
+        const obX = xCoord(obPt.distKm);
+        const obY = yCoord(obPt.effectiveGround);
+
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(obX, obY, 6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        ctx.fillStyle = '#fee2e2';
+        ctx.font = 'bold 10px Prompt, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`⚠️ จุดกีดขวาง (${Math.abs(data.stats.worstClearance)}m)`, obX, obY - 10);
+      }
+
+      // 6. Draw Hover Cursor & Indicator (Google Earth Pro style)
+      if (hoverDistKm !== null && hoverDistKm >= 0 && hoverDistKm <= totalD) {
+        const hX = xCoord(hoverDistKm);
+
+        // Find nearest point
+        let closestPt = points[0];
+        let minDiff = Infinity;
+        for (let i = 0; i < points.length; i++) {
+          const diff = Math.abs(points[i].distKm - hoverDistKm);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestPt = points[i];
+          }
+        }
+
+        const hYGround = yCoord(closestPt.effectiveGround);
+        const hYRay = yCoord(closestPt.rayHeight);
+
+        // Vertical Guide Line
+        ctx.save();
+        ctx.setLineDash([3, 3]);
+        ctx.strokeStyle = '#94a3b8';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.moveTo(hX, padTop);
+        ctx.lineTo(hX, H - padBottom);
+        ctx.stroke();
+        ctx.restore();
+
+        // Point on Terrain
+        ctx.fillStyle = '#dc2626';
+        ctx.beginPath();
+        ctx.arc(hX, hYGround, 5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Point on Ray
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(hX, hYRay, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function initElevationCanvasEvents() {
+      const canvas = document.getElementById('elevation-canvas');
+      const tooltip = document.getElementById('elev-tooltip');
+      if (!canvas) return;
+
+      canvas.addEventListener('mousemove', (e) => {
+        if (!currentElevProfileData || !currentElevProfileData.points.length) return;
+
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+
+        const padLeft = 55;
+        const padRight = 35;
+        const plotW = rect.width - padLeft - padRight;
+        const totalD = currentElevProfileData.totalDistKm || 1;
+
+        if (x < padLeft || x > rect.width - padRight) {
+          drawElevationProfile(currentElevProfileData, null);
+          if (tooltip) tooltip.style.display = 'none';
+          if (elevHoverMarker && map && map.hasLayer(elevHoverMarker)) map.removeLayer(elevHoverMarker);
+          const cursorMsl = document.getElementById('elev-stat-cursor-msl');
+          if (cursorMsl) cursorMsl.style.display = 'none';
+          return;
+        }
+
+        const frac = Math.max(0, Math.min(1, (x - padLeft) / plotW));
+        const hoverDistKm = frac * totalD;
+
+        // Find closest point
+        const points = currentElevProfileData.points;
+        let closestPt = points[0];
+        let minDiff = Infinity;
+        for (let i = 0; i < points.length; i++) {
+          const diff = Math.abs(points[i].distKm - hoverDistKm);
+          if (diff < minDiff) {
+            minDiff = diff;
+            closestPt = points[i];
+          }
+        }
+
+        drawElevationProfile(currentElevProfileData, hoverDistKm);
+
+        // Update Cursor MSL in Stats Bar
+        const cursorMsl = document.getElementById('elev-stat-cursor-msl');
+        if (cursorMsl) {
+          cursorMsl.style.display = 'inline';
+          cursorMsl.innerHTML = ` (จุดชี้: <b>${closestPt.elevation}</b> m)`;
+        }
+
+        // Update Tooltip
+        if (tooltip) {
+          const clearance = closestPt.clearance;
+          const clearColor = clearance >= 0 ? '#34d399' : '#f87171';
+          const clearText = clearance >= 0 ? `+${clearance.toFixed(1)} m (โล่ง)` : `${clearance.toFixed(1)} m (กีดขวาง)`;
+
+          tooltip.innerHTML = `
+            <div style="font-weight:700; color:#38bdf8; margin-bottom:3px;">📍 ระยะทาง: ${closestPt.distKm.toFixed(2)} km</div>
+            <div>🏔️ ระดับความสูงน้ำทะเล: <b>${closestPt.elevation} m</b> (รวมความโค้งโลก: ${closestPt.effectiveGround.toFixed(1)} m)</div>
+            <div>📡 แนวคลื่น: <b>${closestPt.rayHeight.toFixed(1)} m</b></div>
+            <div>ช่องว่างแนวคลื่น: <b style="color:${clearColor};">${clearText}</b></div>
+            <div>📐 ความชัน: <b>${closestPt.slope.toFixed(1)}%</b></div>
+          `;
+          tooltip.style.display = 'block';
+
+          let tooltipX = x + 15;
+          let tooltipY = y - 45;
+          if (tooltipX + 220 > rect.width) tooltipX = x - 230;
+          if (tooltipY < 10) tooltipY = 10;
+          tooltip.style.left = `${tooltipX}px`;
+          tooltip.style.top = `${tooltipY}px`;
+        }
+
+        // Update Leaflet map marker
+        updateElevHoverMarker(closestPt.lat, closestPt.lon, closestPt.distKm, closestPt.elevation);
+      });
+
+      canvas.addEventListener('mouseleave', () => {
+        if (!currentElevProfileData) return;
+        drawElevationProfile(currentElevProfileData, null);
+        if (tooltip) tooltip.style.display = 'none';
+        if (elevHoverMarker && map && map.hasLayer(elevHoverMarker)) {
+          map.removeLayer(elevHoverMarker);
+        }
+        const cursorMsl = document.getElementById('elev-stat-cursor-msl');
+        if (cursorMsl) cursorMsl.style.display = 'none';
+      });
+
+      window.addEventListener('resize', () => {
+        if (currentElevProfileData) {
+          drawElevationProfile(currentElevProfileData, null);
+        }
+      });
+    }
+
+    function updateElevHoverMarker(lat, lon, distKm, elevM) {
+      if (!map) return;
+      const html = `
+        <div style="position:relative; width:32px; height:32px; display:flex; align-items:center; justify-content:center;">
+          <div style="width:12px; height:12px; border-radius:50%; background:#ef4444; border:2px solid white; box-shadow:0 0 10px #ef4444;"></div>
+          <div style="position:absolute; top:-16px; background:#dc2626; color:white; font-size:10px; font-weight:700; padding:1px 6px; border-radius:4px; white-space:nowrap; border:1px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.4);">
+            ▼ ${distKm.toFixed(1)} km (${elevM}m)
+          </div>
+        </div>
+      `;
+      const icon = L.divIcon({
+        className: 'elev-hover-pin',
+        html: html,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16]
+      });
+
+      if (!elevHoverMarker) {
+        elevHoverMarker = L.marker([lat, lon], { icon, zIndexOffset: 2000 }).addTo(map);
+      } else {
+        elevHoverMarker.setLatLng([lat, lon]);
+        elevHoverMarker.setIcon(icon);
+        if (!map.hasLayer(elevHoverMarker)) elevHoverMarker.addTo(map);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initMap();
+      calculate();
+      initElevationCanvasEvents();
+    });
+  </script>
+</body>
+</html>
