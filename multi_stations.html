@@ -950,6 +950,9 @@
       </div>
 
       <div class="header-actions">
+        <a href="coverage_simulation.html" class="btn" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 6px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);" title="จำลองพื้นที่ครอบคลุมสัญญาณวิทยุของสถานีแม่ข่าย (Coverage Heatmap)">
+          📡 <span>จำลอง Coverage แม่ข่าย ➔</span>
+        </a>
         <a href="index.html" class="btn btn-outline" title="สลับกลับไปยังหน้าคำนวณเดี่ยว 2 จุด">
           ⬅ <span data-i18n="btn_single_mode">โหมดคำนวณเดี่ยว (Single Point A-B)</span>
         </a>
@@ -1003,6 +1006,9 @@
           <span class="master-badge">ศูนย์กลางโครงข่าย</span>
         </div>
         <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button class="btn btn-outline" style="padding: 4px 12px; font-size: 0.8rem; background: #fff1f2; color: #be123c; border-color: #fca5a5; font-weight: 700;" onclick="openMasterCoverageSimulation()" title="เปิดระบบจำลองพื้นที่ครอบคลุมสัญญาณ (Coverage) ของสถานีแม่ข่ายนี้">
+            ⚡ จำลอง Coverage สถานีนี้
+          </button>
           <button class="btn btn-excel-outline" style="padding: 4px 12px; font-size: 0.8rem;" onclick="document.getElementById('excel-file-input').click()" title="นำเข้าพิกัดสถานีแม่ข่ายและลูกข่ายจากไฟล์ Excel (.xlsx / .xls / .csv)">
             📂 นำเข้าพิกัดจาก Excel
           </button>
@@ -3881,6 +3887,14 @@
       const target = threeControls.target;
       threeCamera.position.set(0, target.y + 35, 115);
       threeControls.update();
+    }
+
+    function openMasterCoverageSimulation() {
+      const name = encodeURIComponent(document.getElementById('master-name').value || "ศูนย์แม่ข่าย");
+      const lat = encodeURIComponent(document.getElementById('master-lat').value || "13.756331");
+      const lon = encodeURIComponent(document.getElementById('master-lon').value || "100.501765");
+      const tower = encodeURIComponent(document.getElementById('master-tower-height')?.value || document.getElementById('master-height')?.value || "45");
+      window.location.href = `coverage_simulation.html?lat=${lat}&lon=${lon}&name=${name}&tower=${tower}`;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
