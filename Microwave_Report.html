@@ -306,6 +306,19 @@
       margin-top: 1rem !important;
       padding: 10px 14px !important;
     }
+    .pdf-rendering #rf-model-select {
+      border: none !important;
+      background: transparent !important;
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      padding: 0 !important;
+      font-size: inherit !important;
+      font-weight: 700 !important;
+      color: inherit !important;
+      text-align: right !important;
+      box-shadow: none !important;
+    }
 
     /* Print & Paper Setup */
     @page {
@@ -328,6 +341,19 @@
       tr { page-break-inside: avoid !important; break-inside: avoid !important; }
       tbody { page-break-inside: avoid !important; break-inside: avoid !important; }
       td, th { padding: 3px 6px !important; }
+      #rf-model-select {
+        border: none !important;
+        background: transparent !important;
+        appearance: none !important;
+        -webkit-appearance: none !important;
+        -moz-appearance: none !important;
+        padding: 0 !important;
+        font-size: inherit !important;
+        font-weight: 700 !important;
+        color: inherit !important;
+        text-align: right !important;
+        box-shadow: none !important;
+      }
       .profile-box { page-break-inside: avoid !important; break-inside: avoid !important; margin-bottom: 0.5rem !important; padding: 6px !important; }
       .profile-box img { max-height: 130px !important; }
       .conclusion-box { page-break-inside: avoid !important; break-inside: avoid !important; margin-top: 1rem !important; padding: 10px 14px !important; }
@@ -347,7 +373,34 @@
           <div style="font-size: 0.75rem; color: var(--muted);" id="top-bar-status">โหมดแสดงผล: คำนวณตามข้อมูลที่กรอกแบบเรียลไทม์ (Real-time Engineering Calculation)</div>
         </div>
       </div>
-      <div style="display: flex; gap: 8px; align-items: center;">
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <!-- Microwave Dish Size Selector in Report Bar -->
+        <div style="display: inline-flex; align-items: center; gap: 5px; margin-right: 4px;">
+          <label for="report-dish-select" style="font-size: 0.8rem; font-weight: 700; color: #334155; white-space: nowrap;">🎯 ขนาดหน้าจาน:</label>
+          <select id="report-dish-select" onchange="onReportDishChange()" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; outline: none;">
+            <option value="auto">คำนวณอัตโนมัติ (Auto)</option>
+            <option value="0.3">0.3 m (1 ft) - 25.5 dBi</option>
+            <option value="0.6">0.6 m (2 ft) - 31.2 dBi</option>
+            <option value="0.9">0.9 m (3 ft) - 34.9 dBi</option>
+            <option value="1.2">1.2 m (4 ft) - 37.4 dBi</option>
+            <option value="1.8">1.8 m (6 ft) - 40.9 dBi</option>
+            <option value="2.4">2.4 m (8 ft) - 43.4 dBi</option>
+            <option value="3.0">3.0 m (10 ft) - 45.4 dBi</option>
+          </select>
+        </div>
+        <!-- Radio Model Selector in Report Bar -->
+        <div style="display: inline-flex; align-items: center; gap: 5px; margin-right: 4px;">
+          <label for="report-radio-model-select" style="font-size: 0.8rem; font-weight: 700; color: #334155; white-space: nowrap;">📻 รุ่นวิทยุ:</label>
+          <select id="report-radio-model-select" onchange="onReportRadioModelChange(this.value)" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; outline: none;">
+            <option value="7G_XMC3E_32Q_28M_112M" selected>7G_XMC3E (28 MHz)</option>
+            <option value="7G_XMC3E_64Q_40M_160M">7G_XMC3E (40 MHz)</option>
+            <option value="7G_XMC3E_128Q_56M_224M">7G_XMC3E (56 MHz)</option>
+            <option value="NEC_iPASO_VR4_28M">NEC VR4 (28 MHz)</option>
+            <option value="NEC_iPASO_VR4_56M">NEC VR4 (56 MHz)</option>
+            <option value="ML6600_RAU4_28M">MINI-LINK (28 MHz)</option>
+            <option value="ML6600_RAU4_56M">MINI-LINK (56 MHz)</option>
+          </select>
+        </div>
         <button onclick="window.print()" class="btn btn-outline" title="พิมพ์รายงานหรือบันทึกเป็น PDF ผ่านเบราว์เซอร์">
           🖨️ สั่งพิมพ์ (Print)
         </button>
@@ -545,9 +598,19 @@
           </tr>
           <tr>
             <td>รุ่นอุปกรณ์วิทยุ (Radio Model)</td>
-            <td class="mono text-right" id="rf-model">7G_XMC3E_32Q_28M_112M</td>
+            <td class="mono text-right" style="padding: 2px 6px;">
+              <select id="rf-model-select" onchange="onReportRadioModelChange(this.value)" style="font-family: var(--font-mono); font-size: 0.82rem; font-weight: 700; color: #0f172a; background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 3px 6px; cursor: pointer; text-align: right; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                <option value="7G_XMC3E_32Q_28M_112M" selected>7G_XMC3E_32Q_28M_112M</option>
+                <option value="7G_XMC3E_64Q_40M_160M">7G_XMC3E_64Q_40M_160M</option>
+                <option value="7G_XMC3E_128Q_56M_224M">7G_XMC3E_128Q_56M_224M</option>
+                <option value="NEC_iPASO_VR4_28M">NEC_iPASOLINK_VR4_28M</option>
+                <option value="NEC_iPASO_VR4_56M">NEC_iPASOLINK_VR4_56M</option>
+                <option value="ML6600_RAU4_28M">ML6600_RAU4_28M_112M</option>
+                <option value="ML6600_RAU4_56M">ML6600_RAU4_56M_224M</option>
+              </select>
+            </td>
             <td>-</td>
-            <td>Channel Bandwidth 28 MHz</td>
+            <td id="rf-bw-desc">Channel Bandwidth 28 MHz</td>
           </tr>
         </tbody>
       </table>
@@ -676,7 +739,7 @@
     }
 
     // Parabolic Dish Antenna Sizing & Analysis (based on Distance, Target Margin & Carrier-Grade Standards)
-    function calculateParabolicAntenna(distKm, freqGHz = 7.5) {
+    function calculateParabolicAntenna(distKm, freqGHz = 7.5, overrideSize = null) {
       const d = Math.max(0.1, parseFloat(distKm) || 1.0);
       const targetMargin = d <= 8 ? 32.0 : (d <= 20 ? 35.0 : 38.0);
       const freqMHz = freqGHz * 1000.0;
@@ -705,11 +768,22 @@
         { sizeM: 3.0, gainDbi: 45.40, model: 'A7WD30MAC-10NX', label: 'Ø 3.0 m (10 ft)' }
       ];
 
-      let selected = catalog[catalog.length - 1];
-      for (let i = 0; i < catalog.length; i++) {
-        if (catalog[i].gainDbi >= reqGainPerAntenna) {
-          selected = catalog[i];
-          break;
+      // Check if user specified a manual dish size override
+      let selected = null;
+      let isManual = false;
+      if (overrideSize && overrideSize !== 'auto') {
+        const targetSize = parseFloat(overrideSize);
+        selected = catalog.find(c => Math.abs(c.sizeM - targetSize) < 0.05);
+        if (selected) isManual = true;
+      }
+
+      if (!selected) {
+        selected = catalog[catalog.length - 1];
+        for (let i = 0; i < catalog.length; i++) {
+          if (catalog[i].gainDbi >= reqGainPerAntenna) {
+            selected = catalog[i];
+            break;
+          }
         }
       }
 
@@ -725,12 +799,150 @@
         requiredGain: reqGainPerAntenna,
         targetMargin: targetMargin,
         actualMargin: actualMargin,
+        isManual: isManual,
         fsl,
         atmLoss,
         rainLoss,
         totalPathLoss
       };
     }
+
+    // Standard Commercial Microwave Radio Models Catalog & Adaptive Modulation Specifications
+    const RADIO_MODELS = {
+      '7G_XMC3E_32Q_28M_112M': {
+        id: '7G_XMC3E_32Q_28M_112M',
+        label: '7G_XMC3E_32Q_28M_112M',
+        vendor: 'Huawei OptiX RTN 900 / XMC-3E',
+        shortName: '7G_XMC3E (28 MHz)',
+        displayName: '7G_XMC3E_32Q_28M_112M (Huawei 28MHz)',
+        bw: '28 MHz',
+        bwDesc: 'Channel Bandwidth 28 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '424.0 Mbps', tx: 28.5, th: -60.3 },
+          { key: '256', name: '256QAM', tp: '380.0 Mbps', tx: 28.5, th: -63.6 },
+          { key: '128', name: '128QAM', tp: '334.0 Mbps', tx: 30.5, th: -66.6 },
+          { key: '64',  name: '64QAM',  tp: '282.0 Mbps', tx: 30.5, th: -69.9 },
+          { key: '32',  name: '32QAM',  tp: '224.0 Mbps', tx: 30.5, th: -79.0, isBase: true }
+        ]
+      },
+      '7G_XMC3E_64Q_40M_160M': {
+        id: '7G_XMC3E_64Q_40M_160M',
+        label: '7G_XMC3E_64Q_40M_160M',
+        vendor: 'Huawei OptiX RTN 900 / XMC-3E',
+        shortName: '7G_XMC3E (40 MHz)',
+        displayName: '7G_XMC3E_64Q_40M_160M (Huawei 40MHz)',
+        bw: '40 MHz',
+        bwDesc: 'Channel Bandwidth 40 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '606.0 Mbps', tx: 28.0, th: -58.7 },
+          { key: '256', name: '256QAM', tp: '542.0 Mbps', tx: 28.0, th: -62.0 },
+          { key: '128', name: '128QAM', tp: '476.0 Mbps', tx: 30.0, th: -65.0 },
+          { key: '64',  name: '64QAM',  tp: '402.0 Mbps', tx: 30.0, th: -68.3 },
+          { key: '32',  name: '32QAM',  tp: '320.0 Mbps', tx: 30.0, th: -77.4, isBase: true }
+        ]
+      },
+      '7G_XMC3E_128Q_56M_224M': {
+        id: '7G_XMC3E_128Q_56M_224M',
+        label: '7G_XMC3E_128Q_56M_224M',
+        vendor: 'Huawei OptiX RTN 900 / XMC-3E',
+        shortName: '7G_XMC3E (56 MHz)',
+        displayName: '7G_XMC3E_128Q_56M_224M (Huawei 56MHz)',
+        bw: '56 MHz',
+        bwDesc: 'Channel Bandwidth 56 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '848.0 Mbps', tx: 27.5, th: -57.2 },
+          { key: '256', name: '256QAM', tp: '760.0 Mbps', tx: 27.5, th: -60.5 },
+          { key: '128', name: '128QAM', tp: '668.0 Mbps', tx: 29.5, th: -63.5 },
+          { key: '64',  name: '64QAM',  tp: '564.0 Mbps', tx: 29.5, th: -66.8 },
+          { key: '32',  name: '32QAM',  tp: '448.0 Mbps', tx: 29.5, th: -75.9, isBase: true }
+        ]
+      },
+      'NEC_iPASO_VR4_28M': {
+        id: 'NEC_iPASO_VR4_28M',
+        label: 'NEC_iPASOLINK_VR4_28M',
+        vendor: 'NEC iPASOLINK VR4 / IAG',
+        shortName: 'NEC VR4 (28 MHz)',
+        displayName: 'NEC_iPASOLINK_VR4_28M (NEC 28MHz)',
+        bw: '28 MHz',
+        bwDesc: 'Channel Bandwidth 28 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '410.0 Mbps', tx: 28.0, th: -59.5 },
+          { key: '256', name: '256QAM', tp: '368.0 Mbps', tx: 28.0, th: -62.8 },
+          { key: '128', name: '128QAM', tp: '322.0 Mbps', tx: 30.0, th: -65.8 },
+          { key: '64',  name: '64QAM',  tp: '274.0 Mbps', tx: 30.0, th: -69.0 },
+          { key: '32',  name: '32QAM',  tp: '218.0 Mbps', tx: 30.0, th: -78.2, isBase: true }
+        ]
+      },
+      'NEC_iPASO_VR4_56M': {
+        id: 'NEC_iPASO_VR4_56M',
+        label: 'NEC_iPASOLINK_VR4_56M',
+        vendor: 'NEC iPASOLINK VR4 / IAG',
+        shortName: 'NEC VR4 (56 MHz)',
+        displayName: 'NEC_iPASOLINK_VR4_56M (NEC 56MHz)',
+        bw: '56 MHz',
+        bwDesc: 'Channel Bandwidth 56 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '820.0 Mbps', tx: 27.0, th: -56.5 },
+          { key: '256', name: '256QAM', tp: '736.0 Mbps', tx: 27.0, th: -59.8 },
+          { key: '128', name: '128QAM', tp: '644.0 Mbps', tx: 29.0, th: -62.8 },
+          { key: '64',  name: '64QAM',  tp: '548.0 Mbps', tx: 29.0, th: -66.0 },
+          { key: '32',  name: '32QAM',  tp: '436.0 Mbps', tx: 29.0, th: -75.2, isBase: true }
+        ]
+      },
+      'ML6600_RAU4_28M': {
+        id: 'ML6600_RAU4_28M',
+        label: 'ML6600_RAU4_28M_112M',
+        vendor: 'Ericsson MINI-LINK 6600 / RAU4',
+        shortName: 'MINI-LINK (28 MHz)',
+        displayName: 'ML6600_RAU4_28M_112M (Ericsson 28MHz)',
+        bw: '28 MHz',
+        bwDesc: 'Channel Bandwidth 28 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '418.0 Mbps', tx: 29.0, th: -60.0 },
+          { key: '256', name: '256QAM', tp: '375.0 Mbps', tx: 29.0, th: -63.2 },
+          { key: '128', name: '128QAM', tp: '330.0 Mbps', tx: 30.0, th: -66.4 },
+          { key: '64',  name: '64QAM',  tp: '278.0 Mbps', tx: 30.0, th: -69.6 },
+          { key: '32',  name: '32QAM',  tp: '220.0 Mbps', tx: 30.0, th: -78.8, isBase: true }
+        ]
+      },
+      'ML6600_RAU4_56M': {
+        id: 'ML6600_RAU4_56M',
+        label: 'ML6600_RAU4_56M_224M',
+        vendor: 'Ericsson MINI-LINK 6600 / RAU4',
+        shortName: 'MINI-LINK (56 MHz)',
+        displayName: 'ML6600_RAU4_56M_224M (Ericsson 56MHz)',
+        bw: '56 MHz',
+        bwDesc: 'Channel Bandwidth 56 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '836.0 Mbps', tx: 28.0, th: -57.0 },
+          { key: '256', name: '256QAM', tp: '750.0 Mbps', tx: 28.0, th: -60.2 },
+          { key: '128', name: '128QAM', tp: '660.0 Mbps', tx: 29.0, th: -63.4 },
+          { key: '64',  name: '64QAM',  tp: '556.0 Mbps', tx: 29.0, th: -66.6 },
+          { key: '32',  name: '32QAM',  tp: '440.0 Mbps', tx: 29.0, th: -75.8, isBase: true }
+        ]
+      }
+    };
 
     // High-Resolution Report Elevation Profile Renderer (White Background, Clean Engineering Style)
     function drawReportProfileCanvas(canvas, data) {
@@ -1180,20 +1392,38 @@
       const rainLoss = (1.192 * distKm) / (1 + 0.045 * distKm);
 
       // Parabolic Dish Antenna Sizing based on Margin & Distance
-      const antCalc = calculateParabolicAntenna(distKm, freqGHz);
-      const antGainA = (data && data.antGain) ? parseFloat(data.antGain) : antCalc.gainDbi;
+      const dishSel = document.getElementById('report-dish-select');
+      const chosenDish = (dishSel && dishSel.value !== 'auto') ? dishSel.value : (data.dishSize || 'auto');
+      if (dishSel && data.dishSize && document.activeElement !== dishSel) {
+        dishSel.value = data.dishSize;
+      }
+      const antCalc = calculateParabolicAntenna(distKm, freqGHz, chosenDish);
+      const antGainA = antCalc.gainDbi;
       const antGainB = antGainA;
-      const antModelFull = (data && data.antModel) ? data.antModel : antCalc.modelFull;
-      const feederLoss = 2.0;
+      const antModelFull = antCalc.modelFull;
+      // Radio Model Selection & Synchronization
+      const topRadioSel = document.getElementById('report-radio-model-select');
+      const tableRadioSel = document.getElementById('rf-model-select');
+      let chosenRadioKey = data.radioModel || (topRadioSel ? topRadioSel.value : '7G_XMC3E_32Q_28M_112M');
+      if (!RADIO_MODELS[chosenRadioKey]) {
+        chosenRadioKey = '7G_XMC3E_32Q_28M_112M';
+      }
+      if (topRadioSel && document.activeElement !== topRadioSel) {
+        topRadioSel.value = chosenRadioKey;
+      }
+      if (tableRadioSel && document.activeElement !== tableRadioSel) {
+        tableRadioSel.value = chosenRadioKey;
+      }
+
+      const curRadio = RADIO_MODELS[chosenRadioKey];
+      const feederLoss = curRadio.feederLoss || 2.0;
+
+      // Update Channel Bandwidth description in Table 2
+      const bwDescEl = document.getElementById('rf-bw-desc');
+      if (bwDescEl) bwDescEl.innerText = curRadio.bwDesc;
 
       // Adaptive Modulation Modes
-      const modesConfig = [
-        { key: '512', tp: '424.0 Mbps', tx: 28.5, th: -60.3 },
-        { key: '256', tp: '380.0 Mbps', tx: 28.5, th: -63.6 },
-        { key: '128', tp: '334.0 Mbps', tx: 30.5, th: -66.6 },
-        { key: '64',  tp: '282.0 Mbps', tx: 30.5, th: -69.9 },
-        { key: '32',  tp: '224.0 Mbps', tx: 30.5, th: -79.0, isBase: true },
-      ];
+      const modesConfig = curRadio.modes;
 
       const modesResults = modesConfig.map(m => {
         const eirp = m.tx + antGainA;
@@ -1207,7 +1437,7 @@
         return { ...m, eirp: eirp.toFixed(1), rsl: rsl.toFixed(2), fm: fm.toFixed(2), avail };
       });
 
-      const baseMode = modesResults[4];
+      const baseMode = modesResults[modesResults.length - 1];
 
       // Update KPI Cards
       const setT = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
@@ -1292,6 +1522,7 @@
       // Update Engineering Conclusion
       const conclusionEl = document.getElementById('conclusion-text');
       if (conclusionEl) {
+        const sizingAction = antCalc.isManual ? 'กำหนดเลือกใช้' : 'วิเคราะห์และคำนวณเลือกใช้';
         conclusionEl.innerHTML = `
           <p style="margin-bottom: 5px;">
             เส้นทางวิทยุไมโครเวฟ ระหว่าง <b>${nameA}</b> และ <b>${nameB}</b> มีระยะทางจริงตามเส้น Geodesic เท่ากับ <b>${distKm.toFixed(3)} km</b> เมื่อติดตั้งสายอากาศ ที่ระดับความสูง <b>${antA.toFixed(1)} เมตร</b> (สถานี A) และ <b>${antB.toFixed(1)} เมตร</b> (สถานี B)
@@ -1300,13 +1531,36 @@
             แนวคลื่นวิทยุ ย่านความถี่ <b>${freqGHz.toFixed(1)} GHz</b> มีระยะเคลียร์ เหนือผืนดิน และสิ่งกีดขวาง ตลอดแนวเส้นทาง (100% 1st Fresnel Zone ปลอดโปร่ง)
           </p>
           <p style="margin-bottom: 5px;">
-            วิเคราะห์และคำนวณเลือกใช้จานสายอากาศพาราโบลิกขนาดเส้นผ่านศูนย์กลาง <b>${antCalc.sizeM} เมตร (${antCalc.label})</b> อัตราขยาย <b>${antGainA.toFixed(2)} dBi</b> เพื่อรองรับระยะทาง <b>${distKm.toFixed(3)} km</b> ให้ระดับสัญญาณรับในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> (เกณฑ์มาตรฐาน ≥ ${antCalc.targetMargin} dB)
+            ${sizingAction}จานสายอากาศพาราโบลิกขนาดเส้นผ่านศูนย์กลาง <b>${antCalc.sizeM} เมตร (${antCalc.label})</b> อัตราขยาย <b>${antGainA.toFixed(2)} dBi</b> เพื่อรองรับระยะทาง <b>${distKm.toFixed(3)} km</b> ให้ระดับสัญญาณรับในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> (เกณฑ์มาตรฐาน ≥ ${antCalc.targetMargin} dB)
           </p>
           <p style="margin: 0;">
             อัตรา ความพร้อมใช้งาน ของระบบสื่อสาร (Annual Availability) คำนวณได้ <b>${baseMode.avail}</b> ผ่านเกณฑ์มาตรฐาน โทรคมนาคม ระดับ Carrier-Grade Telecom Standard สมบูรณ์แบบ.
           </p>
         `;
       }
+    }
+
+    function onReportDishChange() {
+      const sel = document.getElementById('report-dish-select');
+      if (sel) {
+        if (!activeReportData) {
+          activeReportData = getDataSource() || defaultReportData;
+        }
+        activeReportData.dishSize = sel.value;
+        renderRealtimeReport();
+      }
+    }
+
+    function onReportRadioModelChange(val) {
+      if (!activeReportData) {
+        activeReportData = getDataSource() || defaultReportData;
+      }
+      activeReportData.radioModel = val;
+      const topRadioSel = document.getElementById('report-radio-model-select');
+      const tableRadioSel = document.getElementById('rf-model-select');
+      if (topRadioSel) topRadioSel.value = val;
+      if (tableRadioSel) tableRadioSel.value = val;
+      renderRealtimeReport();
     }
 
     function downloadRealtimeReportPDF() {

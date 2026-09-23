@@ -1420,19 +1420,55 @@
         </div>
 
         <div class="card-body">
-          <!-- Frequency Band Selector -->
-          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 0.75rem;">
-            <label for="fresnel-freq-select" style="font-size: 0.82rem; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 5px; margin: 0; cursor: pointer;">
-              📡 <span data-i18n="lbl_freq_band">ย่านความถี่:</span>
+          <!-- Frequency Band & Dish Size Selectors -->
+          <div style="display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-bottom: 0.5rem; flex-wrap: nowrap;">
+            <!-- Microwave Dish Size Selector -->
+            <div id="dish-size-container" style="display: inline-flex; align-items: center; gap: 4px;">
+              <label for="microwave-dish-select" style="font-size: 0.8rem; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 3px; margin: 0; cursor: pointer; white-space: nowrap;">
+                🎯 <span data-i18n="lbl_dish_size">ขนาดหน้าจาน:</span>
+              </label>
+              <select id="microwave-dish-select" onchange="onMicrowaveDishChange()" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px 6px; font-size: 0.8rem; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                <option value="auto">Auto (คำนวณ)</option>
+                <option value="0.3">0.3m (1 ft)</option>
+                <option value="0.6">0.6m (2 ft)</option>
+                <option value="0.9" selected>0.9m (3 ft)</option>
+                <option value="1.2">1.2m (4 ft)</option>
+                <option value="1.8">1.8m (6 ft)</option>
+                <option value="2.4">2.4m (8 ft)</option>
+                <option value="3.0">3.0m (10 ft)</option>
+              </select>
+            </div>
+
+            <!-- Frequency Band Selector -->
+            <div style="display: inline-flex; align-items: center; gap: 4px;">
+              <label for="fresnel-freq-select" style="font-size: 0.8rem; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 3px; margin: 0; cursor: pointer; white-space: nowrap;">
+                📡 <span data-i18n="lbl_freq_band">ย่านความถี่:</span>
+              </label>
+              <select id="fresnel-freq-select" onchange="onFresnelFreqChange()" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+                <option value="150">VHF 150 MHz</option>
+                <option value="400">UHF / TETRA 400 MHz</option>
+                <option value="800">800 MHz</option>
+                <option value="900">900 MHz</option>
+                <option value="2400">Microwave 2.4 GHz</option>
+                <option value="5800">Microwave 5.8 GHz</option>
+                <option value="7500" selected>Microwave 7.5 GHz</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Radio Model Selector Row -->
+          <div id="radio-model-container" style="display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin-bottom: 0.75rem;">
+            <label for="main-radio-model-select" style="font-size: 0.8rem; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 3px; margin: 0; cursor: pointer; white-space: nowrap;">
+              📻 <span data-i18n="lbl_radio_model">รุ่นอุปกรณ์วิทยุ:</span>
             </label>
-            <select id="fresnel-freq-select" onchange="onFresnelFreqChange()" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px 10px; font-size: 0.82rem; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
-              <option value="150">VHF 150 MHz</option>
-              <option value="400" selected>UHF / TETRA 400 MHz</option>
-              <option value="800">800 MHz</option>
-              <option value="900">900 MHz</option>
-              <option value="2400">Microwave 2.4 GHz</option>
-              <option value="5800">Microwave 5.8 GHz</option>
-              <option value="7500">Microwave 7.5 GHz</option>
+            <select id="main-radio-model-select" onchange="onMainRadioModelChange(this.value)" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04); max-width: 290px;">
+              <option value="7G_XMC3E_32Q_28M_112M" selected>7G_XMC3E_32Q_28M_112M (Huawei 28MHz)</option>
+              <option value="7G_XMC3E_64Q_40M_160M">7G_XMC3E_64Q_40M_160M (Huawei 40MHz)</option>
+              <option value="7G_XMC3E_128Q_56M_224M">7G_XMC3E_128Q_56M_224M (Huawei 56MHz)</option>
+              <option value="NEC_iPASO_VR4_28M">NEC_iPASOLINK_VR4_28M (NEC 28MHz)</option>
+              <option value="NEC_iPASO_VR4_56M">NEC_iPASOLINK_VR4_56M (NEC 56MHz)</option>
+              <option value="ML6600_RAU4_28M">ML6600_RAU4_28M_112M (Ericsson 28MHz)</option>
+              <option value="ML6600_RAU4_56M">ML6600_RAU4_56M_224M (Ericsson 56MHz)</option>
             </select>
           </div>
 
@@ -2056,9 +2092,19 @@
                 </tr>
                 <tr>
                   <td style="padding:5px 10px;">รุ่นอุปกรณ์วิทยุ (Radio Model)</td>
-                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);">7G_XMC3E_32Q_28M_112M</td>
+                  <td style="padding:3px 10px; text-align:right;">
+                    <select id="cur-rf-model-select" onchange="onModalRadioModelChange(this.value)" style="font-family:var(--font-mono); font-size:0.8rem; font-weight:700; color:#0f172a; background:#ffffff; border:1.5px solid #cbd5e1; border-radius:6px; padding:3px 6px; cursor:pointer; text-align:right; outline:none;">
+                      <option value="7G_XMC3E_32Q_28M_112M" selected>7G_XMC3E_32Q_28M_112M</option>
+                      <option value="7G_XMC3E_64Q_40M_160M">7G_XMC3E_64Q_40M_160M</option>
+                      <option value="7G_XMC3E_128Q_56M_224M">7G_XMC3E_128Q_56M_224M</option>
+                      <option value="NEC_iPASO_VR4_28M">NEC_iPASOLINK_VR4_28M</option>
+                      <option value="NEC_iPASO_VR4_56M">NEC_iPASOLINK_VR4_56M</option>
+                      <option value="ML6600_RAU4_28M">ML6600_RAU4_28M_112M</option>
+                      <option value="ML6600_RAU4_56M">ML6600_RAU4_56M_224M</option>
+                    </select>
+                  </td>
                   <td style="padding:5px 10px;">-</td>
-                  <td style="padding:5px 10px; color:#64748b;">Channel Bandwidth 28 MHz</td>
+                  <td style="padding:5px 10px; color:#64748b;" id="cur-rf-bw-desc">Channel Bandwidth 28 MHz</td>
                 </tr>
               </tbody>
             </table>
@@ -2275,6 +2321,8 @@
         inputs_title: "กำหนดพิกัดตำแหน่ง (Coordinates)",
         btn_swap: "สลับจุด A ⇄ B",
         lbl_freq_band: "ย่านความถี่:",
+        lbl_dish_size: "ขนาดหน้าจาน:",
+        lbl_radio_model: "รุ่นอุปกรณ์วิทยุ:",
         point_a_title: "สถานีต้นทาง",
         point_b_title: "สถานีปลายทาง",
         lbl_lat_a: "ละติจูด (ϕ₁)",
@@ -2337,6 +2385,8 @@
         inputs_title: "Coordinates Input",
         btn_swap: "Swap Point A ⇄ B",
         lbl_freq_band: "Frequency Band:",
+        lbl_dish_size: "Dish Size:",
+        lbl_radio_model: "Radio Model:",
         point_a_title: "Radio Substation (Point A)",
         point_b_title: "Master Station (Point B)",
         lbl_lat_a: "Latitude (ϕ₁)",
@@ -4107,6 +4157,14 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const sel = document.getElementById('fresnel-freq-select');
       if (sel) {
         selectedFresnelFreqMHz = parseFloat(sel.value) || 400;
+        const dishCont = document.getElementById('dish-size-container');
+        if (dishCont) {
+          dishCont.style.display = (selectedFresnelFreqMHz >= 1000) ? 'inline-flex' : 'none';
+        }
+        const radioCont = document.getElementById('radio-model-container');
+        if (radioCont) {
+          radioCont.style.display = (selectedFresnelFreqMHz >= 1000) ? 'flex' : 'none';
+        }
         if (currentElevProfileData && currentElevProfileData.points) {
           const fGHz = selectedFresnelFreqMHz / 1000.0;
           const totalD = currentElevProfileData.totalDistKm;
@@ -4123,6 +4181,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         } else if (currentElevProfileData) {
           drawElevationProfile(currentElevProfileData, null);
         }
+        saveRealtimeReportData();
       }
     }
 
@@ -4671,7 +4730,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
     }
 
     // Parabolic Dish Antenna Sizing & Analysis (based on Distance, Target Margin & Carrier-Grade Standards)
-    function calculateParabolicAntenna(distKm, freqGHz = 7.5) {
+    function calculateParabolicAntenna(distKm, freqGHz = 7.5, overrideSize = null) {
       const d = Math.max(0.1, parseFloat(distKm) || 1.0);
       const targetMargin = d <= 8 ? 32.0 : (d <= 20 ? 35.0 : 38.0);
       const freqMHz = freqGHz * 1000.0;
@@ -4700,11 +4759,23 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         { sizeM: 3.0, gainDbi: 45.40, model: 'A7WD30MAC-10NX', label: 'Ø 3.0 m (10 ft)' }
       ];
 
-      let selected = catalog[catalog.length - 1];
-      for (let i = 0; i < catalog.length; i++) {
-        if (catalog[i].gainDbi >= reqGainPerAntenna) {
-          selected = catalog[i];
-          break;
+      // Check if user specified a manual dish size override
+      let selected = null;
+      let isManual = false;
+      if (overrideSize && overrideSize !== 'auto') {
+        const targetSize = parseFloat(overrideSize);
+        selected = catalog.find(c => Math.abs(c.sizeM - targetSize) < 0.05);
+        if (selected) isManual = true;
+      }
+
+      // If auto or not found, calculate automatically from distance & target margin
+      if (!selected) {
+        selected = catalog[catalog.length - 1];
+        for (let i = 0; i < catalog.length; i++) {
+          if (catalog[i].gainDbi >= reqGainPerAntenna) {
+            selected = catalog[i];
+            break;
+          }
         }
       }
 
@@ -4720,12 +4791,150 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         requiredGain: reqGainPerAntenna,
         targetMargin: targetMargin,
         actualMargin: actualMargin,
+        isManual: isManual,
         fsl,
         atmLoss,
         rainLoss,
         totalPathLoss
       };
     }
+
+    // Standard Commercial Microwave Radio Models Catalog & Adaptive Modulation Specifications
+    const RADIO_MODELS = {
+      '7G_XMC3E_32Q_28M_112M': {
+        id: '7G_XMC3E_32Q_28M_112M',
+        label: '7G_XMC3E_32Q_28M_112M',
+        vendor: 'Huawei OptiX RTN 900 / XMC-3E',
+        shortName: '7G_XMC3E (28 MHz)',
+        displayName: '7G_XMC3E_32Q_28M_112M (Huawei 28MHz)',
+        bw: '28 MHz',
+        bwDesc: 'Channel Bandwidth 28 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '424.0 Mbps', tx: 28.5, th: -60.3 },
+          { key: '256', name: '256QAM', tp: '380.0 Mbps', tx: 28.5, th: -63.6 },
+          { key: '128', name: '128QAM', tp: '334.0 Mbps', tx: 30.5, th: -66.6 },
+          { key: '64',  name: '64QAM',  tp: '282.0 Mbps', tx: 30.5, th: -69.9 },
+          { key: '32',  name: '32QAM',  tp: '224.0 Mbps', tx: 30.5, th: -79.0, isBase: true }
+        ]
+      },
+      '7G_XMC3E_64Q_40M_160M': {
+        id: '7G_XMC3E_64Q_40M_160M',
+        label: '7G_XMC3E_64Q_40M_160M',
+        vendor: 'Huawei OptiX RTN 900 / XMC-3E',
+        shortName: '7G_XMC3E (40 MHz)',
+        displayName: '7G_XMC3E_64Q_40M_160M (Huawei 40MHz)',
+        bw: '40 MHz',
+        bwDesc: 'Channel Bandwidth 40 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '606.0 Mbps', tx: 28.0, th: -58.7 },
+          { key: '256', name: '256QAM', tp: '542.0 Mbps', tx: 28.0, th: -62.0 },
+          { key: '128', name: '128QAM', tp: '476.0 Mbps', tx: 30.0, th: -65.0 },
+          { key: '64',  name: '64QAM',  tp: '402.0 Mbps', tx: 30.0, th: -68.3 },
+          { key: '32',  name: '32QAM',  tp: '320.0 Mbps', tx: 30.0, th: -77.4, isBase: true }
+        ]
+      },
+      '7G_XMC3E_128Q_56M_224M': {
+        id: '7G_XMC3E_128Q_56M_224M',
+        label: '7G_XMC3E_128Q_56M_224M',
+        vendor: 'Huawei OptiX RTN 900 / XMC-3E',
+        shortName: '7G_XMC3E (56 MHz)',
+        displayName: '7G_XMC3E_128Q_56M_224M (Huawei 56MHz)',
+        bw: '56 MHz',
+        bwDesc: 'Channel Bandwidth 56 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '848.0 Mbps', tx: 27.5, th: -57.2 },
+          { key: '256', name: '256QAM', tp: '760.0 Mbps', tx: 27.5, th: -60.5 },
+          { key: '128', name: '128QAM', tp: '668.0 Mbps', tx: 29.5, th: -63.5 },
+          { key: '64',  name: '64QAM',  tp: '564.0 Mbps', tx: 29.5, th: -66.8 },
+          { key: '32',  name: '32QAM',  tp: '448.0 Mbps', tx: 29.5, th: -75.9, isBase: true }
+        ]
+      },
+      'NEC_iPASO_VR4_28M': {
+        id: 'NEC_iPASO_VR4_28M',
+        label: 'NEC_iPASOLINK_VR4_28M',
+        vendor: 'NEC iPASOLINK VR4 / IAG',
+        shortName: 'NEC VR4 (28 MHz)',
+        displayName: 'NEC_iPASOLINK_VR4_28M (NEC 28MHz)',
+        bw: '28 MHz',
+        bwDesc: 'Channel Bandwidth 28 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '410.0 Mbps', tx: 28.0, th: -59.5 },
+          { key: '256', name: '256QAM', tp: '368.0 Mbps', tx: 28.0, th: -62.8 },
+          { key: '128', name: '128QAM', tp: '322.0 Mbps', tx: 30.0, th: -65.8 },
+          { key: '64',  name: '64QAM',  tp: '274.0 Mbps', tx: 30.0, th: -69.0 },
+          { key: '32',  name: '32QAM',  tp: '218.0 Mbps', tx: 30.0, th: -78.2, isBase: true }
+        ]
+      },
+      'NEC_iPASO_VR4_56M': {
+        id: 'NEC_iPASO_VR4_56M',
+        label: 'NEC_iPASOLINK_VR4_56M',
+        vendor: 'NEC iPASOLINK VR4 / IAG',
+        shortName: 'NEC VR4 (56 MHz)',
+        displayName: 'NEC_iPASOLINK_VR4_56M (NEC 56MHz)',
+        bw: '56 MHz',
+        bwDesc: 'Channel Bandwidth 56 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '820.0 Mbps', tx: 27.0, th: -56.5 },
+          { key: '256', name: '256QAM', tp: '736.0 Mbps', tx: 27.0, th: -59.8 },
+          { key: '128', name: '128QAM', tp: '644.0 Mbps', tx: 29.0, th: -62.8 },
+          { key: '64',  name: '64QAM',  tp: '548.0 Mbps', tx: 29.0, th: -66.0 },
+          { key: '32',  name: '32QAM',  tp: '436.0 Mbps', tx: 29.0, th: -75.2, isBase: true }
+        ]
+      },
+      'ML6600_RAU4_28M': {
+        id: 'ML6600_RAU4_28M',
+        label: 'ML6600_RAU4_28M_112M',
+        vendor: 'Ericsson MINI-LINK 6600 / RAU4',
+        shortName: 'MINI-LINK (28 MHz)',
+        displayName: 'ML6600_RAU4_28M_112M (Ericsson 28MHz)',
+        bw: '28 MHz',
+        bwDesc: 'Channel Bandwidth 28 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '418.0 Mbps', tx: 29.0, th: -60.0 },
+          { key: '256', name: '256QAM', tp: '375.0 Mbps', tx: 29.0, th: -63.2 },
+          { key: '128', name: '128QAM', tp: '330.0 Mbps', tx: 30.0, th: -66.4 },
+          { key: '64',  name: '64QAM',  tp: '278.0 Mbps', tx: 30.0, th: -69.6 },
+          { key: '32',  name: '32QAM',  tp: '220.0 Mbps', tx: 30.0, th: -78.8, isBase: true }
+        ]
+      },
+      'ML6600_RAU4_56M': {
+        id: 'ML6600_RAU4_56M',
+        label: 'ML6600_RAU4_56M_224M',
+        vendor: 'Ericsson MINI-LINK 6600 / RAU4',
+        shortName: 'MINI-LINK (56 MHz)',
+        displayName: 'ML6600_RAU4_56M_224M (Ericsson 56MHz)',
+        bw: '56 MHz',
+        bwDesc: 'Channel Bandwidth 56 MHz',
+        config: 'Protection 2+0 / XPIC',
+        configDesc: 'Cross-Polarization Interference Cancellation',
+        feederLoss: 2.0,
+        modes: [
+          { key: '512', name: '512QAM', tp: '836.0 Mbps', tx: 28.0, th: -57.0 },
+          { key: '256', name: '256QAM', tp: '750.0 Mbps', tx: 28.0, th: -60.2 },
+          { key: '128', name: '128QAM', tp: '660.0 Mbps', tx: 29.0, th: -63.4 },
+          { key: '64',  name: '64QAM',  tp: '556.0 Mbps', tx: 29.0, th: -66.6 },
+          { key: '32',  name: '32QAM',  tp: '440.0 Mbps', tx: 29.0, th: -75.8, isBase: true }
+        ]
+      }
+    };
 
     // High-Resolution Report Elevation Profile Renderer (White Background, Clean Engineering Style)
     function drawReportProfileCanvas(canvas, data) {
@@ -5012,20 +5221,35 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const atmLoss = 0.0103 * distKm;
       // Rain Attenuation (Region N, 95mm/hr at 0.01%)
       const rainLoss = (1.192 * distKm) / (1 + 0.045 * distKm);
-      // Parabolic Dish Antenna Calculation from Margin & Distance
-      const antCalc = calculateParabolicAntenna(distKm, freqGHz);
+      // Parabolic Dish Antenna Calculation from Margin & Distance (supports manual override)
+      const dishSel = document.getElementById('microwave-dish-select');
+      const chosenDish = dishSel ? dishSel.value : 'auto';
+      const antCalc = calculateParabolicAntenna(distKm, freqGHz, chosenDish);
       const antGainA = antCalc.gainDbi;
       const antGainB = antCalc.gainDbi;
-      const feederLoss = 2.0;
+      // Radio Model Selection & Synchronization
+      const mainRadioSel = document.getElementById('main-radio-model-select');
+      const modalRadioSel = document.getElementById('cur-rf-model-select');
+      let chosenRadioKey = (mainRadioSel ? mainRadioSel.value : null) || (modalRadioSel ? modalRadioSel.value : '7G_XMC3E_32Q_28M_112M');
+      if (!RADIO_MODELS[chosenRadioKey]) {
+        chosenRadioKey = '7G_XMC3E_32Q_28M_112M';
+      }
+      if (mainRadioSel && document.activeElement !== mainRadioSel) {
+        mainRadioSel.value = chosenRadioKey;
+      }
+      if (modalRadioSel && document.activeElement !== modalRadioSel) {
+        modalRadioSel.value = chosenRadioKey;
+      }
+
+      const curRadio = RADIO_MODELS[chosenRadioKey];
+      const feederLoss = curRadio.feederLoss || 2.0;
+
+      // Update Channel Bandwidth in Table 2
+      const bwDescEl = document.getElementById('cur-rf-bw-desc');
+      if (bwDescEl) bwDescEl.innerText = curRadio.bwDesc;
 
       // Adaptive Modulation Modes
-      const modesConfig = [
-        { key: '512', tp: '424.0 Mbps', tx: 28.5, th: -60.3 },
-        { key: '256', tp: '380.0 Mbps', tx: 28.5, th: -63.6 },
-        { key: '128', tp: '334.0 Mbps', tx: 30.5, th: -66.6 },
-        { key: '64',  tp: '282.0 Mbps', tx: 30.5, th: -69.9 },
-        { key: '32',  tp: '224.0 Mbps', tx: 30.5, th: -79.0, isBase: true },
-      ];
+      const modesConfig = curRadio.modes;
 
       const modesResults = modesConfig.map(m => {
         const eirp = m.tx + antGainA;
@@ -5039,7 +5263,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         return { ...m, eirp: eirp.toFixed(1), rsl: rsl.toFixed(2), fm: fm.toFixed(2), avail };
       });
 
-      const baseMode = modesResults[4];
+      const baseMode = modesResults[modesResults.length - 1];
 
       const setTxt = (id, val) => { const el = document.getElementById(id); if (el) el.innerText = val; };
       const setHtml = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
@@ -5109,7 +5333,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
             แนวคลื่นวิทยุ ย่านความถี่ <b>${freqGHz.toFixed(1)} GHz</b> มีระยะเคลียร์ เหนือผืนดิน และสิ่งกีดขวาง ตลอดแนวเส้นทาง (100% 1st Fresnel Zone ปลอดโปร่ง)
           </p>
           <p style="margin-bottom: 5px;">
-            วิเคราะห์และคำนวณเลือกใช้จานสายอากาศพาราโบลิกขนาดเส้นผ่านศูนย์กลาง <b>${antCalc.sizeM} เมตร (${antCalc.label})</b> อัตราขยาย <b>${antCalc.gainDbi.toFixed(2)} dBi</b> เพื่อรองรับระยะทาง <b>${distKm.toFixed(3)} km</b> ให้ระดับสัญญาณรับในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> (เกณฑ์มาตรฐาน ≥ ${antCalc.targetMargin} dB)
+            ${antCalc.isManual ? 'กำหนดเลือกใช้' : 'วิเคราะห์และคำนวณเลือกใช้'}จานสายอากาศพาราโบลิกขนาดเส้นผ่านศูนย์กลาง <b>${antCalc.sizeM} เมตร (${antCalc.label})</b> อัตราขยาย <b>${antCalc.gainDbi.toFixed(2)} dBi</b> เพื่อรองรับระยะทาง <b>${distKm.toFixed(3)} km</b> ให้ระดับสัญญาณรับในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> (เกณฑ์มาตรฐาน ≥ ${antCalc.targetMargin} dB)
           </p>
           <p style="margin: 0;">
             อัตรา ความพร้อมใช้งาน ของระบบสื่อสาร (Annual Availability) คำนวณได้ <b>${baseMode.avail}</b> ผ่านเกณฑ์มาตรฐาน โทรคมนาคม ระดับ Carrier-Grade Telecom Standard สมบูรณ์แบบ.
@@ -5158,18 +5382,22 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const fsl = 32.44 + 20 * Math.log10(Math.max(0.01, distKm)) + 20 * Math.log10(freqMHz);
       const atmLoss = 0.0103 * distKm;
       const rainLoss = (1.192 * distKm) / (1 + 0.045 * distKm);
-      const antCalc = calculateParabolicAntenna(distKm, freqGHz);
+      const dishSel = document.getElementById('microwave-dish-select');
+      const chosenDish = dishSel ? dishSel.value : 'auto';
+      const antCalc = calculateParabolicAntenna(distKm, freqGHz, chosenDish);
       const antGainA = antCalc.gainDbi;
       const antGainB = antCalc.gainDbi;
-      const feederLoss = 2.0;
+      // Radio Model
+      const mainRadioSel = document.getElementById('main-radio-model-select');
+      const modalRadioSel = document.getElementById('cur-rf-model-select');
+      let chosenRadioKey = (mainRadioSel ? mainRadioSel.value : null) || (modalRadioSel ? modalRadioSel.value : '7G_XMC3E_32Q_28M_112M');
+      if (!RADIO_MODELS[chosenRadioKey]) {
+        chosenRadioKey = '7G_XMC3E_32Q_28M_112M';
+      }
+      const curRadio = RADIO_MODELS[chosenRadioKey];
+      const feederLoss = curRadio.feederLoss || 2.0;
 
-      const modesConfig = [
-        { key: '512', tp: '424.0 Mbps', tx: 28.5, th: -60.3 },
-        { key: '256', tp: '380.0 Mbps', tx: 28.5, th: -63.6 },
-        { key: '128', tp: '334.0 Mbps', tx: 30.5, th: -66.6 },
-        { key: '64',  tp: '282.0 Mbps', tx: 30.5, th: -69.9 },
-        { key: '32',  tp: '224.0 Mbps', tx: 30.5, th: -79.0, isBase: true },
-      ];
+      const modesConfig = curRadio.modes;
 
       const modesResults = modesConfig.map(m => {
         const eirp = m.tx + antGainA;
@@ -5183,7 +5411,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         return { ...m, eirp: eirp.toFixed(1), rsl: rsl.toFixed(2), fm: fm.toFixed(2), avail };
       });
 
-      const baseMode = modesResults[4];
+      const baseMode = modesResults[modesResults.length - 1];
 
       // Generate real simulation profile image & structured profile data
       let profileImage = null;
@@ -5270,11 +5498,41 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         antGain: antCalc.gainDbi,
         antModel: antCalc.modelFull,
         antLabel: antCalc.label,
+        dishSize: chosenDish,
+        isManualDish: antCalc.isManual,
         targetMargin: antCalc.targetMargin,
+        radioModel: chosenRadioKey,
+        radioVendor: curRadio.vendor,
+        radioBwDesc: curRadio.bwDesc,
         profileImage,
         elevProfileData: elevProfile,
         timestamp: new Date().toLocaleString('th-TH', { dateStyle: 'medium', timeStyle: 'short' })
       };
+    }
+
+    function onMicrowaveDishChange() {
+      const m = document.getElementById('microwave-modal');
+      if (m && m.style.display !== 'none') {
+        updateCurrentLinkModalData();
+      }
+      saveRealtimeReportData();
+    }
+
+    function onMainRadioModelChange(val) {
+      const modalRadioSel = document.getElementById('cur-rf-model-select');
+      if (modalRadioSel) modalRadioSel.value = val;
+      const m = document.getElementById('microwave-modal');
+      if (m && m.style.display !== 'none') {
+        updateCurrentLinkModalData();
+      }
+      saveRealtimeReportData();
+    }
+
+    function onModalRadioModelChange(val) {
+      const mainRadioSel = document.getElementById('main-radio-model-select');
+      if (mainRadioSel) mainRadioSel.value = val;
+      updateCurrentLinkModalData();
+      saveRealtimeReportData();
     }
 
     function saveRealtimeReportData() {
