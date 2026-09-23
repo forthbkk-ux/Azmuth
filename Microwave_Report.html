@@ -1343,9 +1343,13 @@
 
     let activeReportData = null;
 
-    function renderRealtimeReport() {
-      const data = getDataSource() || defaultReportData;
-      activeReportData = data;
+    function renderRealtimeReport(overrideData = null) {
+      if (overrideData) {
+        activeReportData = overrideData;
+      } else if (!activeReportData) {
+        activeReportData = getDataSource() || defaultReportData;
+      }
+      const data = activeReportData;
 
       const nameA = data.nameA || 'สถานีต้นทาง A';
       const nameB = data.nameB || 'สถานีปลายทาง B';
@@ -1393,25 +1397,33 @@
 
       // Parabolic Dish Antenna Sizing based on Margin & Distance
       const dishSel = document.getElementById('report-dish-select');
-      const chosenDish = (dishSel && dishSel.value !== 'auto') ? dishSel.value : (data.dishSize || 'auto');
-      if (dishSel && data.dishSize && document.activeElement !== dishSel) {
-        dishSel.value = data.dishSize;
+      let chosenDish = (activeReportData && activeReportData.dishSize)
+        ? activeReportData.dishSize
+        : ((dishSel && dishSel.value !== 'auto') ? dishSel.value : (data.dishSize || 'auto'));
+      activeReportData.dishSize = chosenDish;
+      if (dishSel) {
+        dishSel.value = chosenDish;
       }
       const antCalc = calculateParabolicAntenna(distKm, freqGHz, chosenDish);
       const antGainA = antCalc.gainDbi;
       const antGainB = antGainA;
       const antModelFull = antCalc.modelFull;
+
       // Radio Model Selection & Synchronization
       const topRadioSel = document.getElementById('report-radio-model-select');
       const tableRadioSel = document.getElementById('rf-model-select');
-      let chosenRadioKey = data.radioModel || (topRadioSel ? topRadioSel.value : '7G_XMC3E_32Q_28M_112M');
+      let chosenRadioKey = (activeReportData && activeReportData.radioModel)
+        ? activeReportData.radioModel
+        : ((tableRadioSel && tableRadioSel.value) ? tableRadioSel.value : ((topRadioSel && topRadioSel.value) ? topRadioSel.value : (data.radioModel || '7G_XMC3E_32Q_28M_112M')));
       if (!RADIO_MODELS[chosenRadioKey]) {
         chosenRadioKey = '7G_XMC3E_32Q_28M_112M';
       }
-      if (topRadioSel && document.activeElement !== topRadioSel) {
+      activeReportData.radioModel = chosenRadioKey;
+
+      if (topRadioSel) {
         topRadioSel.value = chosenRadioKey;
       }
-      if (tableRadioSel && document.activeElement !== tableRadioSel) {
+      if (tableRadioSel) {
         tableRadioSel.value = chosenRadioKey;
       }
 
@@ -1531,7 +1543,7 @@
             แนวคลื่นวิทยุ ย่านความถี่ <b>${freqGHz.toFixed(1)} GHz</b> มีระยะเคลียร์ เหนือผืนดิน และสิ่งกีดขวาง ตลอดแนวเส้นทาง (100% 1st Fresnel Zone ปลอดโปร่ง)
           </p>
           <p style="margin-bottom: 5px;">
-            ${sizingAction}จานสายอากาศพาราโบลิกขนาดเส้นผ่านศูนย์กลาง <b>${antCalc.sizeM} เมตร (${antCalc.label})</b> อัตราขยาย <b>${antGainA.toFixed(2)} dBi</b> เพื่อรองรับระยะทาง <b>${distKm.toFixed(3)} km</b> ให้ระดับสัญญาณรับในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> (เกณฑ์มาตรฐาน ≥ ${antCalc.targetMargin} dB)
+            ${sizingAction}จานสายอากาศพาราโบลิกขนาดเส้นผ่านศูนย์กลาง <b>${antCalc.sizeM} เมตร (${antCalc.label})</b> อัตราขยาย <b>${antGainA.toFixed(2)} dBi</b> เพื่อรองรับระยะทาง <b>${distKm.toFixed(3)} km</b> ให้ระดับสัญญาณรับในโหมด ${baseMode.name || '32QAM'} (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> (เกณฑ์มาตรฐาน ≥ ${antCalc.targetMargin} dB)
           </p>
           <p style="margin: 0;">
             อัตรา ความพร้อมใช้งาน ของระบบสื่อสาร (Annual Availability) คำนวณได้ <b>${baseMode.avail}</b> ผ่านเกณฑ์มาตรฐาน โทรคมนาคม ระดับ Carrier-Grade Telecom Standard สมบูรณ์แบบ.
@@ -1547,7 +1559,10 @@
           activeReportData = getDataSource() || defaultReportData;
         }
         activeReportData.dishSize = sel.value;
-        renderRealtimeReport();
+        try {
+          localStorage.setItem('realtime_microwave_report_data', JSON.stringify(activeReportData));
+        } catch (e) {}
+        renderRealtimeReport(activeReportData);
       }
     }
 
@@ -1560,7 +1575,10 @@
       const tableRadioSel = document.getElementById('rf-model-select');
       if (topRadioSel) topRadioSel.value = val;
       if (tableRadioSel) tableRadioSel.value = val;
-      renderRealtimeReport();
+      try {
+        localStorage.setItem('realtime_microwave_report_data', JSON.stringify(activeReportData));
+      } catch (e) {}
+      renderRealtimeReport(activeReportData);
     }
 
     function downloadRealtimeReportPDF() {
@@ -1620,7 +1638,8 @@
     });
 
     window.addEventListener('hashchange', () => {
-      renderRealtimeReport();
+      activeReportData = getDataSource() || defaultReportData;
+      renderRealtimeReport(activeReportData);
     });
   </script>
 </body>
