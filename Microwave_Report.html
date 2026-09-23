@@ -1330,6 +1330,21 @@
         const img = document.getElementById('profile-img');
         if (img) img.src = url;
       }
+
+      if (rawElevations && rawElevations.length > 0) {
+        const elev0 = rawElevations[0];
+        const elevEnd = rawElevations[rawElevations.length - 1];
+        const elA = document.getElementById('site-elev-a');
+        const elB = document.getElementById('site-elev-b');
+        if (elA && (!data.groundA || data.groundA === 55.0 || data.groundA === 50.0 || data.groundA === 0)) {
+          elA.innerText = `${elev0.toFixed(2)} m`;
+          if (activeReportData) activeReportData.groundA = elev0;
+        }
+        if (elB && (!data.groundB || data.groundB === 70.0 || data.groundB === 0)) {
+          elB.innerText = `${elevEnd.toFixed(2)} m`;
+          if (activeReportData) activeReportData.groundB = elevEnd;
+        }
+      }
     }
 
     const defaultReportData = {
@@ -1357,8 +1372,17 @@
       const lon1 = parseFloat(data.lon1) || 0;
       const lat2 = parseFloat(data.lat2) || 0;
       const lon2 = parseFloat(data.lon2) || 0;
-      const groundA = parseFloat(data.groundA) || 0;
-      const groundB = parseFloat(data.groundB) || 0;
+      let groundA = parseFloat(data.groundA) || 0;
+      let groundB = parseFloat(data.groundB) || 0;
+      if (data.elevProfileData && data.elevProfileData.points && data.elevProfileData.points.length > 0) {
+        const pts = data.elevProfileData.points;
+        const p0 = pts[0];
+        const pEnd = pts[pts.length - 1];
+        const ptElevA = (p0 && typeof p0.groundElev === 'number') ? p0.groundElev : ((p0 && typeof p0.elevation === 'number') ? p0.elevation : null);
+        const ptElevB = (pEnd && typeof pEnd.groundElev === 'number') ? pEnd.groundElev : ((pEnd && typeof pEnd.elevation === 'number') ? pEnd.elevation : null);
+        if (ptElevA !== null && (groundA === 0 || groundA === 55.0)) groundA = ptElevA;
+        if (ptElevB !== null && (groundB === 0 || groundB === 70.0)) groundB = ptElevB;
+      }
       const towerA = parseFloat(data.towerA) || 0;
       const towerB = parseFloat(data.towerB) || 0;
       const antA = parseFloat(data.antA) || 0;

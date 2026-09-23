@@ -3648,11 +3648,21 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         document.getElementById('elev-stat-gain').innerText = `+${Math.round(totalGain)} m`;
         document.getElementById('elev-stat-loss').innerText = `-${Math.round(totalLoss)} m`;
         document.getElementById('elev-stat-maxslope').innerText = `${maxSlope.toFixed(1)}%`;
-        document.getElementById('elev-stat-avgslope').innerText = `${avgSlope}%`;
         if (document.getElementById('elev-stat-a-msl')) document.getElementById('elev-stat-a-msl').innerText = elev0;
         if (document.getElementById('elev-stat-b-msl')) document.getElementById('elev-stat-b-msl').innerText = elevEnd;
-
-        // Update LOS Badge
+        const curTableElevA = document.getElementById('cur-table-elev-a');
+        const curTableElevB = document.getElementById('cur-table-elev-b');
+        if (curTableElevA) curTableElevA.innerText = `${elev0.toFixed(2)} m`;
+        if (curTableElevB) curTableElevB.innerText = `${elevEnd.toFixed(2)} m`;
+        if (typeof updateCurrentLinkModalData === 'function') {
+          const m = document.getElementById('microwave-modal');
+          if (m && m.style.display !== 'none') {
+            updateCurrentLinkModalData();
+          }
+        }
+        if (typeof saveRealtimeReportData === 'function') {
+          saveRealtimeReportData();
+        }
         const badge = document.getElementById('elev-los-badge');
         if (badge) {
           if (!isObstructed) {
@@ -5178,6 +5188,58 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       return canvas.toDataURL('image/png');
     }
 
+    function getStationGroundElevations(lat1, lon1, lat2, lon2) {
+      let groundA = null;
+      let groundB = null;
+
+      // 1. From currentElevProfileData points (accurate DEM elevations)
+      if (typeof currentElevProfileData !== 'undefined' && currentElevProfileData && currentElevProfileData.points && currentElevProfileData.points.length > 0) {
+        const pts = currentElevProfileData.points;
+        const p0 = pts[0];
+        const pEnd = pts[pts.length - 1];
+        if (p0) {
+          if (typeof p0.elevation === 'number' && !isNaN(p0.elevation)) groundA = p0.elevation;
+          else if (typeof p0.groundElev === 'number' && !isNaN(p0.groundElev)) groundA = p0.groundElev;
+        }
+        if (pEnd) {
+          if (typeof pEnd.elevation === 'number' && !isNaN(pEnd.elevation)) groundB = pEnd.elevation;
+          else if (typeof pEnd.groundElev === 'number' && !isNaN(pEnd.groundElev)) groundB = pEnd.groundElev;
+        }
+      }
+
+      // 2. From UI stat display elements (#elev-stat-a-msl, #elev-stat-b-msl)
+      if (groundA === null || isNaN(groundA)) {
+        const elA = document.getElementById('elev-stat-a-msl');
+        if (elA && elA.innerText && elA.innerText.trim() !== '-' && !isNaN(parseFloat(elA.innerText))) {
+          groundA = parseFloat(elA.innerText);
+        }
+      }
+      if (groundB === null || isNaN(groundB)) {
+        const elB = document.getElementById('elev-stat-b-msl');
+        if (elB && elB.innerText && elB.innerText.trim() !== '-' && !isNaN(parseFloat(elB.innerText))) {
+          groundB = parseFloat(elB.innerText);
+        }
+      }
+
+      // 3. From elevation profile cache
+      if ((groundA === null || groundB === null) && typeof elevProfileCache !== 'undefined' && elevProfileCache) {
+        if (!isNaN(lat1) && !isNaN(lon1) && !isNaN(lat2) && !isNaN(lon2)) {
+          const cacheKey = `${lat1.toFixed(4)},${lon1.toFixed(4)}-${lat2.toFixed(4)},${lon2.toFixed(4)}`;
+          const cached = elevProfileCache.get(cacheKey);
+          if (cached && cached.length > 0) {
+            if (groundA === null && typeof cached[0] === 'number') groundA = cached[0];
+            if (groundB === null && typeof cached[cached.length - 1] === 'number') groundB = cached[cached.length - 1];
+          }
+        }
+      }
+
+      // Fallback defaults if elevation has not loaded yet
+      if (groundA === null || isNaN(groundA)) groundA = 55.0;
+      if (groundB === null || isNaN(groundB)) groundB = 70.0;
+
+      return { groundA, groundB };
+    }
+
     function updateCurrentLinkModalData() {
       const nameA = document.getElementById('point-a-name')?.value || document.getElementById('name-a')?.value || 'สถานีต้นทาง A';
       const nameB = document.getElementById('point-b-name')?.value || document.getElementById('name-b')?.value || 'สถานีปลายทาง B';
@@ -5198,15 +5260,9 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const azAB = azEl ? azEl.innerText : '97.37';
       const azBA = backAzEl ? backAzEl.innerText : '277.40';
 
-      let groundA = 55.0;
-      let groundB = 70.0;
-      let groundMid = 59.0;
-      if (typeof elevProfileData !== 'undefined' && elevProfileData && elevProfileData.elevations && elevProfileData.elevations.length > 0) {
-        const elevs = elevProfileData.elevations;
-        groundA = elevs[0] || 55.0;
-        groundB = elevs[elevs.length - 1] || 70.0;
-        groundMid = elevs[Math.floor(elevs.length / 2)] || ((groundA + groundB) / 2);
-      }
+      const stationElevs = getStationGroundElevations(lat1, lon1, lat2, lon2);
+      const groundA = stationElevs.groundA;
+      const groundB = stationElevs.groundB;
 
       const totA = groundA + antA;
       const totB = groundB + antB;
@@ -5362,15 +5418,9 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const azAB = azEl ? azEl.innerText : '97.37';
       const azBA = backAzEl ? backAzEl.innerText : '277.40';
 
-      let groundA = 55.0;
-      let groundB = 70.0;
-      let groundMid = 59.0;
-      if (typeof elevProfileData !== 'undefined' && elevProfileData && elevProfileData.elevations && elevProfileData.elevations.length > 0) {
-        const elevs = elevProfileData.elevations;
-        groundA = elevs[0] || 55.0;
-        groundB = elevs[elevs.length - 1] || 70.0;
-        groundMid = elevs[Math.floor(elevs.length / 2)] || ((groundA + groundB) / 2);
-      }
+      const stationElevs = getStationGroundElevations(lat1, lon1, lat2, lon2);
+      const groundA = stationElevs.groundA;
+      const groundB = stationElevs.groundB;
 
       const totA = groundA + antA;
       const totB = groundB + antB;
