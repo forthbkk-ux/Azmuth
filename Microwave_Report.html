@@ -1127,13 +1127,12 @@
       ctx.lineWidth = 1.8;
       ctx.stroke();
 
-      // LOS Ray: Red dashed line if obstructed, Blue dashed line if clear
+      // LOS Ray
       ctx.save();
-      ctx.beginPath();
       ctx.setLineDash([5, 4]);
-      const isObs = !!(data && data.stats && data.stats.isObstructed);
-      ctx.strokeStyle = isObs ? '#ef4444' : '#0284c7';
-      ctx.lineWidth = isObs ? 2.2 : 1.8;
+      ctx.strokeStyle = '#0284c7';
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
       ctx.moveTo(xCoord(0), yCoord(points[0].rayHeight));
       ctx.lineTo(xCoord(totalD), yCoord(points[points.length - 1].rayHeight));
       ctx.stroke();

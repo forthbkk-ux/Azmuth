@@ -1675,7 +1675,7 @@
             ${backAzMasterToSub.toFixed(2)}°
           </td>
           <td style="text-align: center; white-space: nowrap;">
-            <button class="btn btn-outline" style="padding:3px 8px; font-size:0.75rem; color:${s.isObstructed ? '#dc2626' : '#0284c7'}; border-color:${s.isObstructed ? '#fca5a5' : '#bae6fd'}; background:${s.isObstructed ? '#fef2f2' : '#f0f9ff'}; font-weight:${s.isObstructed ? '700' : 'normal'};" onclick="selectElevSubstationById(${s.id})" title="ดูโพรไฟล์ความสูงภูมิประเทศ (Elevation Profile)">${s.isObstructed ? '⚠️ บังคลื่น' : '🏔️ โพรไฟล์'}</button>
+            <button class="btn btn-outline" style="padding:3px 8px; font-size:0.75rem; color:#0284c7; border-color:#bae6fd; background:#f0f9ff;" onclick="selectElevSubstationById(${s.id})" title="ดูโพรไฟล์ความสูงภูมิประเทศ (Elevation Profile)">🏔️ โพรไฟล์</button>
             <a href="${gmapsUrl}" target="_blank" class="btn btn-outline" style="padding:3px 8px; font-size:0.75rem;" title="เปิดดูเส้นทางใน Google Maps">🗺️ Map</a>
             <button class="btn-del" onclick="deleteSubstation(${s.id})" title="ลบสถานีนี้">🗑️</button>
           </td>
@@ -1739,11 +1739,9 @@
       substations.forEach((s, idx) => {
         if (isNaN(s.lat) || isNaN(s.lon)) return;
 
-        const isObs = !!s.isObstructed;
-        const subBg = isObs ? '#ef4444' : '#10b981';
         const subIcon = L.divIcon({
           className: 'custom-sub-icon',
-          html: `<div style="background:${subBg}; color:white; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; box-shadow:0 2px 8px rgba(0,0,0,0.4);">${idx + 1}</div>`,
+          html: `<div style="background:#10b981; color:white; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; box-shadow:0 2px 8px rgba(0,0,0,0.4);">${idx + 1}</div>`,
           iconSize: [28, 28],
           iconAnchor: [14, 14]
         });
@@ -1757,13 +1755,8 @@
         const subH = s.height !== undefined ? s.height : 15;
         const radioHorizonKm = 4.12 * (Math.sqrt(mHeight) + Math.sqrt(subH));
 
-        const obsHtml = isObs
-          ? `<div style="margin: 4px 0; padding: 4px 6px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 4px; color: #b91c1c; font-size: 0.75rem; font-weight: bold;">⚠️ มีสิ่งกีดขวาง (สันเขาบังคลื่น ${Math.abs(s.worstClearance || 0).toFixed(1)} m)</div>`
-          : (s.isObstructed === false ? `<div style="margin: 4px 0; color: #15803d; font-size: 0.75rem; font-weight: bold;">✅ Line-of-Sight ปลอดโปร่ง</div>` : '');
-
         marker.bindPopup(`
           <b>📡 ${s.name} (ลูกข่ายลำดับที่ ${idx + 1})</b><br>
-          ${obsHtml}
           พิกัด: ${s.lat.toFixed(6)}°, ${s.lon.toFixed(6)}°<br>
           ความสูงเสา: <b>${subTower} เมตร</b> | ความสูงสายอากาศ: <b>${subH} เมตร</b><br>
           (เสาแม่ข่าย: ${mTower} ม. | สายอากาศแม่ข่าย: ${mHeight} ม.)<br>
@@ -1775,32 +1768,20 @@
         `);
         subMarkers.push(marker);
 
-        // Line to master station: Red dashed line if obstructed, Cyan dashed line if clear
+        // Line to master station
         const line = L.polyline([[s.lat, s.lon], [mLat, mLon]], {
-          color: isObs ? '#ef4444' : '#38bdf8',
-          weight: isObs ? 3.5 : 3,
-          opacity: isObs ? 0.95 : 0.85,
+          color: '#38bdf8',
+          weight: 3,
+          opacity: 0.85,
           dashArray: '6, 6'
         }).addTo(map);
-
-        line.subId = s.id;
 
         line.on('click', () => {
           selectElevSubstationById(s.id);
         });
 
-        if (isObs) {
-          line.bindTooltip(`⚠️ ${s.name}: มีสิ่งกีดขวาง (${Math.abs(s.worstClearance || 0).toFixed(1)} m)`, {
-            sticky: true
-          });
-        }
-
         connectingLines.push(line);
       });
-
-      if (typeof scheduleBatchLOSAnalysis === 'function') {
-        scheduleBatchLOSAnalysis(400);
-      }
     }
 
     // Export Batch Substations to Excel (.xlsx)
@@ -2577,8 +2558,7 @@
         const distKm = calcDistance(s.lat, s.lon, mLat, mLon);
         const opt = document.createElement('option');
         opt.value = s.id;
-        const obsTag = s.isObstructed ? ' ⚠️ (มีสิ่งกีดขวาง)' : '';
-        opt.innerText = `ลำดับที่ ${idx + 1}: ${s.name} (${distKm.toFixed(1)} km, เสา ${s.height || 15}m)${obsTag}`;
+        opt.innerText = `ลำดับที่ ${idx + 1}: ${s.name} (${distKm.toFixed(1)} km, เสา ${s.height || 15}m)`;
         select.appendChild(opt);
       });
 
@@ -2863,11 +2843,6 @@
           }
         }
 
-        // Update substation obstruction state
-        sub.isObstructed = isObstructed;
-        sub.worstClearance = worstClearance;
-        updateSubstationLineStyle(sub.id, isObstructed, worstClearance);
-
         drawElevationProfile(currentElevProfileData, null);
         if (typeof currentElevViewMode !== 'undefined' && currentElevViewMode === '3d') {
           updateThreeScene();
@@ -2879,152 +2854,6 @@
         if (overlay) overlay.style.display = 'none';
         isElevLoading = false;
       }
-    }
-
-    // Dynamic style update for map lines and markers based on obstruction
-    function updateSubstationLineStyle(subId, isObstructed, worstClearance) {
-      const line = connectingLines.find(l => String(l.subId) === String(subId));
-      if (line) {
-        line.setStyle({
-          color: isObstructed ? '#ef4444' : '#38bdf8',
-          weight: isObstructed ? 3.5 : 3,
-          opacity: isObstructed ? 0.95 : 0.85,
-          dashArray: '6, 6'
-        });
-        if (isObstructed) {
-          line.bindTooltip(`⚠️ มีสิ่งกีดขวาง (สันเขาบังคลื่น ${Math.abs(worstClearance || 0).toFixed(1)} m)`, {
-            sticky: true
-          });
-        }
-      }
-
-      const subIdx = substations.findIndex(x => String(x.id) === String(subId));
-      if (subIdx >= 0 && subMarkers[subIdx]) {
-        const subBg = isObstructed ? '#ef4444' : '#10b981';
-        const subIcon = L.divIcon({
-          className: 'custom-sub-icon',
-          html: `<div style="background:${subBg}; color:white; width:28px; height:28px; border-radius:50%; border:2px solid white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:12px; box-shadow:0 2px 8px rgba(0,0,0,0.4);">${subIdx + 1}</div>`,
-          iconSize: [28, 28],
-          iconAnchor: [14, 14]
-        });
-        subMarkers[subIdx].setIcon(subIcon);
-      }
-
-      // Also update dropdown option if present
-      const sel = document.getElementById('elev-substation-select');
-      if (sel) {
-        const opt = sel.querySelector(`option[value="${subId}"]`);
-        if (opt) {
-          const s = substations.find(x => String(x.id) === String(subId));
-          if (s) {
-            const mLat = parseFloat(document.getElementById('master-lat')?.value) || 0;
-            const mLon = parseFloat(document.getElementById('master-lon')?.value) || 0;
-            const distKm = calcDistance(s.lat, s.lon, mLat, mLon);
-            const idx = substations.indexOf(s);
-            const obsTag = isObstructed ? ' ⚠️ (มีสิ่งกีดขวาง)' : '';
-            opt.innerText = `ลำดับที่ ${idx + 1}: ${s.name} (${distKm.toFixed(1)} km, เสา ${s.height || 15}m)${obsTag}`;
-          }
-        }
-      }
-    }
-
-    // Fast check for individual substation obstacle
-    async function checkSubstationObstruction(sub, mLat, mLon, mTower, mHeight) {
-      if (!sub || isNaN(sub.lat) || isNaN(sub.lon)) return { isObstructed: false, worstClearance: 99 };
-      const sTower = sub.towerHeight !== undefined ? sub.towerHeight : (sub.height !== undefined ? sub.height : 15);
-      const sHeight = sub.height !== undefined ? sub.height : 15;
-      const { points, totalDistKm } = calcGeodesicPoints(sub.lat, sub.lon, mLat, mLon, 65);
-      const cacheKey = `${sub.lat.toFixed(4)},${sub.lon.toFixed(4)}-${mLat.toFixed(4)},${mLon.toFixed(4)}`;
-
-      let rawElevations = elevProfileCache.get(cacheKey);
-      if (!rawElevations) {
-        try {
-          const lats = points.map(p => p.lat.toFixed(5)).join(',');
-          const lons = points.map(p => p.lon.toFixed(5)).join(',');
-          const apiUrl = `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lons}`;
-
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 6000);
-          const resp = await fetch(apiUrl, { signal: controller.signal });
-          clearTimeout(timeoutId);
-
-          if (resp.ok) {
-            const json = await resp.json();
-            if (json.elevation && json.elevation.length === points.length) {
-              rawElevations = json.elevation.map(e => (typeof e === 'number' && !isNaN(e)) ? Math.round(e) : 100);
-              elevProfileCache.set(cacheKey, rawElevations);
-            }
-          }
-        } catch (fetchErr) {}
-
-        if (!rawElevations) {
-          rawElevations = generateSyntheticElevation(points, totalDistKm, sub.lat, sub.lon, mLat, mLon);
-          elevProfileCache.set(cacheKey, rawElevations);
-        }
-      }
-
-      const N = points.length;
-      const elev0 = rawElevations[0];
-      const elevEnd = rawElevations[N - 1];
-      const antennaTopStart = elev0 + sHeight;
-      const antennaTopEnd = elevEnd + mHeight;
-
-      let worstClearance = Infinity;
-      let isObstructed = false;
-
-      for (let i = 0; i < N; i++) {
-        const pt = points[i];
-        const groundElev = rawElevations[i];
-        const d_i = pt.distKm;
-        const f = totalDistKm > 0 ? d_i / totalDistKm : 0;
-        const earthBulge = totalDistKm > 0 ? (d_i * (totalDistKm - d_i)) / 12.74 : 0;
-        const effectiveGround = groundElev + earthBulge;
-        const rayHeight = antennaTopStart + f * (antennaTopEnd - antennaTopStart);
-        const clearance = rayHeight - effectiveGround;
-
-        if (clearance < worstClearance) {
-          worstClearance = clearance;
-          if (clearance < 0) {
-            isObstructed = true;
-          }
-        }
-      }
-
-      sub.isObstructed = isObstructed;
-      sub.worstClearance = worstClearance;
-      return { isObstructed, worstClearance };
-    }
-
-    let batchAnalysisTimer = null;
-    let batchAnalysisRunning = false;
-
-    function scheduleBatchLOSAnalysis(delayMs = 400) {
-      if (batchAnalysisTimer) clearTimeout(batchAnalysisTimer);
-      batchAnalysisTimer = setTimeout(() => {
-        runBatchLOSAnalysis();
-      }, delayMs);
-    }
-
-    async function runBatchLOSAnalysis() {
-      if (batchAnalysisRunning) return;
-      if (!substations || substations.length === 0) return;
-      batchAnalysisRunning = true;
-
-      const mLat = parseFloat(document.getElementById('master-lat')?.value) || 0;
-      const mLon = parseFloat(document.getElementById('master-lon')?.value) || 0;
-      const mTower = parseFloat(document.getElementById('master-tower-height')?.value) || 45;
-      const mHeight = parseFloat(document.getElementById('master-height')?.value) || 45;
-
-      for (let i = 0; i < substations.length; i++) {
-        const s = substations[i];
-        if (!s || isNaN(s.lat) || isNaN(s.lon)) continue;
-        try {
-          const res = await checkSubstationObstruction(s, mLat, mLon, mTower, mHeight);
-          updateSubstationLineStyle(s.id, res.isObstructed, res.worstClearance);
-        } catch (e) {}
-        await new Promise(r => setTimeout(r, 120));
-      }
-      batchAnalysisRunning = false;
     }
 
     function clearElevationCanvas() {
@@ -3211,12 +3040,12 @@
       ctx.lineWidth = 2.2;
       ctx.stroke();
 
-      // 3. Draw Direct Radio Line-of-Sight (LOS) Ray: Red dashed line if obstructed, Cyan dashed line if clear
+      // 3. Draw Direct Radio Line-of-Sight (LOS) Ray
       ctx.save();
       ctx.beginPath();
       ctx.setLineDash([6, 5]);
-      ctx.strokeStyle = data.stats.isObstructed ? '#ef4444' : '#38bdf8';
-      ctx.lineWidth = data.stats.isObstructed ? 2.5 : 2;
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
       ctx.moveTo(xCoord(0), yCoord(points[0].rayHeight));
       ctx.lineTo(xCoord(totalD), yCoord(points[points.length - 1].rayHeight));
       ctx.stroke();
@@ -3701,15 +3530,14 @@
       const S_Z = S_Y; // Keep 1:1 cross-section for circular Fresnel tube!
       const baseYOffset = minElev * S_Y;
 
-      // 1. Direct LOS Laser Ray in 3D: Red if obstructed, Cyan if clear
-      const isObs = !!(currentElevProfileData && currentElevProfileData.stats && currentElevProfileData.stats.isObstructed);
+      // 1. Direct LOS Laser Ray in 3D
       const startRayY = (points[0].effectiveGround + sHeight) * S_Y - baseYOffset;
       const endRayY = (points[N - 1].effectiveGround + mHeight) * S_Y - baseYOffset;
       const startPt = new THREE.Vector3(-L_X / 2, startRayY, 0);
       const endPt = new THREE.Vector3(L_X / 2, endRayY, 0);
 
       const rayGeo = new THREE.BufferGeometry().setFromPoints([startPt, endPt]);
-      const rayMat = new THREE.LineBasicMaterial({ color: isObs ? 0xef4444 : 0x00f0ff, linewidth: 2 });
+      const rayMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2 });
       const rayLine = new THREE.Line(rayGeo, rayMat);
       threeDynamicGroup.add(rayLine);
 
@@ -4064,22 +3892,6 @@
 
       if (window.location.hash.includes('sample=1')) {
         loadDefaultSubstations();
-      } else if (window.location.hash.includes('test_obstruction=1')) {
-        document.getElementById('master-name').value = "ศูนย์แม่ข่าย (กรุงเทพฯ)";
-        document.getElementById('master-lat').value = "13.756331";
-        document.getElementById('master-lon').value = "100.501765";
-        document.getElementById('master-tower-height').value = "45";
-        document.getElementById('master-height').value = "45";
-
-        substations = [
-          { id: 1, name: "สถานีลูกข่าย 1 (นนทบุรี - ปลอดโปร่ง)", lat: 13.862145, lon: 100.513254, towerHeight: 18, height: 18 },
-          { id: 2, name: "สถานีลูกข่าย 2 (เขาใหญ่ - มีสิ่งกีดขวาง)", lat: 14.450000, lon: 101.400000, towerHeight: 15, height: 15 }
-        ];
-        renderTable();
-        updateMapElements();
-        fitMapBounds();
-        populateElevSubstationDropdown();
-        selectElevSubstationById(2);
       }
     });
   </script>
