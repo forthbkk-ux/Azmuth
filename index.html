@@ -2741,9 +2741,10 @@
         map.removeLayer(pathLine);
       }
 
+      const isObs = !!(currentElevProfileData && currentElevProfileData.stats && currentElevProfileData.stats.isObstructed);
       pathLine = L.polyline(arcPoints, {
-        color: '#38bdf8',
-        weight: 4,
+        color: isObs ? '#ef4444' : '#38bdf8',
+        weight: isObs ? 4.5 : 4,
         opacity: 0.95,
         dashArray: '6, 6'
       }).addTo(map);
@@ -3711,6 +3712,11 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
             badge.className = 'los-badge obstructed';
             badge.innerHTML = `⚠️ มีสิ่งกีดขวาง (สันเขาบังคลื่น ${Math.abs(worstClearance).toFixed(1)} m)`;
           }
+        if (pathLine) {
+          pathLine.setStyle({
+            color: isObstructed ? '#ef4444' : '#38bdf8',
+            weight: isObstructed ? 4.5 : 4
+          });
         }
 
         drawElevationProfile(currentElevProfileData, null);
@@ -3868,12 +3874,12 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       ctx.lineWidth = 2.2;
       ctx.stroke();
 
-      // 3. Draw Direct Radio Line-of-Sight (LOS) Ray
+      // 3. Draw Direct Radio Line-of-Sight (LOS) Ray: Red dashed line if obstructed, Cyan dashed line if clear
       ctx.save();
       ctx.beginPath();
       ctx.setLineDash([6, 5]);
-      ctx.strokeStyle = '#38bdf8';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = (data.stats && data.stats.isObstructed) ? '#ef4444' : '#38bdf8';
+      ctx.lineWidth = (data.stats && data.stats.isObstructed) ? 2.5 : 2;
       ctx.moveTo(xCoord(0), yCoord(points[0].rayHeight));
       ctx.lineTo(xCoord(totalD), yCoord(points[points.length - 1].rayHeight));
       ctx.stroke();
@@ -4413,8 +4419,9 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const startPt = new THREE.Vector3(-L_X / 2, startRayY, 0);
       const endPt = new THREE.Vector3(L_X / 2, endRayY, 0);
 
+      const isObs = !!(currentElevProfileData && currentElevProfileData.stats && currentElevProfileData.stats.isObstructed);
       const rayGeo = new THREE.BufferGeometry().setFromPoints([startPt, endPt]);
-      const rayMat = new THREE.LineBasicMaterial({ color: 0x00f0ff, linewidth: 2 });
+      const rayMat = new THREE.LineBasicMaterial({ color: isObs ? 0xef4444 : 0x00f0ff, linewidth: 2 });
       const rayLine = new THREE.Line(rayGeo, rayMat);
       threeDynamicGroup.add(rayLine);
 
