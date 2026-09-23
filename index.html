@@ -1439,12 +1439,18 @@
               </select>
             </div>
 
-            <!-- Frequency Band Selector -->
+            <!-- Frequency Input (GHz) -->
             <div style="display: inline-flex; align-items: center; gap: 4px;">
-              <label for="fresnel-freq-select" style="font-size: 0.8rem; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 3px; margin: 0; cursor: pointer; white-space: nowrap;">
-                📡 <span data-i18n="lbl_freq_band">ย่านความถี่:</span>
+              <label for="fresnel-freq-ghz" style="font-size: 0.8rem; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 3px; margin: 0; cursor: pointer; white-space: nowrap;">
+                📡 <span data-i18n="lbl_freq_ghz">ความถี่:</span>
               </label>
-              <select id="fresnel-freq-select" onchange="onFresnelFreqChange()" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; border-radius: 6px; padding: 4px 8px; font-size: 0.8rem; font-weight: 600; font-family: inherit; cursor: pointer; outline: none; box-shadow: 0 1px 2px rgba(0,0,0,0.04);">
+              <div class="input-wrapper" style="width: 105px; display: inline-flex; align-items: center; position: relative;">
+                <input type="number" id="fresnel-freq-ghz" step="0.1" min="0.1" max="100" value="7.5" placeholder="7.5"
+                       oninput="onFresnelFreqGhzChange(this.value)"
+                       style="width: 100%; font-size: 0.82rem; font-weight: 700; color: #0f172a; padding: 4px 34px 4px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; outline: none; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.04);" />
+                <span style="position: absolute; right: 8px; font-size: 0.75rem; font-weight: 700; color: #64748b; pointer-events: none;">GHz</span>
+              </div>
+              <select id="fresnel-freq-select" onchange="onFresnelFreqChange()" style="display: none;">
                 <option value="150">VHF 150 MHz</option>
                 <option value="400">UHF / TETRA 400 MHz</option>
                 <option value="800">800 MHz</option>
@@ -1474,11 +1480,14 @@
 
           <!-- Point A -->
           <div class="point-box point-a">
-            <div class="point-head">
-              <div class="point-title">
+            <div class="point-head" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <div class="point-title" style="display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;">
                 <span class="point-badge">A</span>
                 <span data-i18n="point_a_title">สถานีต้นทาง</span>
               </div>
+              <input type="text" id="point-a-name" value="" placeholder="ระบุชื่อสถานีต้นทาง A..." 
+                     oninput="onStationNameChange()" 
+                     style="flex: 1; max-width: 240px; font-size: 0.82rem; font-weight: 600; padding: 4px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; outline: none; color: #0f172a; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.04);" />
             </div>
 
             <!-- Point A Decimal Inputs -->
@@ -1566,11 +1575,14 @@
 
           <!-- Point B -->
           <div class="point-box point-b">
-            <div class="point-head">
-              <div class="point-title">
+            <div class="point-head" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+              <div class="point-title" style="display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;">
                 <span class="point-badge">B</span>
                 <span data-i18n="point_b_title">สถานีปลายทาง</span>
               </div>
+              <input type="text" id="point-b-name" value="" placeholder="ระบุชื่อสถานีปลายทาง B..." 
+                     oninput="onStationNameChange()" 
+                     style="flex: 1; max-width: 240px; font-size: 0.82rem; font-weight: 600; padding: 4px 8px; border: 1.5px solid #cbd5e1; border-radius: 6px; outline: none; color: #0f172a; background: #ffffff; box-shadow: 0 1px 2px rgba(0,0,0,0.04);" />
             </div>
 
             <!-- Point B Decimal Inputs -->
@@ -2321,6 +2333,7 @@
         inputs_title: "กำหนดพิกัดตำแหน่ง (Coordinates)",
         btn_swap: "สลับจุด A ⇄ B",
         lbl_freq_band: "ย่านความถี่:",
+        lbl_freq_ghz: "ความถี่:",
         lbl_dish_size: "ขนาดหน้าจาน:",
         lbl_radio_model: "รุ่นอุปกรณ์วิทยุ:",
         point_a_title: "สถานีต้นทาง",
@@ -2385,6 +2398,7 @@
         inputs_title: "Coordinates Input",
         btn_swap: "Swap Point A ⇄ B",
         lbl_freq_band: "Frequency Band:",
+        lbl_freq_ghz: "Frequency:",
         lbl_dish_size: "Dish Size:",
         lbl_radio_model: "Radio Model:",
         point_a_title: "Radio Substation (Point A)",
@@ -2879,6 +2893,15 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
         }
       });
 
+      if (p.nameA) {
+        const nameAEl = document.getElementById('point-a-name');
+        if (nameAEl) nameAEl.value = p.nameA;
+      }
+      if (p.nameB) {
+        const nameBEl = document.getElementById('point-b-name');
+        if (nameBEl) nameBEl.value = p.nameB;
+      }
+
       document.getElementById('lat-a').value = p.latA.toFixed(6);
       document.getElementById('lon-a').value = p.lonA.toFixed(6);
       document.getElementById('lat-b').value = p.latB.toFixed(6);
@@ -2924,6 +2947,14 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
     }
 
     function swapPoints() {
+      const nameAEl = document.getElementById('point-a-name');
+      const nameBEl = document.getElementById('point-b-name');
+      if (nameAEl && nameBEl) {
+        const tmpName = nameAEl.value;
+        nameAEl.value = nameBEl.value;
+        nameBEl.value = tmpName;
+      }
+
       const latA = document.getElementById('lat-a').value;
       const lonA = document.getElementById('lon-a').value;
       const towerA = document.getElementById('tower-height-a').value;
@@ -2948,6 +2979,11 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
     }
 
     function resetCalculator() {
+      const nameAEl = document.getElementById('point-a-name');
+      const nameBEl = document.getElementById('point-b-name');
+      if (nameAEl) nameAEl.value = '';
+      if (nameBEl) nameBEl.value = '';
+
       document.getElementById('lat-a').value = '';
       document.getElementById('lon-a').value = '';
       document.getElementById('tower-height-a').value = '';
@@ -3623,9 +3659,12 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         const avgElev = Math.round(rawElevations.reduce((a, b) => a + b, 0) / N);
         const avgSlope = (sumSlope / (N - 1 || 1)).toFixed(1);
 
+        const curNameA = document.getElementById('point-a-name')?.value?.trim() || 'สถานีต้นทาง A';
+        const curNameB = document.getElementById('point-b-name')?.value?.trim() || 'สถานีปลายทาง B';
+
         currentElevProfileData = {
-          subStation: { name: "สถานีต้นทาง A", towerHeight: tHeightA, height: sHeight },
-          masterStation: { name: "สถานีปลายทาง B", towerHeight: tHeightB, height: mHeight },
+          subStation: { name: curNameA, towerHeight: tHeightA, height: sHeight },
+          masterStation: { name: curNameB, towerHeight: tHeightB, height: mHeight },
           totalDistKm: totalDistKm,
           points: processedPoints,
           stats: {
@@ -3868,9 +3907,10 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       ctx.font = 'bold 10.5px Prompt, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'bottom';
+      const nameTxtA = (sub && sub.name) ? sub.name : 'จุด A';
       const txtA = sub.towerHeight && sub.towerHeight !== sub.height
-        ? `📡 จุด A (เสา ${sub.towerHeight}m | สายอากาศ ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`
-        : `📡 จุด A (เสา/สายอากาศ ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`;
+        ? `📡 ${nameTxtA} (เสา ${sub.towerHeight}m | สายอากาศ ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`
+        : `📡 ${nameTxtA} (เสา/สายอากาศ ${sub.height || 15}m | ระดับน้ำทะเล ${ptStart.elevation}m)`;
       ctx.fillText(txtA, xStart + 8, yStartTop - 2);
 
       // Tower End (Station B)
@@ -3895,9 +3935,10 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       ctx.font = 'bold 10.5px Prompt, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'bottom';
+      const nameTxtB = (master && master.name) ? master.name : 'จุด B';
       const txtB = master.towerHeight && master.towerHeight !== master.height
-        ? `🗼 จุด B (เสา ${master.towerHeight}m | สายอากาศ ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`
-        : `🗼 จุด B (เสา/สายอากาศ ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`;
+        ? `🗼 ${nameTxtB} (เสา ${master.towerHeight}m | สายอากาศ ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`
+        : `🗼 ${nameTxtB} (เสา/สายอากาศ ${master.height || 45}m | ระดับน้ำทะเล ${ptEnd.elevation}m)`;
       ctx.fillText(txtB, xEnd - 8, yEndTop - 2);
 
       // 5. Draw Obstruction Warning Pin if path is obstructed
@@ -4135,7 +4176,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
     let threeControls = null;
     let threeAnimId = null;
     let threeDynamicGroup = null;
-    let selectedFresnelFreqMHz = 400; // default 400 MHz (UHF/TETRA)
+    let selectedFresnelFreqMHz = 7500; // default 7.5 GHz Microwave
     let beaconMaterial = null;
     let beaconTime = 0;
 
@@ -4163,36 +4204,72 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       }
     }
 
+    function onFresnelFreqGhzChange(val) {
+      const fGHz = parseFloat(val) || 7.5;
+      selectedFresnelFreqMHz = fGHz * 1000.0;
+      const sel = document.getElementById('fresnel-freq-select');
+      if (sel) sel.value = String(Math.round(selectedFresnelFreqMHz));
+
+      const dishCont = document.getElementById('dish-size-container');
+      if (dishCont) {
+        dishCont.style.display = (selectedFresnelFreqMHz >= 1000) ? 'inline-flex' : 'none';
+      }
+      const radioCont = document.getElementById('radio-model-container');
+      if (radioCont) {
+        radioCont.style.display = (selectedFresnelFreqMHz >= 1000) ? 'flex' : 'none';
+      }
+      if (currentElevProfileData && currentElevProfileData.points) {
+        const totalD = currentElevProfileData.totalDistKm;
+        currentElevProfileData.points.forEach(p => {
+          const d1 = p.distKm;
+          const d2 = totalD - d1;
+          p.fresnelR = (totalD > 0 && d1 > 0 && d1 < totalD)
+            ? 17.32 * Math.sqrt((d1 * d2) / (fGHz * totalD))
+            : 0;
+        });
+      }
+      if (currentElevViewMode === '3d') {
+        updateThreeScene();
+      } else if (currentElevProfileData) {
+        drawElevationProfile(currentElevProfileData, null);
+      }
+      const m = document.getElementById('microwave-modal');
+      if (m && m.style.display !== 'none') {
+        updateCurrentLinkModalData();
+      }
+      saveRealtimeReportData();
+    }
+
     function onFresnelFreqChange() {
       const sel = document.getElementById('fresnel-freq-select');
+      const ghzInput = document.getElementById('fresnel-freq-ghz');
       if (sel) {
-        selectedFresnelFreqMHz = parseFloat(sel.value) || 400;
-        const dishCont = document.getElementById('dish-size-container');
-        if (dishCont) {
-          dishCont.style.display = (selectedFresnelFreqMHz >= 1000) ? 'inline-flex' : 'none';
-        }
-        const radioCont = document.getElementById('radio-model-container');
-        if (radioCont) {
-          radioCont.style.display = (selectedFresnelFreqMHz >= 1000) ? 'flex' : 'none';
-        }
-        if (currentElevProfileData && currentElevProfileData.points) {
-          const fGHz = selectedFresnelFreqMHz / 1000.0;
-          const totalD = currentElevProfileData.totalDistKm;
-          currentElevProfileData.points.forEach(p => {
-            const d1 = p.distKm;
-            const d2 = totalD - d1;
-            p.fresnelR = (totalD > 0 && d1 > 0 && d1 < totalD)
-              ? 17.32 * Math.sqrt((d1 * d2) / (fGHz * totalD))
-              : 0;
-          });
-        }
+        selectedFresnelFreqMHz = parseFloat(sel.value) || 7500;
+        const fGHz = selectedFresnelFreqMHz / 1000.0;
+        if (ghzInput) ghzInput.value = fGHz.toString();
+        onFresnelFreqGhzChange(fGHz);
+      }
+    }
+
+    function onStationNameChange() {
+      const nameA = document.getElementById('point-a-name')?.value?.trim() || 'สถานีต้นทาง A';
+      const nameB = document.getElementById('point-b-name')?.value?.trim() || 'สถานีปลายทาง B';
+
+      if (currentElevProfileData) {
+        if (currentElevProfileData.subStation) currentElevProfileData.subStation.name = nameA;
+        if (currentElevProfileData.masterStation) currentElevProfileData.masterStation.name = nameB;
         if (currentElevViewMode === '3d') {
           updateThreeScene();
-        } else if (currentElevProfileData) {
+        } else {
           drawElevationProfile(currentElevProfileData, null);
         }
-        saveRealtimeReportData();
       }
+
+      const m = document.getElementById('microwave-modal');
+      if (m && m.style.display !== 'none') {
+        updateCurrentLinkModalData();
+      }
+      saveRealtimeReportData();
     }
 
     function initOrUpdateThreeScene() {
@@ -4694,6 +4771,8 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       }
 
       // Set Point A: Wat Bang Udom (New)
+      const nameA = document.getElementById('point-a-name');
+      if (nameA) nameA.value = 'Wat Bang Udom (New)';
       document.getElementById('lat-a').value = '8.205790';
       document.getElementById('lon-a').value = '100.253740';
       const towerA = document.getElementById('tower-height-a');
@@ -4702,6 +4781,8 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       if (antA) antA.value = '50';
 
       // Set Point B: ที่ว่าการอำเภอหัวไทร
+      const nameB = document.getElementById('point-b-name');
+      if (nameB) nameB.value = 'ที่ว่าการอำเภอหัวไทร';
       document.getElementById('lat-b').value = '8.040590';
       document.getElementById('lon-b').value = '100.274670';
       const towerB = document.getElementById('tower-height-b');
@@ -4709,12 +4790,14 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const antB = document.getElementById('height-b');
       if (antB) antB.value = '50';
 
-      // Set frequency to Microwave 7.5 GHz (7500 MHz)
+      // Set frequency to Microwave 7.5 GHz
+      const freqGhzInput = document.getElementById('fresnel-freq-ghz');
+      if (freqGhzInput) freqGhzInput.value = '7.5';
       const freqSelect = document.getElementById('fresnel-freq-select');
       if (freqSelect) {
         freqSelect.value = '7500';
-        selectedFresnelFreqMHz = 7500;
       }
+      selectedFresnelFreqMHz = 7500;
 
       calculate();
       
@@ -5241,8 +5324,8 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
     }
 
     function updateCurrentLinkModalData() {
-      const nameA = document.getElementById('point-a-name')?.value || document.getElementById('name-a')?.value || 'สถานีต้นทาง A';
-      const nameB = document.getElementById('point-b-name')?.value || document.getElementById('name-b')?.value || 'สถานีปลายทาง B';
+      const nameA = document.getElementById('point-a-name')?.value?.trim() || document.getElementById('name-a')?.value?.trim() || 'สถานีต้นทาง A';
+      const nameB = document.getElementById('point-b-name')?.value?.trim() || document.getElementById('name-b')?.value?.trim() || 'สถานีปลายทาง B';
       const lat1 = parseFloat(document.getElementById('lat-a')?.value);
       const lon1 = parseFloat(document.getElementById('lon-a')?.value);
       const lat2 = parseFloat(document.getElementById('lat-b')?.value);
@@ -5269,8 +5352,9 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const deltaH = totB - totA;
       const tiltDeg = Math.atan2(deltaH, distKm * 1000) * (180 / Math.PI);
 
-      const freqMHz = 7500.0;
-      const freqGHz = 7.5;
+      const freqGhzInput = document.getElementById('fresnel-freq-ghz');
+      const freqGHz = freqGhzInput ? (parseFloat(freqGhzInput.value) || 7.5) : ((selectedFresnelFreqMHz || 7500) / 1000.0);
+      const freqMHz = freqGHz * 1000.0;
 
       // Microwave Propagation Loss Calculations
       const fsl = 32.44 + 20 * Math.log10(Math.max(0.01, distKm)) + 20 * Math.log10(freqMHz);
@@ -5330,15 +5414,17 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
 
       // KPI Cards
       setTxt('cur-modal-dist', distKm.toFixed(3) + ' km');
-      setTxt('cur-modal-freq', '7.5 GHz');
+      setTxt('cur-modal-freq', `${freqGHz.toFixed(1)} GHz`);
       setTxt('cur-modal-fsl', fsl.toFixed(2) + ' dB');
       setTxt('cur-modal-rsl', baseMode.rsl + ' dBm');
       setTxt('cur-modal-fade-margin', baseMode.fm + ' dB');
       setTxt('cur-modal-availability', baseMode.avail.substring(0, 7) + '%');
 
       // Table 1: Site & Antenna Parameters
-      setTxt('m-site-head-a', `สถานีต้นทาง A: ${nameA}`);
-      setTxt('m-site-head-b', `สถานีปลายทาง B: ${nameB}`);
+      const mSiteA = (!nameA || nameA === 'สถานีต้นทาง A') ? 'สถานีต้นทาง A' : (nameA.startsWith('สถานีต้นทาง A') ? nameA : `สถานีต้นทาง A: ${nameA}`);
+      const mSiteB = (!nameB || nameB === 'สถานีปลายทาง B') ? 'สถานีปลายทาง B' : (nameB.startsWith('สถานีปลายทาง B') ? nameB : `สถานีปลายทาง B: ${nameB}`);
+      setTxt('m-site-head-a', mSiteA);
+      setTxt('m-site-head-b', mSiteB);
       setTxt('cur-table-name-a', nameA);
       setTxt('cur-table-name-b', nameB);
       setTxt('cur-table-coord-a-lat', `${lat1.toFixed(6)}° N`);
@@ -5362,7 +5448,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
 
       // Table 2: RF Propagation & Path Loss
       setTxt('cur-rf-dist', distKm.toFixed(3));
-      setTxt('cur-rf-freq', '7.5 GHz (7,500 MHz)');
+      setTxt('cur-rf-freq', `${freqGHz.toFixed(1)} GHz (${Math.round(freqMHz).toLocaleString()} MHz)`);
       setTxt('cur-rf-fsl', fsl.toFixed(2));
       setTxt('cur-rf-atm', atmLoss.toFixed(2));
       setTxt('cur-rf-rain', rainLoss.toFixed(2));
@@ -5401,8 +5487,8 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
     }
 
     function getRealtimeReportData() {
-      const nameA = document.getElementById('point-a-name')?.value || document.getElementById('name-a')?.value || 'สถานีต้นทาง A';
-      const nameB = document.getElementById('point-b-name')?.value || document.getElementById('name-b')?.value || 'สถานีปลายทาง B';
+      const nameA = document.getElementById('point-a-name')?.value?.trim() || document.getElementById('name-a')?.value?.trim() || 'สถานีต้นทาง A';
+      const nameB = document.getElementById('point-b-name')?.value?.trim() || document.getElementById('name-b')?.value?.trim() || 'สถานีปลายทาง B';
       const lat1 = parseFloat(document.getElementById('lat-a')?.value) || 0;
       const lon1 = parseFloat(document.getElementById('lon-a')?.value) || 0;
       const lat2 = parseFloat(document.getElementById('lat-b')?.value) || 0;
@@ -5427,8 +5513,9 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const deltaH = totB - totA;
       const tiltDeg = Math.atan2(deltaH, distKm * 1000) * (180 / Math.PI);
 
-      const freqMHz = 7500.0;
-      const freqGHz = 7.5;
+      const freqGhzInput = document.getElementById('fresnel-freq-ghz');
+      const freqGHz = freqGhzInput ? (parseFloat(freqGhzInput.value) || 7.5) : ((selectedFresnelFreqMHz || 7500) / 1000.0);
+      const freqMHz = freqGHz * 1000.0;
       const fsl = 32.44 + 20 * Math.log10(Math.max(0.01, distKm)) + 20 * Math.log10(freqMHz);
       const atmLoss = 0.0103 * distKm;
       const rainLoss = (1.192 * distKm) / (1 + 0.045 * distKm);
@@ -5536,7 +5623,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         tiltB: `${-tiltDeg >= 0 ? '+' : ''}${-tiltDeg.toFixed(2)}° (${-tiltDeg >= 0 ? 'เงยขึ้น' : 'ก้มลง'})`,
         freqMHz,
         freqGHz,
-        freqText: '7.5 GHz',
+        freqText: `${freqGHz.toFixed(1)} GHz`,
         fsl: fsl.toFixed(2),
         atmLoss: atmLoss.toFixed(2),
         rainLoss: rainLoss.toFixed(2),
@@ -5678,7 +5765,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
               <div style="font-size:11px; color:#64748b; margin-top:3px;">เส้นทาง: <b>${data.nameA}</b> ➔ <b>${data.nameB}</b> | ระยะทาง: <b>${data.distKm} km</b></div>
             </div>
             <div style="text-align:right; font-size:11px; color:#64748b;">
-              <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:12px; font-weight:700; font-size:10px;">7.5 GHz Microwave</span>
+              <span style="background:#e0f2fe; color:#0369a1; padding:3px 8px; border-radius:12px; font-weight:700; font-size:10px;">${data.freqGHz ? parseFloat(data.freqGHz).toFixed(1) : '7.5'} GHz Microwave</span>
               <div style="margin-top:4px;">วันที่: ${data.timestamp}</div>
             </div>
           </div>

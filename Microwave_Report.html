@@ -374,6 +374,16 @@
         </div>
       </div>
       <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <!-- Microwave Frequency (GHz) in Report Bar -->
+        <div style="display: inline-flex; align-items: center; gap: 5px; margin-right: 4px;">
+          <label for="report-freq-input" style="font-size: 0.8rem; font-weight: 700; color: #334155; white-space: nowrap;">📡 ความถี่:</label>
+          <div style="position: relative; display: inline-flex; align-items: center; width: 85px;">
+            <input type="number" id="report-freq-input" step="0.1" min="0.1" max="100" value="7.5"
+                   oninput="onReportFreqChange(this.value)"
+                   style="width: 100%; font-size: 0.8rem; font-weight: 700; padding: 4px 28px 4px 6px; border: 1.5px solid #cbd5e1; border-radius: 6px; outline: none; background: #ffffff;" />
+            <span style="position: absolute; right: 6px; font-size: 0.72rem; font-weight: 700; color: #64748b; pointer-events: none;">GHz</span>
+          </div>
+        </div>
         <!-- Microwave Dish Size Selector in Report Bar -->
         <div style="display: inline-flex; align-items: center; gap: 5px; margin-right: 4px;">
           <label for="report-dish-select" style="font-size: 0.8rem; font-weight: 700; color: #334155; white-space: nowrap;">🎯 ขนาดหน้าจาน:</label>
@@ -1475,6 +1485,12 @@
 
       const baseMode = modesResults[modesResults.length - 1];
 
+      // Frequency Input Sync
+      const topFreqInput = document.getElementById('report-freq-input');
+      if (topFreqInput && document.activeElement !== topFreqInput) {
+        topFreqInput.value = freqGHz.toString();
+      }
+
       // Update KPI Cards
       const setT = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
       setT('kpi-dist', `${distKm.toFixed(3)} <small style="font-size:0.8rem;">km</small>`);
@@ -1485,10 +1501,12 @@
       setT('kpi-availability', `${baseMode.avail.substring(0, 7)}%`);
 
       // Update Table 1: Site & Antenna Parameters
-      setT('th-site-a', `สถานีต้นทาง A: ${nameA}`);
-      setT('th-site-b', `สถานีปลายทาง B: ${nameB}`);
-      setT('site-name-a', nameA);
-      setT('site-name-b', nameB);
+      const thSiteA = (!nameA || nameA === 'สถานีต้นทาง A') ? 'สถานีต้นทาง A' : (nameA.startsWith('สถานีต้นทาง A') ? nameA : `สถานีต้นทาง A: ${nameA}`);
+      const thSiteB = (!nameB || nameB === 'สถานีปลายทาง B') ? 'สถานีปลายทาง B' : (nameB.startsWith('สถานีปลายทาง B') ? nameB : `สถานีปลายทาง B: ${nameB}`);
+      setT('th-site-a', thSiteA);
+      setT('th-site-b', thSiteB);
+      setT('site-name-a', nameA || 'สถานีต้นทาง A');
+      setT('site-name-b', nameB || 'สถานีปลายทาง B');
       setT('site-lat-a', `${lat1.toFixed(6)}° N`);
       setT('site-lat-b', `${lat2.toFixed(6)}° N`);
       setT('site-lon-a', `${lon1.toFixed(6)}° E`);
@@ -1574,6 +1592,19 @@
           </p>
         `;
       }
+    }
+
+    function onReportFreqChange(val) {
+      const fGHz = parseFloat(val) || 7.5;
+      if (!activeReportData) {
+        activeReportData = getDataSource() || defaultReportData;
+      }
+      activeReportData.freqGHz = fGHz;
+      activeReportData.freqMHz = fGHz * 1000.0;
+      try {
+        localStorage.setItem('realtime_microwave_report_data', JSON.stringify(activeReportData));
+      } catch (e) {}
+      renderRealtimeReport(activeReportData);
     }
 
     function onReportDishChange() {
