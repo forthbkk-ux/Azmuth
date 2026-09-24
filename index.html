@@ -2095,9 +2095,9 @@
                 </tr>
                 <tr>
                   <td style="padding:5px 10px;">Diffraction Loss & Field Margin</td>
-                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);">1.00</td>
+                  <td style="padding:5px 10px; text-align:right; font-family:var(--font-mono);" id="cur-rf-diffraction">1.00</td>
                   <td style="padding:5px 10px;">dB</td>
-                  <td style="padding:5px 10px; color:#64748b;">แนวสายตาปลอดสิ่งกีดขวางสมบูรณ์</td>
+                  <td style="padding:5px 10px; color:#64748b;" id="cur-rf-diffraction-desc">แนวสายตาปลอดสิ่งกีดขวางสมบูรณ์</td>
                 </tr>
                 <tr style="background:#fafbfc;">
                   <td style="padding:5px 10px;">ระบบสำรองและเทคโนโลยี (Configuration)</td>
@@ -4825,6 +4825,160 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       updateCurrentLinkModalData();
     }
 
+    // Rigorous Microwave Obstacle & Diffraction Analysis (ITU-R P.526 & ITU-R P.530 Carrier-Grade Standards)
+    function analyzePathObstacles(profilePoints, totalDistKm, freqGHz, antA, antB, groundA, groundB) {
+      if (!profilePoints || !profilePoints.length) {
+        return {
+          isObstructed: false,
+          isSubFresnel: false,
+          worstClearanceM: 999,
+          maxObstaclePenetrationM: 0,
+          worstPoint: null,
+          diffractionLossDb: 1.0,
+          requiredExtraHeightM: 0,
+          status: 'clear',
+          statusBadge: '✅ ปกติ (Clear LOS)',
+          statusColor: '#16a34a',
+          statusText: 'แนวสายตาปลอดสิ่งกีดขวางสมบูรณ์'
+        };
+      }
+
+      const N = profilePoints.length;
+      const dTot = Math.max(0.1, parseFloat(totalDistKm) || 1.0);
+      const fG = Math.max(0.1, parseFloat(freqGHz) || 7.5);
+      const hA = parseFloat(groundA) || 0;
+      const hB = parseFloat(groundB) || 0;
+      const aA = parseFloat(antA) || 0;
+      const aB = parseFloat(antB) || 0;
+      const topA = hA + aA;
+      const topB = hB + aB;
+
+      let worstClearance = Infinity;
+      let worstPt = null;
+      let maxObstaclePenetration = 0; // meters above LOS line
+
+      for (let i = 0; i < N; i++) {
+        const p = profilePoints[i];
+        const d_i = typeof p.distKm === 'number' ? p.distKm : (dTot * i / (N - 1));
+        const frac = dTot > 0 ? (d_i / dTot) : 0;
+
+        // Skip near-station proximity (first 2% and last 2%)
+        if (frac <= 0.02 || frac >= 0.98) continue;
+
+        // Earth Bulge with standard atmospheric refraction K = 4/3
+        const earthBulge = (d_i * (dTot - d_i)) / 12.74;
+        
+        let gElev = 0;
+        if (typeof p.groundElev === 'number') gElev = p.groundElev;
+        else if (typeof p.elevation === 'number') gElev = p.elevation;
+        else if (typeof p.effectiveGround === 'number') gElev = p.effectiveGround - earthBulge;
+
+        const effGround = (typeof p.effectiveGround === 'number' && p.effectiveGround > gElev)
+          ? p.effectiveGround
+          : (gElev + earthBulge);
+
+        // LOS ray straight line height between antenna tips
+        const rayH = topA + frac * (topB - topA);
+
+        // Clearance = Ray Height - Effective Ground (positive = clear, negative = blocked)
+        const clearance = rayH - effGround;
+
+        // 1st Fresnel Zone Radius F1 in meters
+        const d2 = dTot - d_i;
+        const fR = (d_i > 0 && d2 > 0) ? 17.32 * Math.sqrt((d_i * d2) / (fG * dTot)) : 1.0;
+
+        if (clearance < worstClearance) {
+          worstClearance = clearance;
+          worstPt = {
+            index: i,
+            distKm: d_i,
+            groundElev: gElev,
+            effectiveGround: effGround,
+            rayHeight: rayH,
+            clearance: clearance,
+            fresnelR: fR,
+            frac: frac
+          };
+        }
+
+        if (clearance < 0) {
+          const pen = Math.abs(clearance);
+          if (pen > maxObstaclePenetration) {
+            maxObstaclePenetration = pen;
+          }
+        }
+      }
+
+      const fR_worst = (worstPt && worstPt.fresnelR > 0) ? worstPt.fresnelR : (17.32 * Math.sqrt((dTot / 4) / fG));
+      const d_worst = worstPt ? worstPt.distKm : (dTot / 2);
+
+      let isObstructed = false;
+      let isSubFresnel = false;
+      let diffractionLoss = 1.0;
+      let requiredExtraHeightM = 0;
+      let status = 'clear';
+      let statusBadge = '✅ ปกติ (Clear LOS)';
+      let statusColor = '#16a34a';
+      let statusText = 'แนวสายตาปลอดสิ่งกีดขวางสมบูรณ์';
+
+      if (worstClearance < 0) {
+        // Direct Non-Line-of-Sight Blockage
+        isObstructed = true;
+        status = 'blocked';
+        statusBadge = '🔴 สิ่งกีดขวางบดบัง (NLOS Blocked)';
+        statusColor = '#dc2626';
+
+        // Required antenna height increase to achieve 60% 1st Fresnel clearance
+        requiredExtraHeightM = Math.ceil(maxObstaclePenetration + 0.6 * fR_worst);
+
+        // Knife-edge diffraction parameter nu = sqrt(2) * (h_obs / F1)
+        const nu = Math.SQRT2 * (maxObstaclePenetration / fR_worst);
+        let jNu = 6.9 + 20 * Math.log10(Math.sqrt(Math.pow(nu - 0.1, 2) + 1) + Math.max(0, nu - 0.1));
+        
+        // For deep mountain obstructions, knife-edge + rounded obstacle loss ranges between 18 dB up to 120 dB
+        diffractionLoss = Math.max(18.0, Math.min(120.0, Math.round(jNu * 10) / 10));
+
+        statusText = `บดบังแนวสายตา LOS (สิ่งกีดขวางสูงเกินแนวคลื่น ${maxObstaclePenetration.toFixed(1)} m ณ กม. ${d_worst.toFixed(2)})`;
+      } else if (worstClearance < 0.6 * fR_worst) {
+        // Sub-Fresnel zone clearance (0 <= clearance < 0.6 F1)
+        isSubFresnel = true;
+        status = 'sub_fresnel';
+        statusBadge = '⚠️ รุกล้ำ Fresnel Zone';
+        statusColor = '#d97706';
+
+        const clearRatio = Math.max(0, worstClearance / (0.6 * fR_worst));
+        diffractionLoss = Math.round((1.0 + 5.0 * (1.0 - clearRatio)) * 10) / 10;
+        requiredExtraHeightM = Math.ceil(0.6 * fR_worst - worstClearance);
+
+        statusText = `รุกล้ำพื้นที่ Fresnel ลำดับที่ 1 (ระยะเคลียร์ ${worstClearance.toFixed(1)} m < 0.6 F1 = ${(0.6 * fR_worst).toFixed(1)} m ณ กม. ${d_worst.toFixed(2)})`;
+      } else {
+        // Clear Line-of-Sight
+        isObstructed = false;
+        isSubFresnel = false;
+        status = 'clear';
+        statusBadge = '✅ ปกติ (Clear LOS)';
+        statusColor = '#16a34a';
+        diffractionLoss = 1.0;
+        requiredExtraHeightM = 0;
+
+        statusText = `แนวสายตาปลอดสิ่งกีดขวางสมบูรณ์ (ระยะเคลียร์ต่ำสุด +${worstClearance.toFixed(1)} m เหนือผืนดิน ณ กม. ${d_worst.toFixed(2)})`;
+      }
+
+      return {
+        isObstructed,
+        isSubFresnel,
+        worstClearanceM: worstClearance,
+        maxObstaclePenetrationM: maxObstaclePenetration,
+        worstPoint: worstPt,
+        diffractionLossDb: diffractionLoss,
+        requiredExtraHeightM,
+        status,
+        statusBadge,
+        statusColor,
+        statusText
+      };
+    }
+
     // Parabolic Dish Antenna Sizing & Analysis (based on Distance, Target Margin & Carrier-Grade Standards)
     function calculateParabolicAntenna(distKm, freqGHz = 7.5, overrideSize = null) {
       const d = Math.max(0.1, parseFloat(distKm) || 1.0);
@@ -5265,6 +5419,37 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const bTextY = yB_top < padTop + 14 ? yB_top + 14 : yB_top - 2;
       ctx.fillText(`[B] ${master.name || 'B'} (${master.height || 50}m)`, xB - 5, bTextY);
 
+      // Obstacle Warning Indicator on Canvas
+      let worstCanvasPt = null;
+      let maxPen = 0;
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        if (p.clearance < 0 && Math.abs(p.clearance) > maxPen) {
+          maxPen = Math.abs(p.clearance);
+          worstCanvasPt = p;
+        }
+      }
+      if (worstCanvasPt && maxPen > 0) {
+        const xObs = xCoord(worstCanvasPt.distKm);
+        const yObs = yCoord(worstCanvasPt.effectiveGround);
+        ctx.save();
+        ctx.fillStyle = '#dc2626';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(xObs, yObs, 5.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#991b1b';
+        ctx.font = 'bold 8.5px "Inter", "Sarabun", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        const txtY = Math.max(padTop + 10, yObs - 7);
+        ctx.fillText(`⚠️ สันเขาบังคลื่น +${maxPen.toFixed(1)}m`, xObs, txtY);
+        ctx.restore();
+      }
+
       // Border outline
       ctx.strokeStyle = '#cbd5e1';
       ctx.lineWidth = 1;
@@ -5391,18 +5576,33 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const bwDescEl = document.getElementById('cur-rf-bw-desc');
       if (bwDescEl) bwDescEl.innerText = curRadio.bwDesc;
 
+      // Extract Profile Points and Perform Obstacle Analysis
+      let profilePoints = null;
+      if (typeof currentElevProfileData !== 'undefined' && currentElevProfileData && currentElevProfileData.points && currentElevProfileData.points.length > 0) {
+        profilePoints = currentElevProfileData.points;
+      }
+      const obsResult = analyzePathObstacles(profilePoints, distKm, freqGHz, antA, antB, groundA, groundB);
+      const diffLoss = obsResult.diffractionLossDb;
+
       // Adaptive Modulation Modes
       const modesConfig = curRadio.modes;
 
       const modesResults = modesConfig.map(m => {
         const eirp = m.tx + antGainA;
-        const rsl = m.tx + antGainA + antGainB - feederLoss - fsl - atmLoss;
+        const rsl = m.tx + antGainA + antGainB - feederLoss - fsl - atmLoss - diffLoss;
         const fm = rsl - m.th;
-        const fadeFactor = Math.pow(10, -fm / 10);
-        const distFactor = Math.pow(distKm / 18.416, 3);
-        const baseOutage = 0.000514;
-        const outageProb = Math.min(1.0, Math.max(0.000001, baseOutage * distFactor * (fadeFactor / Math.pow(10, -42.78 / 10))));
-        const avail = (100 - outageProb).toFixed(6) + '%';
+        let avail = '0.0000%';
+        if (obsResult.isObstructed) {
+          avail = '0.0000% (Link Down)';
+        } else if (fm <= 0) {
+          avail = '0.0000% (No Margin)';
+        } else {
+          const fadeFactor = Math.pow(10, -fm / 10);
+          const distFactor = Math.pow(distKm / 18.416, 3);
+          const baseOutage = 0.000514;
+          const outageProb = Math.min(1.0, Math.max(0.000001, baseOutage * distFactor * (fadeFactor / Math.pow(10, -42.78 / 10))));
+          avail = (100 - outageProb).toFixed(6) + '%';
+        }
         return { ...m, eirp: eirp.toFixed(1), rsl: rsl.toFixed(2), fm: fm.toFixed(2), avail };
       });
 
@@ -5419,9 +5619,20 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       setTxt('cur-modal-dist', distKm.toFixed(3) + ' km');
       setTxt('cur-modal-freq', `${freqGHz.toFixed(1)} GHz`);
       setTxt('cur-modal-fsl', fsl.toFixed(2) + ' dB');
-      setTxt('cur-modal-rsl', baseMode.rsl + ' dBm');
-      setTxt('cur-modal-fade-margin', baseMode.fm + ' dB');
-      setTxt('cur-modal-availability', baseMode.avail.substring(0, 7) + '%');
+
+      if (obsResult.isObstructed) {
+        setHtml('cur-modal-rsl', `<span style="color:#dc2626;font-weight:800;">${baseMode.rsl} dBm</span><div style="font-size:0.65rem;color:#dc2626;font-weight:700;margin-top:2px;">⚠️ ต่ำกว่าเกณฑ์ (${baseMode.th.toFixed(1)} dBm)</div>`);
+        setHtml('cur-modal-fade-margin', `<span style="color:#dc2626;font-weight:800;">${baseMode.fm} dB</span><div style="font-size:0.65rem;color:#dc2626;font-weight:700;margin-top:2px;">⚠️ ติดลบ (ไม่มี Margin)</div>`);
+        setHtml('cur-modal-availability', `<span style="color:#dc2626;font-weight:800;">0.0000%</span><div style="font-size:0.65rem;color:#dc2626;font-weight:700;margin-top:2px;">⚠️ ลิงก์ไม่ทำงาน (NLOS)</div>`);
+      } else if (obsResult.isSubFresnel) {
+        setHtml('cur-modal-rsl', `<span style="color:#d97706;font-weight:800;">${baseMode.rsl} dBm</span><div style="font-size:0.65rem;color:#d97706;font-weight:700;margin-top:2px;">⚠️ รุกล้ำ Fresnel Zone</div>`);
+        setHtml('cur-modal-fade-margin', `<span style="color:#d97706;font-weight:800;">${baseMode.fm} dB</span><div style="font-size:0.65rem;color:#d97706;font-weight:700;margin-top:2px;">⚠️ Margin ลดลง</div>`);
+        setHtml('cur-modal-availability', `<span style="color:#d97706;font-weight:800;">${baseMode.avail.substring(0, 7)}%</span>`);
+      } else {
+        setHtml('cur-modal-rsl', `${baseMode.rsl} dBm`);
+        setHtml('cur-modal-fade-margin', `${baseMode.fm} dB`);
+        setHtml('cur-modal-availability', `${baseMode.avail.substring(0, 7)}%`);
+      }
 
       // Table 1: Site & Antenna Parameters
       const mSiteA = (!nameA || nameA === 'สถานีต้นทาง A') ? 'สถานีต้นทาง A' : (nameA.startsWith('สถานีต้นทาง A') ? nameA : `สถานีต้นทาง A: ${nameA}`);
@@ -5455,35 +5666,86 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       setTxt('cur-rf-fsl', fsl.toFixed(2));
       setTxt('cur-rf-atm', atmLoss.toFixed(2));
       setTxt('cur-rf-rain', rainLoss.toFixed(2));
+      setHtml('cur-rf-diffraction', `<span style="color:${obsResult.statusColor};font-weight:bold;">${obsResult.diffractionLossDb.toFixed(2)}</span>`);
+      setHtml('cur-rf-diffraction-desc', `<span style="color:${obsResult.statusColor};font-weight:600;">${obsResult.statusText}</span>`);
 
       // Table 3: Adaptive Modulation Performance
       modesResults.forEach(m => {
         setTxt(`m-tp-${m.key}`, m.tp);
         setTxt(`m-tx-${m.key}`, `${m.tx.toFixed(1)} dBm`);
         setTxt(`m-eirp-${m.key}`, `${m.eirp} dBm`);
-        setTxt(`m-rsl-${m.key}`, `${m.rsl} dBm`);
+        const rslColor = (parseFloat(m.rsl) < m.th || obsResult.isObstructed) ? '#dc2626' : (obsResult.isSubFresnel ? '#d97706' : '#059669');
+        const fmColor = (parseFloat(m.fm) <= 0 || obsResult.isObstructed) ? '#dc2626' : (obsResult.isSubFresnel ? '#d97706' : '#2563eb');
+        const availColor = (obsResult.isObstructed || parseFloat(m.fm) <= 0) ? '#dc2626' : (obsResult.isSubFresnel ? '#d97706' : '#16a34a');
+        setHtml(`m-rsl-${m.key}`, `<span style="color:${rslColor};font-weight:700;">${m.rsl} dBm</span>`);
         setTxt(`m-th-${m.key}`, `${m.th.toFixed(1)} dBm`);
-        setTxt(`m-fm-${m.key}`, `${m.fm} dB`);
-        setTxt(`m-avail-${m.key}`, m.avail);
+        setHtml(`m-fm-${m.key}`, `<span style="color:${fmColor};font-weight:700;">${m.fm} dB</span>`);
+        setHtml(`m-avail-${m.key}`, `<span style="color:${availColor};font-weight:700;">${m.avail}</span>`);
       });
 
       // Section 4: Engineering Conclusion
       const conclusionEl = document.getElementById('cur-modal-conclusion');
       if (conclusionEl) {
-        conclusionEl.innerHTML = `
-          <p style="margin-bottom: 5px;">
-            เส้นทางวิทยุไมโครเวฟ ระหว่าง <b>${nameA}</b> และ <b>${nameB}</b> มีระยะทางจริงตามเส้น Geodesic เท่ากับ <b>${distKm.toFixed(3)} km</b> เมื่อติดตั้งสายอากาศ ที่ระดับความสูง <b>${antA.toFixed(1)} เมตร</b> (สถานี A) และ <b>${antB.toFixed(1)} เมตร</b> (สถานี B)
-          </p>
-          <p style="margin-bottom: 5px;">
-            แนวคลื่นวิทยุ ย่านความถี่ <b>${freqGHz.toFixed(1)} GHz</b> มีระยะเคลียร์ เหนือผืนดิน และสิ่งกีดขวาง ตลอดแนวเส้นทาง (100% 1st Fresnel Zone ปลอดโปร่ง)
-          </p>
-          <p style="margin-bottom: 5px;">
-            ${antCalc.isManual ? 'กำหนดเลือกใช้' : 'วิเคราะห์และคำนวณเลือกใช้'}จานสายอากาศพาราโบลิกขนาดเส้นผ่านศูนย์กลาง <b>${antCalc.sizeM} เมตร (${antCalc.label})</b> อัตราขยาย <b>${antCalc.gainDbi.toFixed(2)} dBi</b> เพื่อรองรับระยะทาง <b>${distKm.toFixed(3)} km</b> ให้ระดับสัญญาณรับในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> (เกณฑ์มาตรฐาน ≥ ${antCalc.targetMargin} dB)
-          </p>
-          <p style="margin: 0;">
-            อัตรา ความพร้อมใช้งาน ของระบบสื่อสาร (Annual Availability) คำนวณได้ <b>${baseMode.avail}</b> ผ่านเกณฑ์มาตรฐาน โทรคมนาคม ระดับ Carrier-Grade Telecom Standard สมบูรณ์แบบ.
-          </p>
-        `;
+        if (obsResult.isObstructed) {
+          conclusionEl.innerHTML = `
+            <div style="background: #fef2f2; border: 1.5px solid #f87171; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;">
+              <div style="font-weight: 800; color: #b91c1c; font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span>⚠️ ผลการวิเคราะห์: เส้นทางมีสิ่งกีดขวางบดบังแนวคลื่นวิทยุ (Path Obstructed / NLOS) ไม่ผ่านเกณฑ์มาตรฐาน</span>
+              </div>
+              <p style="margin: 0 0 6px 0; color: #991b1b; font-size: 0.83rem; line-height: 1.5;">
+                เส้นทางวิทยุไมโครเวฟระหว่าง <b>${nameA}</b> และ <b>${nameB}</b> (ระยะทาง <b>${distKm.toFixed(3)} km</b>) 
+                <b>ถูกสิ่งกีดขวาง/แนวสันเขาบดบังแนวสายตา (Line-of-Sight) อย่างสิ้นเชิง</b> 
+                โดยมียอดสิ่งกีดขวางตัดผ่านแนวคลื่นสูงถึง <b>${obsResult.maxObstaclePenetrationM.toFixed(1)} เมตร</b> 
+                ณ ตำแหน่งประมาณ กม. <b>${obsResult.worstPoint ? obsResult.worstPoint.distKm.toFixed(2) : ''}</b> จากสถานี A.
+              </p>
+              <p style="margin: 0 0 8px 0; color: #7f1d1d; font-size: 0.82rem; line-height: 1.5;">
+                การบดบังดังกล่าวทำให้เกิดการลดทอนสัญญาณจากการเลี้ยวเบน (Diffraction Loss) สูงถึง <b>${obsResult.diffractionLossDb.toFixed(1)} dB</b> 
+                ส่งผลให้ระดับสัญญาณรับ (RSL) ตกต่ำลงเหลือ <b>${baseMode.rsl} dBm</b> ซึ่งต่ำกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) 
+                ค่า Fade Margin ติดลบ (<b>${baseMode.fm} dB</b>) ทำให้ระบบ<b>ไม่สามารถเชื่อมโยงสัญญาณสื่อสารได้ (ความพร้อมใช้งาน 0.0000%)</b>.
+              </p>
+              <div style="border-top: 1px dashed #fca5a5; padding-top: 8px; margin-top: 6px; color: #991b1b; font-size: 0.81rem; line-height: 1.5;">
+                <b>💡 ข้อเสนอแนะทางวิศวกรรมในการแก้ไข (Recommendations):</b><br/>
+                1. <b>ปรับเพิ่มความสูงเสาสื่อสาร:</b> ต้องเพิ่มความสูงสายอากาศทั้งสองฝั่งรวมกันไม่น้อยกว่า <b>${obsResult.requiredExtraHeightM} เมตร</b> เพื่อยกแนวคลื่นให้พ้นยอดเขาและได้ระยะเคลียร์ 60% 1st Fresnel Zone<br/>
+                2. <b>ติดตั้งสถานีทวนสัญญาณ (Repeater):</b> หากข้อจำกัดโครงสร้างเสาไม่สามารถเพิ่มความสูงได้ ควรพิจารณาติดตั้งสถานีทวนสัญญาณ (Active Repeater หรือ Passive Back-to-Back Dish) บนยอดเขาสันกั้น เพื่อส่งต่อสัญญาณข้ามแนวเขา
+              </div>
+            </div>
+          `;
+        } else if (obsResult.isSubFresnel) {
+          conclusionEl.innerHTML = `
+            <div style="background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 8px; padding: 12px 14px; margin-bottom: 8px;">
+              <div style="font-weight: 800; color: #92400e; font-size: 0.92rem; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                <span>⚠️ ผลการวิเคราะห์: รุกล้ำพื้นที่ Fresnel Zone ลำดับที่ 1 (Sub-Fresnel Clearance)</span>
+              </div>
+              <p style="margin: 0 0 6px 0; color: #78350f; font-size: 0.83rem; line-height: 1.5;">
+                เส้นทางวิทยุไมโครเวฟระหว่าง <b>${nameA}</b> และ <b>${nameB}</b> (ระยะทาง <b>${distKm.toFixed(3)} km</b>) 
+                มีระยะเคลียร์เหนือผืนดินต่ำสุด <b>${obsResult.worstClearanceM.toFixed(1)} เมตร</b> ณ กม. ${obsResult.worstPoint ? obsResult.worstPoint.distKm.toFixed(2) : ''} 
+                ซึ่งต่ำกว่าเกณฑ์ความปลอดโปร่ง 60% 1st Fresnel Zone ทำให้เกิด Diffraction Loss เพิ่มขึ้น <b>${obsResult.diffractionLossDb.toFixed(1)} dB</b>.
+              </p>
+              <p style="margin: 0 0 6px 0; color: #78350f; font-size: 0.82rem; line-height: 1.5;">
+                ระดับสัญญาณรับในโหมด ${baseMode.name || '32QAM'} (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> 
+                และมี Fade Margin อยู่ที่ <b>${baseMode.fm} dB</b> (ความพร้อมใช้งาน <b>${baseMode.avail}</b>)
+              </p>
+              <div style="border-top: 1px dashed #fde68a; padding-top: 6px; margin-top: 6px; color: #92400e; font-size: 0.81rem;">
+                💡 <b>ข้อเสนอแนะ:</b> ควรพิจารณาปรับเพิ่มความสูงเสาอีกประมาณ <b>${obsResult.requiredExtraHeightM} เมตร</b> เพื่อให้พ้นเขต 60% Fresnel Zone อย่างสมบูรณ์และได้ Fade Margin สูงสุด.
+              </div>
+            </div>
+          `;
+        } else {
+          conclusionEl.innerHTML = `
+            <p style="margin-bottom: 5px;">
+              เส้นทางวิทยุไมโครเวฟ ระหว่าง <b>${nameA}</b> และ <b>${nameB}</b> มีระยะทางจริงตามเส้น Geodesic เท่ากับ <b>${distKm.toFixed(3)} km</b> เมื่อติดตั้งสายอากาศ ที่ระดับความสูง <b>${antA.toFixed(1)} เมตร</b> (สถานี A) และ <b>${antB.toFixed(1)} เมตร</b> (สถานี B)
+            </p>
+            <p style="margin-bottom: 5px;">
+              แนวคลื่นวิทยุ ย่านความถี่ <b>${freqGHz.toFixed(1)} GHz</b> มีระยะเคลียร์ เหนือผืนดิน และสิ่งกีดขวาง ตลอดแนวเส้นทาง (100% 1st Fresnel Zone ปลอดโปร่ง)
+            </p>
+            <p style="margin-bottom: 5px;">
+              ${antCalc.isManual ? 'กำหนดเลือกใช้' : 'วิเคราะห์และคำนวณเลือกใช้'}จานสายอากาศพาราโบลิกขนาดเส้นผ่านศูนย์กลาง <b>${antCalc.sizeM} เมตร (${antCalc.label})</b> อัตราขยาย <b>${antCalc.gainDbi.toFixed(2)} dBi</b> เพื่อรองรับระยะทาง <b>${distKm.toFixed(3)} km</b> ให้ระดับสัญญาณรับในโหมด 32QAM (Base Mode) อยู่ที่ <b>${baseMode.rsl} dBm</b> ซึ่งสูงกว่าเกณฑ์ความไวภาครับ (${baseMode.th.toFixed(1)} dBm) ให้ค่า Thermal Fade Margin สูงถึง <b>${baseMode.fm} dB</b> (เกณฑ์มาตรฐาน ≥ ${antCalc.targetMargin} dB)
+            </p>
+            <p style="margin: 0;">
+              อัตรา ความพร้อมใช้งาน ของระบบสื่อสาร (Annual Availability) คำนวณได้ <b>${baseMode.avail}</b> ผ่านเกณฑ์มาตรฐาน โทรคมนาคม ระดับ Carrier-Grade Telecom Standard สมบูรณ์แบบ.
+            </p>
+          `;
+        }
       }
 
       saveRealtimeReportData();
@@ -5539,15 +5801,30 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
 
       const modesConfig = curRadio.modes;
 
+      // Extract Profile Points and Perform Obstacle Analysis
+      let profilePoints = null;
+      if (typeof currentElevProfileData !== 'undefined' && currentElevProfileData && currentElevProfileData.points && currentElevProfileData.points.length > 0) {
+        profilePoints = currentElevProfileData.points;
+      }
+      const obsResult = analyzePathObstacles(profilePoints, distKm, freqGHz, antA, antB, groundA, groundB);
+      const diffLoss = obsResult.diffractionLossDb;
+
       const modesResults = modesConfig.map(m => {
         const eirp = m.tx + antGainA;
-        const rsl = m.tx + antGainA + antGainB - feederLoss - fsl - atmLoss;
+        const rsl = m.tx + antGainA + antGainB - feederLoss - fsl - atmLoss - diffLoss;
         const fm = rsl - m.th;
-        const fadeFactor = Math.pow(10, -fm / 10);
-        const distFactor = Math.pow(distKm / 18.416, 3);
-        const baseOutage = 0.000514;
-        const outageProb = Math.min(1.0, Math.max(0.000001, baseOutage * distFactor * (fadeFactor / Math.pow(10, -42.78 / 10))));
-        const avail = (100 - outageProb).toFixed(6) + '%';
+        let avail = '0.0000%';
+        if (obsResult.isObstructed) {
+          avail = '0.0000% (Link Down)';
+        } else if (fm <= 0) {
+          avail = '0.0000% (No Margin)';
+        } else {
+          const fadeFactor = Math.pow(10, -fm / 10);
+          const distFactor = Math.pow(distKm / 18.416, 3);
+          const baseOutage = 0.000514;
+          const outageProb = Math.min(1.0, Math.max(0.000001, baseOutage * distFactor * (fadeFactor / Math.pow(10, -42.78 / 10))));
+          avail = (100 - outageProb).toFixed(6) + '%';
+        }
         return { ...m, eirp: eirp.toFixed(1), rsl: rsl.toFixed(2), fm: fm.toFixed(2), avail };
       });
 
@@ -5633,6 +5910,8 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         rsl: baseMode.rsl,
         fadeMargin: baseMode.fm,
         availability: baseMode.avail,
+        diffractionLoss: diffLoss,
+        obsResult: obsResult,
         modesResults,
         antSize: antCalc.sizeM,
         antGain: antCalc.gainDbi,
