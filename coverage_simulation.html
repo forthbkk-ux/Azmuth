@@ -1228,39 +1228,46 @@
             </thead>
             <tbody id="distrib-table-body">
               <tr>
-                <td><span style="color:#15803d; font-weight:700;">🟢 ดีเยี่ยม (Excellent)</span></td>
-                <td>≥ -75 dBm</td>
-                <td>ความเร็วสูงสุด ไร้สัญญาณรบกวน ทะลุทะลวงในอาคารหนาแน่น</td>
-                <td id="dist-area-exc">342 ตร.กม.</td>
-                <td id="dist-pct-exc">27.2%</td>
+                <td><span style="color:#0284c7; font-weight:700;">🔵 แรงสูงสุด (Near Field)</span></td>
+                <td>≥ -50 dBm</td>
+                <td>ไร้สัญญาณรบกวน ใกล้เสาสถานีแม่ข่าย (สัญญาณสูงสุด)</td>
+                <td id="dist-area-near">- ตร.กม.</td>
+                <td id="dist-pct-near">-%</td>
+              </tr>
+              <tr>
+                <td><span style="color:#16a34a; font-weight:700;">🟢 ดีเยี่ยม (Excellent)</span></td>
+                <td>-50 ถึง -70 dBm</td>
+                <td>สัญญาณคมชัดมาก เหมาะสมสำหรับการสื่อสารทุกรูปแบบ</td>
+                <td id="dist-area-exc">- ตร.กม.</td>
+                <td id="dist-pct-exc">-%</td>
               </tr>
               <tr>
                 <td><span style="color:#22c55e; font-weight:700;">🟢 ดีมาก (Good)</span></td>
-                <td>-75 ถึง -85 dBm</td>
-                <td>สัญญาณคมชัด เหมาะสมสำหรับการใช้งานปกติในตัวเมือง</td>
-                <td id="dist-area-good">415 ตร.กม.</td>
-                <td id="dist-pct-good">33.0%</td>
+                <td>-70 ถึง -80 dBm</td>
+                <td>สัญญาณดีมาก การสื่อสารราบรื่น ไม่มีสะดุด</td>
+                <td id="dist-area-good">- ตร.กม.</td>
+                <td id="dist-pct-good">-%</td>
               </tr>
               <tr>
-                <td><span style="color:#eab308; font-weight:700;">🟡 ปานกลาง (Fair)</span></td>
-                <td>-85 ถึง -95 dBm</td>
-                <td>ใช้งานได้ตามมาตรฐาน แต่อาจเริ่มมีสัญญาณรบกวนในอาคาร</td>
-                <td id="dist-area-fair">499 ตร.กม.</td>
-                <td id="dist-pct-fair">39.8%</td>
+                <td><span style="color:#84cc16; font-weight:700;">🟡 ปานกลาง (Fair)</span></td>
+                <td>-80 ถึง -90 dBm</td>
+                <td>ใช้งานได้ตามมาตรฐาน แต่อาจเริ่มมีทอนสัญญาณในอาคาร</td>
+                <td id="dist-area-fair">- ตร.กม.</td>
+                <td id="dist-pct-fair">-%</td>
               </tr>
               <tr>
-                <td><span style="color:#f97316; font-weight:700;">🟠 ขอบเขต (Marginal)</span></td>
-                <td>-95 ถึง -105 dBm</td>
-                <td>ขอบเขตการให้บริการ สัญญาณเริ่มขาดหายในจุดอับ</td>
-                <td id="dist-area-marg">190 ตร.กม.</td>
-                <td id="dist-pct-marg">-</td>
+                <td><span style="color:#eab308; font-weight:700;">🟠 ขอบเขต (Marginal)</span></td>
+                <td>-90 ถึง -100 dBm</td>
+                <td>ขอบเขตการให้บริการ สัญญาณเริ่มอ่อนในจุดอับ</td>
+                <td id="dist-area-marg">- ตร.กม.</td>
+                <td id="dist-pct-marg">-%</td>
               </tr>
               <tr>
-                <td><span style="color:#ef4444; font-weight:700;">🔴 วิกฤต (Poor)</span></td>
-                <td>-105 ถึง -115 dBm</td>
+                <td><span style="color:#ea580c; font-weight:700;">🔴 สัญญาณอ่อนวิกฤต (Poor)</span></td>
+                <td>-100 ถึง -112 dBm</td>
                 <td>สัญญาณอ่อนมาก มีการหลุดของการเชื่อมต่อ</td>
-                <td id="dist-area-poor">85 ตร.กม.</td>
-                <td id="dist-pct-poor">-</td>
+                <td id="dist-area-poor">- ตร.กม.</td>
+                <td id="dist-pct-poor">-%</td>
               </tr>
             </tbody>
           </table>
@@ -1716,7 +1723,7 @@
       maxReliableRadiusKm: 0,
       blockedAreaKm2: 0,
       blockedPct: 0,
-      tiers: { exc: 0, good: 0, fair: 0, marg: 0, poor: 0 }
+      tiers: { near: 0, exc: 0, good: 0, fair: 0, marg: 0, poor: 0 }
     };
 
     // Map and Layers
@@ -2249,7 +2256,7 @@
       if (loadingText) loadingText.innerText = "กำลังประมวลผล Coverage ทุกสถานีแม่ข่าย...";
 
       let totalCoveredAreaKm2 = 0;
-      let countExc = 0, countGood = 0, countFair = 0, countMarg = 0, countPoor = 0;
+      let countNear = 0, countExc = 0, countGood = 0, countFair = 0, countMarg = 0, countPoor = 0;
 
       for (let i = 0; i < masterStations.length; i++) {
         const m = masterStations[i];
@@ -2279,16 +2286,18 @@
         if (coverageGrid && coverageGrid.length > 0) {
           for (let r of coverageGrid) {
             for (let pt of r.radials) {
-              if (pt.rsl >= -50) countExc++;
-              else if (pt.rsl >= -70) countGood++;
-              else if (pt.rsl >= -85) countFair++;
-              else if (pt.rsl >= -95) countMarg++;
+              if (pt.rsl >= -50) countNear++;
+              else if (pt.rsl >= -70) countExc++;
+              else if (pt.rsl >= -80) countGood++;
+              else if (pt.rsl >= -90) countFair++;
+              else if (pt.rsl >= -100) countMarg++;
               else if (pt.rsl >= -112) countPoor++;
-              if (pt.rsl >= -95) totalCoveredAreaKm2 += cellAreaUnit;
+              if (pt.rsl >= -112) totalCoveredAreaKm2 += cellAreaUnit;
             }
           }
           kpiResults.reliableAreaKm2 = Math.round(totalCoveredAreaKm2);
           kpiResults.maxReliableRadiusKm = Math.min(activeM.maxRadiusKm, Math.round(Math.sqrt(totalCoveredAreaKm2 / Math.PI) * 10) / 10);
+          kpiResults.tiers.near = Math.round(countNear * cellAreaUnit);
           kpiResults.tiers.exc = Math.round(countExc * cellAreaUnit);
           kpiResults.tiers.good = Math.round(countGood * cellAreaUnit);
           kpiResults.tiers.fair = Math.round(countFair * cellAreaUnit);
@@ -2379,16 +2388,15 @@
       return Math.min(loss, fbRatio);
     }
 
-    // Color mapper for RSL (dBm) matching pure signal tiers (No dark red shadow wedge)
+    // Color mapper for RSL (dBm) strictly matching Legend and Client Status
     function getRslColor(rsl) {
-      if (rsl >= -50) return '#0284c7'; // Sky Blue (Near Station)
-      if (rsl >= -65) return '#15803d'; // Rich Deep Green
-      if (rsl >= -75) return '#22c55e'; // Bright Green
-      if (rsl >= -85) return '#84cc16'; // Lime / Yellow-Green
-      if (rsl >= -95) return '#eab308'; // Fair Yellow
-      if (rsl >= -105) return '#ea580c'; // Marginal Orange
-      if (rsl >= -112) return '#dc2626'; // Poor Red
-      return null; // Out of service (transparent)
+      if (rsl >= -50) return '#0284c7'; // ฟ้า (>= -50 dBm)
+      if (rsl >= -70) return '#16a34a'; // เขียวเข้ม (-50 ถึง -70 dBm)
+      if (rsl >= -80) return '#22c55e'; // เขียวอ่อน (-70 ถึง -80 dBm)
+      if (rsl >= -90) return '#84cc16'; // เขียวตอง (-80 ถึง -90 dBm)
+      if (rsl >= -100) return '#eab308'; // เหลือง (-90 ถึง -100 dBm)
+      if (rsl >= -112) return '#ea580c'; // ส้ม (-100 ถึง -112 dBm)
+      return null; // < -112 dBm (บอดสัญญาณ Out - พื้นที่โปร่งแสง)
     }
 
     function getSignalQualityText(rsl) {
@@ -2397,7 +2405,7 @@
       if (rsl >= -80) return '🟢 ดีมาก (Good)';
       if (rsl >= -90) return '🟡 ปานกลาง (Fair)';
       if (rsl >= -100) return '🟠 ขอบเขต (Marginal)';
-      if (rsl >= -112) return '🔴 วิกฤต (Poor)';
+      if (rsl >= -112) return '🔴 สัญญาณอ่อนวิกฤต (Poor)';
       return '⚪ บอดสัญญาณ (No Service)';
     }
 
@@ -2447,35 +2455,28 @@
         }
       }
 
-      // 3. High-detail topographic synthesis
-      const baseElev = simState.groundElev;
-      const angleRad = (azimuthDeg * Math.PI) / 180;
+      // 3. Topographic synthesis (real geographical baseline without fake demo obstacle ridges)
+      const baseElev = (simState.groundElev !== undefined && !isNaN(simState.groundElev)) ? simState.groundElev : 30;
 
-      // Suphan Buri / Uthai Thani (lat ~14.8, lon ~99.8 - Image 2 area)
+      // Suphan Buri / Uthai Thani (lat ~14.5-15.3, lon ~99.5-100.1)
       if (lat >= 14.5 && lat <= 15.3 && lon >= 99.5 && lon <= 100.1) {
         let westHill = 0;
         if (lon < 99.78) {
           const wDist = (99.78 - lon) * 105;
           westHill = Math.min(580, Math.pow(wDist, 1.4) * 45);
         }
-        const ridgeWest = Math.max(0, -Math.cos(angleRad)) * Math.exp(-Math.pow(distKm - 12, 2) / 25) * 220;
-        return Math.max(1, Math.round(baseElev + westHill + ridgeWest));
+        return Math.max(1, Math.round(baseElev + westHill));
       }
 
-      // Real geographic features for Thailand (Phichit / Nakhon Sawan / Phetchabun / Khao Kho)
-      // To the east (Lon > 100.5) rises the Phetchabun mountain range (300 - 1200m)
+      // Real geographic features for Thailand (Phichit / Nakhon Sawan / Phetchabun)
       let mountainRange = 0;
       if (lon > 100.5) {
         const eastDist = (lon - 100.5) * 105; // km east
         mountainRange = Math.min(850, Math.pow(Math.max(0, eastDist - 3) / 18, 1.8) * 140);
       }
 
-      // Prominent mountain ridges (e.g. Khao Kho, Khao Sai, Khao Phanom Pha)
-      const ridge1 = Math.max(0, Math.sin(angleRad * 2 + 0.8)) * Math.exp(-Math.pow(distKm - 18, 2) / 30) * 180;
-      const ridge2 = Math.max(0, Math.cos(angleRad * 3 - 1.2)) * Math.exp(-Math.pow(distKm - 26, 2) / 45) * 220;
-      const ripple = Math.sin(lat * 60 + lon * 40) * 12 + Math.cos(distKm * 0.3) * 8;
-
-      const total = Math.max(1, Math.round(baseElev + mountainRange + ridge1 + ridge2 + ripple));
+      const ripple = Math.sin(lat * 60 + lon * 40) * 8;
+      const total = Math.max(1, Math.round(baseElev + mountainRange + ripple));
       return total;
     }
 
@@ -3105,6 +3106,11 @@
 
     function updateDistributionTable() {
       const total = kpiResults.reliableAreaKm2 || 1;
+      const elNear = document.getElementById('dist-area-near');
+      if (elNear) elNear.innerText = `${(kpiResults.tiers.near || 0).toLocaleString()} ตร.กม.`;
+      const elNearPct = document.getElementById('dist-pct-near');
+      if (elNearPct) elNearPct.innerText = `${(((kpiResults.tiers.near || 0) / total) * 100).toFixed(1)}%`;
+
       document.getElementById('dist-area-exc').innerText = `${kpiResults.tiers.exc.toLocaleString()} ตร.กม.`;
       document.getElementById('dist-pct-exc').innerText = `${((kpiResults.tiers.exc / total) * 100).toFixed(1)}%`;
 
@@ -3115,7 +3121,12 @@
       document.getElementById('dist-pct-fair').innerText = `${((kpiResults.tiers.fair / total) * 100).toFixed(1)}%`;
 
       document.getElementById('dist-area-marg').innerText = `${kpiResults.tiers.marg.toLocaleString()} ตร.กม.`;
+      const elMargPct = document.getElementById('dist-pct-marg');
+      if (elMargPct) elMargPct.innerText = `${((kpiResults.tiers.marg / total) * 100).toFixed(1)}%`;
+
       document.getElementById('dist-area-poor').innerText = `${kpiResults.tiers.poor.toLocaleString()} ตร.กม.`;
+      const elPoorPct = document.getElementById('dist-pct-poor');
+      if (elPoorPct) elPoorPct.innerText = `${((kpiResults.tiers.poor / total) * 100).toFixed(1)}%`;
     }
 
     /* --------------------------------------------------------------------------
@@ -3268,11 +3279,12 @@
     function exportCoverageSummary() {
       let csv = "Signal Tier,RSL Range,Area_sq_km,Percentage\n";
       const total = kpiResults.reliableAreaKm2 || 1;
-      csv += `Excellent,>= -75 dBm,${kpiResults.tiers.exc},${((kpiResults.tiers.exc/total)*100).toFixed(1)}%\n`;
-      csv += `Good,-75 to -85 dBm,${kpiResults.tiers.good},${((kpiResults.tiers.good/total)*100).toFixed(1)}%\n`;
-      csv += `Fair,-85 to -95 dBm,${kpiResults.tiers.fair},${((kpiResults.tiers.fair/total)*100).toFixed(1)}%\n`;
-      csv += `Marginal,-95 to -105 dBm,${kpiResults.tiers.marg},-\n`;
-      csv += `Poor,-105 to -115 dBm,${kpiResults.tiers.poor},-\n`;
+      csv += `Near Field,>= -50 dBm,${kpiResults.tiers.near || 0},${(((kpiResults.tiers.near || 0)/total)*100).toFixed(1)}%\n`;
+      csv += `Excellent,-50 to -70 dBm,${kpiResults.tiers.exc},${((kpiResults.tiers.exc/total)*100).toFixed(1)}%\n`;
+      csv += `Good,-70 to -80 dBm,${kpiResults.tiers.good},${((kpiResults.tiers.good/total)*100).toFixed(1)}%\n`;
+      csv += `Fair,-80 to -90 dBm,${kpiResults.tiers.fair},${((kpiResults.tiers.fair/total)*100).toFixed(1)}%\n`;
+      csv += `Marginal,-90 to -100 dBm,${kpiResults.tiers.marg},${((kpiResults.tiers.marg/total)*100).toFixed(1)}%\n`;
+      csv += `Poor,-100 to -112 dBm,${kpiResults.tiers.poor},${((kpiResults.tiers.poor/total)*100).toFixed(1)}%\n`;
       if (kpiResults.shadowAreaKm2 > 0) {
         csv += `Shadow / NLOS,< -105 dBm (Blocked),${kpiResults.shadowAreaKm2},-\n`;
       }
@@ -4011,14 +4023,8 @@
       const rxGain = 2.15;
       const rsl = effectiveEirp - totalPathLoss + rxGain;
 
-      let quality = "ดีเยี่ยม";
-      let color = "#15803d";
-      if (rsl >= -70) { quality = "ดีเยี่ยม (Excellent)"; color = "#15803d"; }
-      else if (rsl >= -85) { quality = "ดีมาก (Good)"; color = "#22c55e"; }
-      else if (rsl >= -95) { quality = "ปานกลาง (Fair)"; color = "#eab308"; }
-      else if (rsl >= -105) { quality = "ขอบเขต (Marginal)"; color = "#ea580c"; }
-      else if (rsl >= -112) { quality = "วิกฤต (Poor)"; color = "#dc2626"; }
-      else { quality = "นอกเขตบริการ (No Service)"; color = "#64748b"; }
+      const color = getRslColor(rsl) || '#dc2626';
+      const quality = getSignalQualityText(rsl);
 
       return {
         distKm,
@@ -4067,14 +4073,14 @@
         }
 
         // Coverage condition:
-        // Must have an active master, RSL >= -105 dBm, and distance within master's max radius
-        const isCovered = (bestMaster !== null && bestCalc !== null && bestRsl >= -105.0 && bestCalc.distKm <= bestMaster.maxRadiusKm);
+        // Must have an active master, RSL >= -112.0 dBm (within legend thresholds), and distance within master's max radius
+        const isCovered = (bestMaster !== null && bestCalc !== null && bestRsl >= -112.0 && bestCalc.distKm <= bestMaster.maxRadiusKm);
 
         c.bestMaster = bestMaster;
         c.calc = bestCalc;
         c.isCovered = isCovered;
 
-        if (isCovered && bestRsl >= -85) countGood++;
+        if (isCovered && bestRsl >= -80) countGood++;
 
         // Client Badge Icon:
         // Shows Station Name instead of dBm.
@@ -4444,11 +4450,11 @@
 
       const items = [
         { color: '#0284c7', label: '≥ -50 dBm (ฟ้า / ใกล้เสา)' },
-        { color: '#15803d', label: '-50 ถึง -70 dBm (เขียว ดีเยี่ยม)' },
+        { color: '#16a34a', label: '-50 ถึง -70 dBm (เขียว ดีเยี่ยม)' },
         { color: '#22c55e', label: '-70 ถึง -80 dBm (เขียวอ่อน ดีมาก)' },
-        { color: '#84cc16', label: '-80 ถึง -90 dBm (เขียวตอง)' },
+        { color: '#84cc16', label: '-80 ถึง -90 dBm (เขียวตอง ปานกลาง)' },
         { color: '#eab308', label: '-90 ถึง -100 dBm (เหลือง ขอบเขต)' },
-        { color: '#ea580c', label: '-100 ถึง -112 dBm (ส้ม/แดง อ่อน)' },
+        { color: '#ea580c', label: '-100 ถึง -112 dBm (ส้ม สัญญาณอ่อน)' },
         { color: '#334155', label: '< -112 dBm (บอดสัญญาณ Out)' }
       ];
 
@@ -4587,7 +4593,7 @@
           bestCalc = computeLinkToClient(activeMaster, c);
         }
 
-        const isCovered = (bestMaster && bestCalc && bestRsl >= -105.0 && bestCalc.distKm <= bestMaster.maxRadiusKm);
+        const isCovered = (bestMaster && bestCalc && bestRsl >= -112.0 && bestCalc.distKm <= bestMaster.maxRadiusKm);
         const styleId = isCovered ? "clientStyleIn" : "clientStyleOut";
         const pinLabel = isCovered ? `${c.name} (${bestCalc.rsl.toFixed(1)} dBm)` : `⚠️ ${c.name} [หลุด Coverage]`;
 
@@ -4638,7 +4644,7 @@
           bestCalc = computeLinkToClient(activeMaster, c);
         }
 
-        const isCovered = (bestMaster && bestCalc && bestRsl >= -105.0 && bestCalc.distKm <= bestMaster.maxRadiusKm);
+        const isCovered = (bestMaster && bestCalc && bestRsl >= -112.0 && bestCalc.distKm <= bestMaster.maxRadiusKm);
         const lineStyleId = isCovered ? "lineIn" : "lineOut";
 
         kml += `      <Placemark>\n`;
@@ -4667,10 +4673,12 @@
         kml += `      <name>🗺️ ขอบเขตสัญญาณ (Coverage Polygons)</name>\n`;
 
         const tiers = [
-          { rsl: -70, name: "สัญญาณดีเยี่ยม (≥ -70 dBm)", color: "4015803d" },
-          { rsl: -85, name: "สัญญาณดี (≥ -85 dBm)", color: "4022c55e" },
-          { rsl: -95, name: "สัญญาณปานกลาง (≥ -95 dBm)", color: "40eab308" },
-          { rsl: -105, name: "ขอบเขตบริการทั้งหมด (≥ -105 dBm)", color: "40ea580c" }
+          { rsl: -50, name: "แรงสูงสุด (≥ -50 dBm)", color: "400284c7" },
+          { rsl: -70, name: "สัญญาณดีเยี่ยม (≥ -70 dBm)", color: "4016a34a" },
+          { rsl: -80, name: "สัญญาณดีมาก (≥ -80 dBm)", color: "4022c55e" },
+          { rsl: -90, name: "สัญญาณปานกลาง (≥ -90 dBm)", color: "4084cc16" },
+          { rsl: -100, name: "ขอบเขตบริการ (≥ -100 dBm)", color: "40eab308" },
+          { rsl: -112, name: "ครอบคลุมทั้งหมด (≥ -112 dBm)", color: "40ea580c" }
         ];
 
         tiers.forEach((tier) => {
