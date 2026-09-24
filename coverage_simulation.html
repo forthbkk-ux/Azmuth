@@ -1494,13 +1494,19 @@
           <div class="form-row">
             <div class="form-group">
               <label>ความสูงเสาลูกข่าย/เครื่องรับ <span class="unit-hint">m</span></label>
-              <select id="rx-antenna-height" class="form-select">
-                <option value="1.5" selected>1.5 ม. (วิทยุมือถือ Handheld)</option>
-                <option value="3.0">3.0 ม. (วิทยุติดรถยนต์ Mobile)</option>
-                <option value="6.0">6.0 ม. (เสาเตี้ยประจำที่)</option>
-                <option value="10.0">10.0 ม. (เสาสถานี Base)</option>
-                <option value="20.0">20.0 ม. (สถานีลูกข่าย Substation)</option>
-              </select>
+              <div style="display: flex; gap: 6px;">
+                <input type="number" id="rx-antenna-height" class="form-input" step="0.5" min="0.5" max="300" value="1.5" placeholder="เช่น 1.5, 30" style="flex: 1.1;" title="ระบุความสูงเสาลูกข่าย/เครื่องรับ (เมตร)">
+                <select id="rx-antenna-preset" class="form-select" style="flex: 1.5; font-size: 11px; padding: 4px 6px;" onchange="if(this.value){document.getElementById('rx-antenna-height').value=this.value; this.value='';}" title="เลือกค่าความสูงแนะนำ">
+                  <option value="">⚡ ค่าแนะนำ...</option>
+                  <option value="1.5">1.5 ม. (วิทยุมือถือ Handheld)</option>
+                  <option value="3.0">3.0 ม. (วิทยุติดรถ Mobile)</option>
+                  <option value="6.0">6.0 ม. (เสาเตี้ยประจำที่)</option>
+                  <option value="10.0">10.0 ม. (เสาสถานี Base)</option>
+                  <option value="20.0">20.0 ม. (สถานีลูกข่าย Substation)</option>
+                  <option value="30.0">30.0 ม. (เสาสูง)</option>
+                  <option value="45.0">45.0 ม. (เสาทาวเวอร์ / สถานีใหญ่)</option>
+                </select>
+              </div>
             </div>
             <div class="form-group">
               <label>ความละเอียดการจำลอง (Rays)</label>
@@ -2182,6 +2188,8 @@
 
                 if (color) {
                   ctx.fillStyle = color;
+                  ctx.strokeStyle = color;
+                  ctx.lineWidth = 0.5;
                   ctx.beginPath();
                   ctx.moveTo(pt1.x, pt1.y);
                   ctx.lineTo(pt2.x, pt2.y);
@@ -2189,6 +2197,7 @@
                   ctx.lineTo(pt4.x, pt4.y);
                   ctx.closePath();
                   ctx.fill();
+                  ctx.stroke();
                 }
               }
             }
@@ -2214,7 +2223,7 @@
       const cableLoss = (m.cableLoss !== undefined && !isNaN(m.cableLoss)) ? m.cableLoss : 1.5;
       const numRays = m.resolutionRays || 180;
       const maxDistKm = m.maxRadiusKm || 25;
-      const distSteps = 30; // radial segments per ray
+      const distSteps = 45; // High-resolution radial segments for accurate near-field rendering
       const angleStep = 360 / numRays;
 
       const grid = [];
@@ -2227,8 +2236,20 @@
         const effectiveEirp = txPowerDbm + (antGain - antAngleGain) - cableLoss;
 
         const rawRay = [];
+        // Point s = 0 at the tower itself (distance 0.0)
+        rawRay.push({
+          s: 0,
+          distKm: 0.0,
+          lat: m.lat,
+          lon: m.lon,
+          groundElev: m.groundElev || 30
+        });
+
+        // Non-linear power distribution (power = 1.7) provides high density near tower
+        // guaranteeing crisp near-field blue circle (>= -50 dBm) rendering and smooth propagation
         for (let s = 1; s <= distSteps; s++) {
-          const distKm = (s / distSteps) * maxDistKm;
+          const frac = s / distSteps;
+          const distKm = Math.pow(frac, 1.7) * maxDistKm;
           const destLatLng = computeDestinationLatLng(m.lat, m.lon, distKm, azimuthDeg);
           const terrainElev = getSyntheticTerrainAt(destLatLng.lat, destLatLng.lon, distKm, azimuthDeg);
           rawRay.push({
@@ -2245,14 +2266,14 @@
           radials: []
         };
 
-        for (let s = 0; s < distSteps; s++) {
+        for (let s = 0; s <= distSteps; s++) {
           const pt = rawRay[s];
           const distKm = pt.distKm;
           const rxAntennaAmsl = pt.groundElev + (m.rxHeight || 1.5) + (m.enableObstacles ? (m.clutterHeight || 0) : 0);
 
           let maxNu = -999;
-          if (m.enableObstacles && s > 0) {
-            for (let k = 0; k < s; k++) {
+          if (m.enableObstacles && s > 0 && distKm > 0.05) {
+            for (let k = 1; k < s; k++) {
               const d1 = rawRay[k].distKm;
               const d2 = distKm - d1;
               if (d1 <= 0.05 || d2 <= 0.05) continue;
@@ -2282,7 +2303,7 @@
           }
 
           const basePathLoss = computePathLoss(distKm, m.freqMHz, m.towerHeight, m.rxHeight || 1.5, m.propModel, pt.groundElev);
-          const clutterLoss = m.enableObstacles ? (m.clutterLoss || 0) : 0;
+          const clutterLoss = (m.enableObstacles && distKm > 0.05) ? (m.clutterLoss || 0) : 0;
           const totalPathLoss = basePathLoss + diffLoss + clutterLoss;
 
           const rxGain = 2.15;
@@ -2325,9 +2346,6 @@
       const loadingText = document.getElementById('sim-loading-text');
       if (loadingText) loadingText.innerText = "กำลังประมวลผล Coverage ทุกสถานีแม่ข่าย...";
 
-      let totalCoveredAreaKm2 = 0;
-      let countNear = 0, countExc = 0, countGood = 0, countFair = 0, countMarg = 0, countPoor = 0;
-
       for (let i = 0; i < masterStations.length; i++) {
         const m = masterStations[i];
         if (m.showCoverage !== false) {
@@ -2351,28 +2369,46 @@
         const eirpDbm = pDbm + aGain - cLoss;
         kpiResults.eirpDbm = eirpDbm;
         kpiResults.eirpWatts = Math.pow(10, (eirpDbm - 30) / 10);
-        const cellAreaUnit = (Math.PI * activeM.maxRadiusKm * activeM.maxRadiusKm) / ((activeM.resolutionRays || 180) * 30);
 
         if (coverageGrid && coverageGrid.length > 0) {
-          for (let r of coverageGrid) {
-            for (let pt of r.radials) {
-              if (pt.rsl >= -50) countNear++;
-              else if (pt.rsl >= -70) countExc++;
-              else if (pt.rsl >= -80) countGood++;
-              else if (pt.rsl >= -90) countFair++;
-              else if (pt.rsl >= -100) countMarg++;
-              else if (pt.rsl >= -112) countPoor++;
-              if (pt.rsl >= -112) totalCoveredAreaKm2 += cellAreaUnit;
+          const numRays = coverageGrid.length;
+          let areaNear = 0, areaExc = 0, areaGood = 0, areaFair = 0, areaMarg = 0, areaPoor = 0;
+          let totalCoveredAreaKm2 = 0;
+
+          for (let r = 0; r < numRays; r++) {
+            const ray1 = coverageGrid[r];
+            const ray2 = coverageGrid[(r + 1) % numRays];
+            const steps = Math.min(ray1.radials.length, ray2.radials.length);
+
+            for (let s = 0; s < steps - 1; s++) {
+              const p1 = ray1.radials[s];
+              const p2 = ray1.radials[s + 1];
+              const p3 = ray2.radials[s + 1];
+              const p4 = ray2.radials[s];
+
+              const d1 = p1.distKm;
+              const d2 = p2.distKm;
+              const quadArea = (Math.PI * Math.abs(d2 * d2 - d1 * d1)) / numRays;
+              const avgRsl = (p1.rsl + p2.rsl + p3.rsl + p4.rsl) / 4;
+
+              if (avgRsl >= -50) areaNear += quadArea;
+              else if (avgRsl >= -70) areaExc += quadArea;
+              else if (avgRsl >= -80) areaGood += quadArea;
+              else if (avgRsl >= -90) areaFair += quadArea;
+              else if (avgRsl >= -100) areaMarg += quadArea;
+              else if (avgRsl >= -112) areaPoor += quadArea;
+
+              if (avgRsl >= -112) totalCoveredAreaKm2 += quadArea;
             }
           }
           kpiResults.reliableAreaKm2 = Math.round(totalCoveredAreaKm2);
           kpiResults.maxReliableRadiusKm = Math.min(activeM.maxRadiusKm, Math.round(Math.sqrt(totalCoveredAreaKm2 / Math.PI) * 10) / 10);
-          kpiResults.tiers.near = Math.round(countNear * cellAreaUnit);
-          kpiResults.tiers.exc = Math.round(countExc * cellAreaUnit);
-          kpiResults.tiers.good = Math.round(countGood * cellAreaUnit);
-          kpiResults.tiers.fair = Math.round(countFair * cellAreaUnit);
-          kpiResults.tiers.marg = Math.round(countMarg * cellAreaUnit);
-          kpiResults.tiers.poor = Math.round(countPoor * cellAreaUnit);
+          kpiResults.tiers.near = Math.round(areaNear);
+          kpiResults.tiers.exc = Math.round(areaExc);
+          kpiResults.tiers.good = Math.round(areaGood);
+          kpiResults.tiers.fair = Math.round(areaFair);
+          kpiResults.tiers.marg = Math.round(areaMarg);
+          kpiResults.tiers.poor = Math.round(areaPoor);
         }
       }
 
@@ -4773,6 +4809,8 @@
 
             if (color) {
               ctx.fillStyle = color;
+              ctx.strokeStyle = color;
+              ctx.lineWidth = 0.5;
               ctx.beginPath();
               ctx.moveTo(x1, y1);
               ctx.lineTo(x2, y2);
@@ -4780,6 +4818,7 @@
               ctx.lineTo(x4, y4);
               ctx.closePath();
               ctx.fill();
+              ctx.stroke();
             }
           }
         }
