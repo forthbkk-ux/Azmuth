@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Azimuth Calculator | Azimuth & Google Maps</title>
+  <title>วิเคราะห์ข้อมูล Microwave Link | ระบบคำนวณและวิเคราะห์เส้นทางคลื่น</title>
   <meta name="description" content="คำนวณมุมแอซิมัท (Azimuth) และระยะทางระหว่างพิกัดละติจูด-ลองจิจูด ทศนิยม 6 ตำแหน่ง พร้อมเข็มทิศ แผนที่ Google Maps ขนาดใหญ่ และขั้นตอนการคำนวณอย่างละเอียด" />
 
   <!-- Google Fonts -->
@@ -1353,28 +1353,31 @@
   <header>
     <div class="header-container">
       <a href="#" class="brand">
-        <div class="brand-icon" title="เสาสื่อสาร (Communication Tower)">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4.9 16.1C1 12.2 1 5.8 4.9 1.9"></path>
-            <path d="M7.8 13.2a6 6 0 0 1 0-8.4"></path>
-            <circle cx="12" cy="9" r="2" fill="currentColor"></circle>
-            <path d="M16.2 4.8a6 6 0 0 1 0 8.4"></path>
-            <path d="M19.1 1.9a14.2 14.2 0 0 1 0 14.2"></path>
-            <path d="M9 22l3-11 3 11"></path>
-            <path d="M9.5 18h5"></path>
+        <div class="brand-icon" style="background: linear-gradient(135deg, #0284c7, #2563eb); box-shadow: 0 4px 12px rgba(2, 132, 199, 0.35);" title="วิเคราะห์ข้อมูล Microwave Link (Microwave Link Analysis)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Parabolic Dish Reflector -->
+            <path d="M4 19C1.8 15 1.8 9 4 5"></path>
+            <path d="M4 12h7"></path>
+            <circle cx="11" cy="12" r="1.5" fill="currentColor"></circle>
+            <path d="M3 20l4-4"></path>
+            <!-- Microwave Signal Emission -->
+            <path d="M14 9a4.5 4.5 0 0 1 0 6"></path>
+            <path d="M17 6.5a8 8 0 0 1 0 11"></path>
+            <path d="M20 4a12 12 0 0 1 0 16"></path>
           </svg>
         </div>
         <div>
-          <span class="brand-title" data-i18n="header_title">Azimuth</span>
+          <span class="brand-title" data-i18n="header_title" style="font-size: 1.12rem;">วิเคราะห์ข้อมูล Microwave Link</span>
+          <span class="brand-sub" data-i18n="header_sub">ระบบคำนวณและวิเคราะห์เส้นทางคลื่นไมโครเวฟ (Point-to-Point)</span>
         </div>
       </a>
 
       <div class="header-actions">
-        <a href="coverage_simulation.html" class="btn" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 6px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);" title="จำลองพื้นที่ครอบคลุมสัญญาณวิทยุของสถานีแม่ข่าย (Coverage Heatmap)">
+        <a href="coverage_simulation.html" class="btn" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 6px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25); white-space: nowrap;" title="จำลองพื้นที่ครอบคลุมสัญญาณวิทยุของสถานีแม่ข่าย (Coverage Heatmap)">
           📡 <span data-i18n="btn_goto_coverage">จำลอง Coverage แม่ข่าย ➔</span>
         </a>
-        <a href="multi_stations.html" class="btn" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: white; padding: 6px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25);" title="คำนวณหลายสถานี">
-          🗼 <span data-i18n="btn_goto_multi">คำนวณหลายสถานี (Multi-Station) ➔</span>
+        <a href="multi_stations.html" class="btn" style="background: linear-gradient(135deg, #1d4ed8, #2563eb); color: white; padding: 6px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(29, 78, 216, 0.25); white-space: nowrap;" title="คำนวณระยะทางแม่ข่าย ไปยัง ลูกข่าย">
+          🗼 <span data-i18n="btn_goto_multi">คำนวณระยะทางแม่ข่าย ไปยัง ลูกข่าย ➔</span>
         </a>
         <div class="lang-toggle">
           <button class="lang-btn active" id="btn-th" onclick="setLanguage('th')">TH</button>
@@ -2325,8 +2328,8 @@
     // Translations Dictionary
     const I18N = {
       th: {
-        header_title: "Azimuth",
-        header_sub: "Azimuth & Google Maps (ทศนิยม 6 ตำแหน่ง)",
+        header_title: "วิเคราะห์ข้อมูล Microwave Link",
+        header_sub: "ระบบคำนวณและวิเคราะห์เส้นทางคลื่นไมโครเวฟ (Point-to-Point)",
         badge_text: "Navigation & Geodesy Tool",
         hero_title: "Azimuth Calculator",
         hero_desc: "คำนวณมุมแอซิมัท (Azimuth / Bearing) จากพิกัดละติจูดและลองจิจูดของจุดเริ่มต้นไปยังจุดปลายทาง พร้อมระยะทาง Great-circle และทิศทางเข็มทิศ",
@@ -2386,12 +2389,12 @@
         toast_copied: "คัดลอกผลการคำนวณเรียบร้อยแล้ว!",
         btn_export_excel: "ส่งออก Excel",
         toast_exported: "ส่งออกไฟล์ Excel (.xlsx) เรียบร้อยแล้ว!",
-        btn_goto_multi: "คำนวณหลายสถานี (Multi-Station) ➔",
+        btn_goto_multi: "คำนวณระยะทางแม่ข่าย ไปยัง ลูกข่าย ➔",
         btn_sample_pdf: "ไฟล์ PDF ตัวอย่าง Microwave"
       },
       en: {
-        header_title: "Azimuth Calculator",
-        header_sub: "Azimuth Calculator & Google Maps (6 Decimals)",
+        header_title: "Microwave Link Analysis",
+        header_sub: "Carrier-Grade Microwave Path & Link Analysis (Point-to-Point)",
         badge_text: "Navigation & Geodesy Tool",
         hero_title: "Azimuth Calculator",
         hero_desc: "Calculate the azimuth (bearing) and great-circle distance between two points given their latitude and longitude coordinates, complete with interactive compass and map.",
@@ -2451,7 +2454,7 @@
         toast_copied: "Results copied to clipboard!",
         btn_export_excel: "Export Excel",
         toast_exported: "Excel file exported successfully!",
-        btn_goto_multi: "Multi-Station Calculator ➔",
+        btn_goto_multi: "Master-to-Sub Stations ➔",
         btn_sample_pdf: "Microwave Sample PDF"
       }
     };

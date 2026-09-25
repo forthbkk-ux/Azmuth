@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ระบบคำนวณและส่งออก Excel ข่ายวิทยุสื่อสารหลายสถานี (Multi-Station Radio Azimuth & Distance)</title>
+  <title>คำนวณระยะทางแม่ข่าย ไปยัง ลูกข่าย | Multi-Station Radio Network</title>
 
   <!-- Google Fonts: Inter & Sarabun -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -939,13 +939,28 @@
   <header>
     <div class="header-container">
       <div class="brand">
-        <div class="brand-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        <div class="brand-icon" style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #1d4ed8, #0284c7); display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 4px 10px rgba(29, 78, 216, 0.3);" title="คำนวณระยะทางแม่ข่าย ไปยัง ลูกข่าย (Master-to-Sub Stations)">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <!-- Central Master Station Base Tower -->
+            <path d="M12 2v8"></path>
+            <circle cx="12" cy="5" r="2" fill="currentColor"></circle>
+            <path d="M9 13l3-5 3 5"></path>
+            <path d="M8 21l4-8 4 8"></path>
+            <path d="M9.5 17h5"></path>
+            <!-- Left Client / Sub-Station Node -->
+            <circle cx="3.5" cy="18.5" r="1.5" fill="currentColor"></circle>
+            <path d="M3.5 18.5L8 14" stroke-dasharray="2 2"></path>
+            <!-- Right Client / Sub-Station Node -->
+            <circle cx="20.5" cy="18.5" r="1.5" fill="currentColor"></circle>
+            <path d="M20.5 18.5L16 14" stroke-dasharray="2 2"></path>
+            <!-- Top Broadcast Waves for Master -->
+            <path d="M9 3a4 4 0 0 1 6 0"></path>
+            <path d="M7 1a7 7 0 0 1 10 0"></path>
           </svg>
         </div>
         <div>
-          <span class="brand-title" id="header-brand-title">Azimuth</span>
+          <span class="brand-title" id="header-brand-title">คำนวณระยะทางแม่ข่าย ไปยัง ลูกข่าย</span>
+          <span class="brand-sub">ระบบคำนวณระยะทางและมุมแอซิมัทข่ายวิทยุสื่อสารหลายสถานี (Multi-Station)</span>
         </div>
       </div>
 
@@ -953,8 +968,8 @@
         <a href="coverage_simulation.html" class="btn" style="background: linear-gradient(135deg, #dc2626, #b91c1c); color: white; padding: 6px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(220, 38, 38, 0.25);" title="จำลองพื้นที่ครอบคลุมสัญญาณวิทยุของสถานีแม่ข่าย (Coverage Heatmap)">
           📡 <span>จำลอง Coverage แม่ข่าย ➔</span>
         </a>
-        <a href="index.html" class="btn btn-outline" title="สลับกลับไปยังหน้าคำนวณเดี่ยว 2 จุด">
-          ⬅ <span data-i18n="btn_single_mode">โหมดคำนวณเดี่ยว (Single Point A-B)</span>
+        <a href="index.html" class="btn" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: white; padding: 6px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);" title="ไปยังระบบวิเคราะห์ข้อมูล Microwave Link (Point A-B)">
+          📡 <span data-i18n="btn_single_mode">วิเคราะห์ข้อมูล Microwave Link ➔</span>
         </a>
         <div class="lang-toggle">
           <button class="lang-btn active" id="btn-th" onclick="setLanguage('th')">TH</button>
@@ -2055,7 +2070,11 @@
       document.getElementById('btn-en').classList.toggle('active', lang === 'en');
       const titleEl = document.getElementById('header-brand-title');
       if (titleEl) {
-        titleEl.innerText = lang === 'th' ? 'Azimuth' : 'Multi-Station Radio Azimuth & Distance';
+        titleEl.innerText = lang === 'th' ? 'คำนวณระยะทางแม่ข่าย ไปยัง ลูกข่าย' : 'Master-to-Sub Stations Distance & Azimuth';
+      }
+      const btnSingle = document.querySelector('[data-i18n="btn_single_mode"]');
+      if (btnSingle) {
+        btnSingle.innerText = lang === 'th' ? 'วิเคราะห์ข้อมูล Microwave Link ➔' : 'Microwave Link Analysis ➔';
       }
       renderTable();
       updateMapElements();
