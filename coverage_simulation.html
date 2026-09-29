@@ -2086,6 +2086,7 @@
     class TerrariumDemEngine {
       constructor() {
         this.tileCache = new Map();
+        this._inFlight = new Map();
         this.isLoading = false;
       }
 
@@ -2101,12 +2102,26 @@
         return { z, tx, ty, px, py };
       }
 
+      get loadedTileCount() {
+        let count = 0;
+        for (let v of this.tileCache.values()) {
+          if (v && v.imgData) count++;
+        }
+        return count;
+      }
+
       loadTile(z, tx, ty) {
         const key = `${z}_${tx}_${ty}`;
         if (this.tileCache.has(key)) return Promise.resolve(this.tileCache.get(key));
+        if (this._inFlight.has(key)) return this._inFlight.get(key);
 
-        return new Promise((resolve) => {
-          const timer = setTimeout(() => resolve(null), 3000);
+        const promise = new Promise((resolve) => {
+          const timer = setTimeout(() => {
+            this.tileCache.set(key, null);
+            this._inFlight.delete(key);
+            resolve(null);
+          }, 3500);
+
           const img = new Image();
           img.crossOrigin = "Anonymous";
           img.onload = () => {
@@ -2120,17 +2135,25 @@
               const imgData = ctx.getImageData(0, 0, 256, 256);
               const tile = { key, z, tx, ty, imgData };
               this.tileCache.set(key, tile);
+              this._inFlight.delete(key);
               resolve(tile);
             } catch (e) {
+              this.tileCache.set(key, null);
+              this._inFlight.delete(key);
               resolve(null);
             }
           };
           img.onerror = () => {
             clearTimeout(timer);
+            this.tileCache.set(key, null);
+            this._inFlight.delete(key);
             resolve(null);
           };
           img.src = `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${tx}/${ty}.png`;
         });
+
+        this._inFlight.set(key, promise);
+        return promise;
       }
 
       async loadArea(centerLat, centerLon, radiusKm, z = 10) {
@@ -2170,22 +2193,30 @@
       }
 
       updateStatusBadge() {
+        const count = this.loadedTileCount;
         const tag = document.getElementById('coverage-status-tag');
         if (tag) {
-          if (this.tileCache.size > 0) {
-            tag.innerHTML = `🟢 DEM จริง: Google Earth / SRTM 30m (${this.tileCache.size} แผ่น)`;
+          if (count > 0) {
+            tag.innerHTML = `🟢 DEM จริง: Google Earth / SRTM 30m (${count} แผ่น)`;
             tag.style.background = "#ecfdf5";
             tag.style.color = "#059669";
             tag.style.borderColor = "#a7f3d0";
+          } else {
+            tag.innerHTML = `⚡ DEM จำลอง (Synthetic Baseline)`;
+            tag.style.background = "#fef3c7";
+            tag.style.color = "#d97706";
+            tag.style.borderColor = "#fde68a";
           }
         }
         const demText = document.getElementById('dem-status-text');
         if (demText) {
-          demText.innerText = `เชื่อมต่อ DEM SRTM 30m สำเร็จ (${this.tileCache.size} แผ่นภูมิประเทศ)`;
+          demText.innerText = count > 0
+            ? `เชื่อมต่อ DEM SRTM 30m สำเร็จ (${count} แผ่นภูมิประเทศ)`
+            : `โหมดภูมิประเทศจำลองแบบกำหนดเอง`;
         }
         const demCount = document.getElementById('dem-cache-count');
         if (demCount) {
-          demCount.innerText = `${this.tileCache.size * 65536} จุดความสูง`;
+          demCount.innerText = `${count * 65536} จุดความสูง`;
         }
       }
     }
@@ -2592,29 +2623,42 @@
             this._canvas.style.position = 'absolute';
             this._canvas.style.pointerEvents = 'none';
             this._canvas.style.zIndex = '350';
+            this._canvas.style.filter = 'blur(1px)';
           }
           const pane = map.getPanes().overlayPane;
           pane.appendChild(this._canvas);
-          map.on('moveend viewreset resize', this._reset, this);
+          this._onReset = () => this._reset();
+          map.on('moveend viewreset resize', this._onReset);
           this._reset();
         },
         onRemove: function (map) {
           if (this._canvas && this._canvas.parentNode) {
             this._canvas.parentNode.removeChild(this._canvas);
           }
-          map.off('moveend viewreset resize', this._reset, this);
+          if (this._onReset) {
+            map.off('moveend viewreset resize', this._onReset);
+          }
+          if (this._animFrame) {
+            cancelAnimationFrame(this._animFrame);
+            this._animFrame = null;
+          }
         },
         _reset: function () {
           if (!this._map || !this._canvas) return;
-          const bounds = this._map.getBounds();
-          const topLeft = this._map.latLngToLayerPoint(bounds.getNorthWest());
-          const size = this._map.getSize();
+          if (this._animFrame) cancelAnimationFrame(this._animFrame);
+          this._animFrame = requestAnimationFrame(() => {
+            this._animFrame = null;
+            if (!this._map || !this._canvas) return;
+            const bounds = this._map.getBounds();
+            const topLeft = this._map.latLngToLayerPoint(bounds.getNorthWest());
+            const size = this._map.getSize();
 
-          this._canvas.width = size.x;
-          this._canvas.height = size.y;
-          L.DomUtil.setPosition(this._canvas, topLeft);
+            this._canvas.width = size.x;
+            this._canvas.height = size.y;
+            L.DomUtil.setPosition(this._canvas, topLeft);
 
-          this.draw(topLeft);
+            this.draw(topLeft);
+          });
         },
         draw: function (topLeft) {
           if (!this._canvas || !this._map) return;
@@ -2625,6 +2669,7 @@
             topLeft = this._map.latLngToLayerPoint(this._map.getBounds().getNorthWest());
           }
 
+          const mapBounds = this._map.getBounds();
           const toCanvasPoint = (lat, lon) => {
             const lp = this._map.latLngToLayerPoint([lat, lon]);
             return {
@@ -2638,54 +2683,64 @@
             if (m.showCoverage === false || !m.coverageGrid || m.coverageGrid.length === 0) return;
             const grid = m.coverageGrid;
             const numRays = grid.length;
-            const globalAlpha = m.opacity || 0.70;
+            const globalAlpha = m.opacity !== undefined ? m.opacity : 0.70;
+
+            // Viewport culling: skip stations completely outside the visible screen
+            const rKm = (m.maxRadiusKm || 25) + 3;
+            const dLat = rKm / 111.0;
+            const cosLat = Math.max(0.2, Math.cos((m.lat * Math.PI) / 180));
+            const dLon = rKm / (111.0 * cosLat);
+            const stationBounds = L.latLngBounds([m.lat - dLat, m.lon - dLon], [m.lat + dLat, m.lon + dLon]);
+            if (!mapBounds.intersects(stationBounds)) return;
+
+            // Precompute canvas coordinates for all ray points (saves 75% coordinate projections)
+            const pts = new Array(numRays);
+            for (let r = 0; r < numRays; r++) {
+              const radials = grid[r].radials;
+              const rLen = radials.length;
+              const rayPts = new Array(rLen);
+              for (let s = 0; s < rLen; s++) {
+                rayPts[s] = toCanvasPoint(radials[s].lat, radials[s].lon);
+              }
+              pts[r] = rayPts;
+            }
 
             ctx.save();
             ctx.globalAlpha = globalAlpha;
-            if (ctx.filter) ctx.filter = 'blur(1.0px)';
 
-            const subSteps = 2; // Subdivide azimuth so there are zero visible angular spokes
             for (let r = 0; r < numRays; r++) {
+              const nextR = (r + 1) % numRays;
               const ray1 = grid[r];
-              const ray2 = grid[(r + 1) % numRays];
+              const ray2 = grid[nextR];
               const steps = Math.min(ray1.radials.length, ray2.radials.length);
+              const pRay1 = pts[r];
+              const pRay2 = pts[nextR];
 
               for (let s = 0; s < steps - 1; s++) {
                 const p1 = ray1.radials[s];
                 const p2 = ray1.radials[s + 1];
-                const p3 = ray2.radials[s + 1];
-                const p4 = ray2.radials[s];
 
-                const pt1 = toCanvasPoint(p1.lat, p1.lon);
-                const pt2 = toCanvasPoint(p2.lat, p2.lon);
-                const pt3 = toCanvasPoint(p3.lat, p3.lon);
-                const pt4 = toCanvasPoint(p4.lat, p4.lon);
+                const cIn = getAtollColorRgb(p1.rsl);
+                const cOut = getAtollColorRgb(p2.rsl);
+                if (!cIn && !cOut) continue;
 
-                for (let sub = 0; sub < subSteps; sub++) {
-                  const fA = sub / subSteps;
-                  const fB = (sub + 1) / subSteps;
+                const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
+                const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
 
-                  const rslIn = p1.rsl + ((fA + fB) / 2) * (p4.rsl - p1.rsl);
-                  const rslOut = p2.rsl + ((fA + fB) / 2) * (p3.rsl - p2.rsl);
+                const pt1 = pRay1[s];
+                const pt2 = pRay1[s + 1];
+                const pt3 = pRay2[s + 1];
+                const pt4 = pRay2[s];
 
-                  const cIn = getAtollColorRgb(rslIn);
-                  const cOut = getAtollColorRgb(rslOut);
-                  if (!cIn && !cOut) continue;
-
-                  const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
-                  const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
-
-                  const q1x = pt1.x + fA * (pt4.x - pt1.x), q1y = pt1.y + fA * (pt4.y - pt1.y);
-                  const q2x = pt2.x + fA * (pt3.x - pt2.x), q2y = pt2.y + fA * (pt3.y - pt2.y);
-                  const q3x = pt2.x + fB * (pt3.x - pt2.x), q3y = pt2.y + fB * (pt3.y - pt2.y);
-                  const q4x = pt1.x + fB * (pt4.x - pt1.x), q4y = pt1.y + fB * (pt4.y - pt1.y);
-
-                  const midInX = (q1x + q4x) / 2;
-                  const midInY = (q1y + q4y) / 2;
-                  const midOutX = (q2x + q3x) / 2;
-                  const midOutY = (q2y + q3y) / 2;
-
-                  if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
+                // If inner and outer colors match, fill directly with solid color (super fast!)
+                if (colIn === colOut || (cIn && cOut && cIn.r === cOut.r && cIn.g === cOut.g && cIn.b === cOut.b)) {
+                  ctx.fillStyle = colIn;
+                } else {
+                  const midInX = (pt1.x + pt4.x) / 2;
+                  const midInY = (pt1.y + pt4.y) / 2;
+                  const midOutX = (pt2.x + pt3.x) / 2;
+                  const midOutY = (pt2.y + pt3.y) / 2;
+                  if (Math.abs(midInX - midOutX) < 0.5 && Math.abs(midInY - midOutY) < 0.5) {
                     ctx.fillStyle = colIn;
                   } else {
                     const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
@@ -2693,16 +2748,15 @@
                     grad.addColorStop(1, colOut);
                     ctx.fillStyle = grad;
                   }
-
-                  ctx.beginPath();
-                  ctx.moveTo(q1x, q1y);
-                  ctx.lineTo(q2x, q2y);
-                  ctx.lineTo(q3x, q3y);
-                  ctx.lineTo(q4x, q4y);
-                  ctx.closePath();
-                  ctx.fill();
-                  // No stroke to eliminate wireframe lines
                 }
+
+                ctx.beginPath();
+                ctx.moveTo(pt1.x, pt1.y);
+                ctx.lineTo(pt2.x, pt2.y);
+                ctx.lineTo(pt3.x, pt3.y);
+                ctx.lineTo(pt4.x, pt4.y);
+                ctx.closePath();
+                ctx.fill();
               }
             }
 
@@ -2836,6 +2890,67 @@
       }
     }
 
+    function calculateKpiForMaster(activeM) {
+      if (!activeM) return;
+      const pDbm = (activeM.powerDbm !== undefined && !isNaN(activeM.powerDbm)) ? activeM.powerDbm : (10 * Math.log10(Math.max(1, (activeM.powerWatts || 50)) * 1000));
+      const aGain = (activeM.antGain !== undefined && !isNaN(activeM.antGain)) ? activeM.antGain : ((activeM.antGainDbi !== undefined && !isNaN(activeM.antGainDbi)) ? activeM.antGainDbi : 9.0);
+      const cLoss = (activeM.cableLoss !== undefined && !isNaN(activeM.cableLoss)) ? activeM.cableLoss : 1.5;
+      const eirpDbm = pDbm + aGain - cLoss;
+      kpiResults.eirpDbm = eirpDbm;
+      kpiResults.eirpWatts = Math.pow(10, (eirpDbm - 30) / 10);
+
+      const grid = activeM.coverageGrid;
+      if (grid && grid.length > 0) {
+        const numRays = grid.length;
+        let area40 = 0, area50 = 0, area60 = 0, area70 = 0, area80 = 0, area90 = 0, area100 = 0;
+        let totalCoveredAreaKm2 = 0;
+
+        for (let r = 0; r < numRays; r++) {
+          const ray1 = grid[r];
+          const ray2 = grid[(r + 1) % numRays];
+          const steps = Math.min(ray1.radials.length, ray2.radials.length);
+
+          for (let s = 0; s < steps - 1; s++) {
+            const p1 = ray1.radials[s];
+            const p2 = ray1.radials[s + 1];
+            const p3 = ray2.radials[s + 1];
+            const p4 = ray2.radials[s];
+
+            const d1 = p1.distKm;
+            const d2 = p2.distKm;
+            const quadArea = (Math.PI * Math.abs(d2 * d2 - d1 * d1)) / numRays;
+            const avgRsl = (p1.rsl + p2.rsl + p3.rsl + p4.rsl) / 4;
+
+            if (avgRsl >= -40) area40 += quadArea;
+            else if (avgRsl >= -50) area50 += quadArea;
+            else if (avgRsl >= -60) area60 += quadArea;
+            else if (avgRsl >= -70) area70 += quadArea;
+            else if (avgRsl >= -80) area80 += quadArea;
+            else if (avgRsl >= -90) area90 += quadArea;
+            else if (avgRsl >= -100) area100 += quadArea;
+
+            if (avgRsl >= -100) totalCoveredAreaKm2 += quadArea;
+          }
+        }
+        kpiResults.reliableAreaKm2 = Math.round(totalCoveredAreaKm2);
+        kpiResults.maxReliableRadiusKm = Math.min(activeM.maxRadiusKm || 25, Math.round(Math.sqrt(totalCoveredAreaKm2 / Math.PI) * 10) / 10);
+        kpiResults.tiers.t40 = Math.round(area40);
+        kpiResults.tiers.t50 = Math.round(area50);
+        kpiResults.tiers.t60 = Math.round(area60);
+        kpiResults.tiers.t70 = Math.round(area70);
+        kpiResults.tiers.t80 = Math.round(area80);
+        kpiResults.tiers.t90 = Math.round(area90);
+        kpiResults.tiers.t100 = Math.round(area100);
+        // Legacy properties for compatibility
+        kpiResults.tiers.near = Math.round(area40 + area50);
+        kpiResults.tiers.exc = Math.round(area60);
+        kpiResults.tiers.good = Math.round(area70);
+        kpiResults.tiers.fair = Math.round(area80);
+        kpiResults.tiers.marg = Math.round(area90);
+        kpiResults.tiers.poor = Math.round(area100);
+      }
+    }
+
     async function runFullCoverageSimulation() {
       if (masterStations.length === 0) {
         coverageGrid = [];
@@ -2848,13 +2963,18 @@
 
       showLoading(true);
       const loadingText = document.getElementById('sim-loading-text');
-      if (loadingText) loadingText.innerText = "กำลังประมวลผล Coverage ทุกสถานีแม่ข่าย...";
+      if (loadingText) loadingText.innerText = "กำลังเริ่มต้นประมวลผล Coverage ทุกสถานีแม่ข่าย...";
+      await new Promise(r => setTimeout(r, 40));
 
       for (let i = 0; i < masterStations.length; i++) {
         const m = masterStations[i];
         if (m.showCoverage !== false) {
+          if (loadingText) {
+            loadingText.innerText = `กำลังประมวลผล DEM & สัญญาณ (${i + 1}/${masterStations.length}): ${m.name}...`;
+          }
           await demEngine.loadArea(m.lat, m.lon, m.maxRadiusKm);
           computeCoverageForMaster(i);
+          await new Promise(r => setTimeout(r, 10));
         }
       }
 
@@ -2866,63 +2986,7 @@
         const activeM = masterStations[activeMasterIndex];
         Object.assign(simState, activeM);
         coverageGrid = activeM.coverageGrid || [];
-
-        const pDbm = (activeM.powerDbm !== undefined && !isNaN(activeM.powerDbm)) ? activeM.powerDbm : (10 * Math.log10(Math.max(1, (activeM.powerWatts || 50)) * 1000));
-        const aGain = (activeM.antGain !== undefined && !isNaN(activeM.antGain)) ? activeM.antGain : ((activeM.antGainDbi !== undefined && !isNaN(activeM.antGainDbi)) ? activeM.antGainDbi : 9.0);
-        const cLoss = (activeM.cableLoss !== undefined && !isNaN(activeM.cableLoss)) ? activeM.cableLoss : 1.5;
-        const eirpDbm = pDbm + aGain - cLoss;
-        kpiResults.eirpDbm = eirpDbm;
-        kpiResults.eirpWatts = Math.pow(10, (eirpDbm - 30) / 10);
-
-        if (coverageGrid && coverageGrid.length > 0) {
-          const numRays = coverageGrid.length;
-          let area40 = 0, area50 = 0, area60 = 0, area70 = 0, area80 = 0, area90 = 0, area100 = 0;
-          let totalCoveredAreaKm2 = 0;
-
-          for (let r = 0; r < numRays; r++) {
-            const ray1 = coverageGrid[r];
-            const ray2 = coverageGrid[(r + 1) % numRays];
-            const steps = Math.min(ray1.radials.length, ray2.radials.length);
-
-            for (let s = 0; s < steps - 1; s++) {
-              const p1 = ray1.radials[s];
-              const p2 = ray1.radials[s + 1];
-              const p3 = ray2.radials[s + 1];
-              const p4 = ray2.radials[s];
-
-              const d1 = p1.distKm;
-              const d2 = p2.distKm;
-              const quadArea = (Math.PI * Math.abs(d2 * d2 - d1 * d1)) / numRays;
-              const avgRsl = (p1.rsl + p2.rsl + p3.rsl + p4.rsl) / 4;
-
-              if (avgRsl >= -40) area40 += quadArea;
-              else if (avgRsl >= -50) area50 += quadArea;
-              else if (avgRsl >= -60) area60 += quadArea;
-              else if (avgRsl >= -70) area70 += quadArea;
-              else if (avgRsl >= -80) area80 += quadArea;
-              else if (avgRsl >= -90) area90 += quadArea;
-              else if (avgRsl >= -100) area100 += quadArea;
-
-              if (avgRsl >= -100) totalCoveredAreaKm2 += quadArea;
-            }
-          }
-          kpiResults.reliableAreaKm2 = Math.round(totalCoveredAreaKm2);
-          kpiResults.maxReliableRadiusKm = Math.min(activeM.maxRadiusKm, Math.round(Math.sqrt(totalCoveredAreaKm2 / Math.PI) * 10) / 10);
-          kpiResults.tiers.t40 = Math.round(area40);
-          kpiResults.tiers.t50 = Math.round(area50);
-          kpiResults.tiers.t60 = Math.round(area60);
-          kpiResults.tiers.t70 = Math.round(area70);
-          kpiResults.tiers.t80 = Math.round(area80);
-          kpiResults.tiers.t90 = Math.round(area90);
-          kpiResults.tiers.t100 = Math.round(area100);
-          // Legacy properties for compatibility
-          kpiResults.tiers.near = Math.round(area40 + area50);
-          kpiResults.tiers.exc = Math.round(area60);
-          kpiResults.tiers.good = Math.round(area70);
-          kpiResults.tiers.fair = Math.round(area80);
-          kpiResults.tiers.marg = Math.round(area90);
-          kpiResults.tiers.poor = Math.round(area100);
-        }
+        calculateKpiForMaster(activeM);
       }
 
       showLoading(false);
@@ -3546,7 +3610,8 @@
       const statusEl = document.getElementById('radial-status-text');
       if (statusEl) {
         if (isBlocked && worstPoint) {
-          statusEl.innerHTML = `⚠️ ถูกสันเขาบดบังที่ระยะ <b>${worstPoint.worstObsDist.toFixed(1)} km</b> (Shadow Loss: <b>+${maxDiffLoss.toFixed(1)} dB</b>)`;
+          const obsDist = (worstPoint.worstObsDist !== undefined && !isNaN(worstPoint.worstObsDist)) ? worstPoint.worstObsDist : (worstPoint.distKm || 0);
+          statusEl.innerHTML = `⚠️ ถูกสันเขาบดบังที่ระยะ <b>${obsDist.toFixed(1)} km</b> (Shadow Loss: <b>+${maxDiffLoss.toFixed(1)} dB</b>)`;
           statusEl.style.color = '#f87171';
         } else {
           statusEl.innerHTML = '✅ แนวคลื่นปลอดโปร่ง (Line of Sight Clear)';
@@ -3713,10 +3778,29 @@
 
     function fitCoverageMapBounds() {
       if (!map) return;
-      const north = computeDestinationLatLng(simState.lat, simState.lon, simState.maxRadiusKm, 0);
-      const south = computeDestinationLatLng(simState.lat, simState.lon, simState.maxRadiusKm, 180);
-      const east = computeDestinationLatLng(simState.lat, simState.lon, simState.maxRadiusKm, 90);
-      const west = computeDestinationLatLng(simState.lat, simState.lon, simState.maxRadiusKm, 270);
+      const targets = masterStations.filter(m => m.showCoverage !== false);
+      const list = targets.length > 0 ? targets : masterStations;
+      if (list.length > 0) {
+        let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
+        list.forEach(m => {
+          const r = m.maxRadiusKm || 25;
+          const dDeg = r / 111.0;
+          const cosLat = Math.max(0.2, Math.cos((m.lat * Math.PI) / 180));
+          minLat = Math.min(minLat, m.lat - dDeg);
+          maxLat = Math.max(maxLat, m.lat + dDeg);
+          minLon = Math.min(minLon, m.lon - dDeg / cosLat);
+          maxLon = Math.max(maxLon, m.lon + dDeg / cosLat);
+        });
+        map.fitBounds([[minLat, minLon], [maxLat, maxLon]], { padding: [30, 30] });
+        return;
+      }
+      const refLat = (activeMasterIndex >= 0 && masterStations[activeMasterIndex]) ? masterStations[activeMasterIndex].lat : simState.lat;
+      const refLon = (activeMasterIndex >= 0 && masterStations[activeMasterIndex]) ? masterStations[activeMasterIndex].lon : simState.lon;
+      const refR = (activeMasterIndex >= 0 && masterStations[activeMasterIndex]) ? masterStations[activeMasterIndex].maxRadiusKm : (simState.maxRadiusKm || 25);
+      const north = computeDestinationLatLng(refLat, refLon, refR, 0);
+      const south = computeDestinationLatLng(refLat, refLon, refR, 180);
+      const east = computeDestinationLatLng(refLat, refLon, refR, 90);
+      const west = computeDestinationLatLng(refLat, refLon, refR, 270);
       const bounds = L.latLngBounds([
         [south.lat, west.lon],
         [north.lat, east.lon]
@@ -4349,6 +4433,7 @@
       showLoading(false);
 
       computeCoverageForMaster(targetIdx);
+      calculateKpiForMaster(masterStations[targetIdx]);
       if (heatmapCanvasLayer) heatmapCanvasLayer._reset();
       updateClientMarkersAndLinks();
       renderClientTable();
@@ -4430,6 +4515,7 @@
       if (idx < 0 || idx >= masterStations.length) return;
       activeMasterIndex = idx;
       Object.assign(simState, masterStations[idx]);
+      calculateKpiForMaster(masterStations[idx]);
       renderMasterStationsList();
       updateMasterMarkers();
       drawRadialProfileCanvas(simState.currentProfileAzimuth || 270);
@@ -4632,20 +4718,14 @@
           });
 
           if (addedCount > 0) {
-            if (activeMasterIndex === -1) activeMasterIndex = 0;
+            if (activeMasterIndex === -1 || activeMasterIndex >= masterStations.length) {
+              activeMasterIndex = 0;
+            }
             renderMasterStationsList();
             updateMasterMarkers();
-            showLoading(true);
-            for (let i = prevLen; i < masterStations.length; i++) {
-              await demEngine.loadArea(masterStations[i].lat, masterStations[i].lon, masterStations[i].maxRadiusKm);
-              computeCoverageForMaster(i);
-            }
-            showLoading(false);
-            if (heatmapCanvasLayer) heatmapCanvasLayer._reset();
-            updateClientMarkersAndLinks();
-            renderClientTable();
-            updateKpiDisplay();
-            showToast(`นำเข้าสถานีแม่ข่ายสำเร็จ ${addedCount} สถานี!`);
+            fitCoverageMapBounds();
+            await runFullCoverageSimulation();
+            showToast(`นำเข้าสถานีแม่ข่ายสำเร็จ ${addedCount} สถานี และคำนวณ Coverage เรียบร้อยแล้ว!`);
           } else {
             alert("ไม่พบข้อมูลพิกัด (ละติจูด/ลองจิจูด) ที่ถูกต้องในไฟล์ Excel");
           }
