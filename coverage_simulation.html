@@ -1658,6 +1658,9 @@
               <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.78rem; color:#dc2626;" onclick="clearAllClients()" title="ล้างสถานีลูกข่ายทั้งหมด">
                 🗑️ ล้างทั้งหมด
               </button>
+              <button class="btn btn-outline" style="padding: 4px 10px; font-size: 0.78rem; font-weight:700; color:#166534; border-color:#22c55e; background:#f0fdf4;" onclick="exportClientsToExcel()" title="ส่งออกตารางผลการคำนวณระดับสัญญาณสถานีลูกข่ายทั้งหมดเป็นไฟล์ Excel (.xlsx)">
+                📊 ส่งออก Excel
+              </button>
             </div>
           </div>
 
@@ -2639,7 +2642,9 @@
 
             ctx.save();
             ctx.globalAlpha = globalAlpha;
+            if (ctx.filter) ctx.filter = 'blur(1.0px)';
 
+            const subSteps = 2; // Subdivide azimuth so there are zero visible angular spokes
             for (let r = 0; r < numRays; r++) {
               const ray1 = grid[r];
               const ray2 = grid[(r + 1) % numRays];
@@ -2651,45 +2656,53 @@
                 const p3 = ray2.radials[s + 1];
                 const p4 = ray2.radials[s];
 
-                const rslIn = (p1.rsl + p4.rsl) / 2;
-                const rslOut = (p2.rsl + p3.rsl) / 2;
-
-                const cIn = getAtollColorRgb(rslIn);
-                const cOut = getAtollColorRgb(rslOut);
-                if (!cIn && !cOut) continue;
-
-                const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
-                const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
-
                 const pt1 = toCanvasPoint(p1.lat, p1.lon);
                 const pt2 = toCanvasPoint(p2.lat, p2.lon);
                 const pt3 = toCanvasPoint(p3.lat, p3.lon);
                 const pt4 = toCanvasPoint(p4.lat, p4.lon);
 
-                const midInX = (pt1.x + pt4.x) / 2;
-                const midInY = (pt1.y + pt4.y) / 2;
-                const midOutX = (pt2.x + pt3.x) / 2;
-                const midOutY = (pt2.y + pt3.y) / 2;
+                for (let sub = 0; sub < subSteps; sub++) {
+                  const fA = sub / subSteps;
+                  const fB = (sub + 1) / subSteps;
 
-                if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
-                  ctx.fillStyle = colIn;
-                  ctx.strokeStyle = colIn;
-                } else {
-                  const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
-                  grad.addColorStop(0, colIn);
-                  grad.addColorStop(1, colOut);
-                  ctx.fillStyle = grad;
-                  ctx.strokeStyle = grad;
+                  const rslIn = p1.rsl + ((fA + fB) / 2) * (p4.rsl - p1.rsl);
+                  const rslOut = p2.rsl + ((fA + fB) / 2) * (p3.rsl - p2.rsl);
+
+                  const cIn = getAtollColorRgb(rslIn);
+                  const cOut = getAtollColorRgb(rslOut);
+                  if (!cIn && !cOut) continue;
+
+                  const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
+                  const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
+
+                  const q1x = pt1.x + fA * (pt4.x - pt1.x), q1y = pt1.y + fA * (pt4.y - pt1.y);
+                  const q2x = pt2.x + fA * (pt3.x - pt2.x), q2y = pt2.y + fA * (pt3.y - pt2.y);
+                  const q3x = pt2.x + fB * (pt3.x - pt2.x), q3y = pt2.y + fB * (pt3.y - pt2.y);
+                  const q4x = pt1.x + fB * (pt4.x - pt1.x), q4y = pt1.y + fB * (pt4.y - pt1.y);
+
+                  const midInX = (q1x + q4x) / 2;
+                  const midInY = (q1y + q4y) / 2;
+                  const midOutX = (q2x + q3x) / 2;
+                  const midOutY = (q2y + q3y) / 2;
+
+                  if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
+                    ctx.fillStyle = colIn;
+                  } else {
+                    const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
+                    grad.addColorStop(0, colIn);
+                    grad.addColorStop(1, colOut);
+                    ctx.fillStyle = grad;
+                  }
+
+                  ctx.beginPath();
+                  ctx.moveTo(q1x, q1y);
+                  ctx.lineTo(q2x, q2y);
+                  ctx.lineTo(q3x, q3y);
+                  ctx.lineTo(q4x, q4y);
+                  ctx.closePath();
+                  ctx.fill();
+                  // No stroke to eliminate wireframe lines
                 }
-                ctx.lineWidth = 0.5;
-                ctx.beginPath();
-                ctx.moveTo(pt1.x, pt1.y);
-                ctx.lineTo(pt2.x, pt2.y);
-                ctx.lineTo(pt3.x, pt3.y);
-                ctx.lineTo(pt4.x, pt4.y);
-                ctx.closePath();
-                ctx.fill();
-                ctx.stroke();
               }
             }
 
@@ -3732,15 +3745,30 @@
       }
 
       const activeMaster = (activeMasterIndex >= 0 && masterStations[activeMasterIndex]) ? masterStations[activeMasterIndex] : masterStations[0];
-      const eirpDbm = activeMaster.powerDbm + activeMaster.antGain - activeMaster.cableLoss;
+      const pDbm = (activeMaster.powerDbm !== undefined && !isNaN(activeMaster.powerDbm))
+        ? activeMaster.powerDbm
+        : (10 * Math.log10(Math.max(1, (activeMaster.powerWatts || 50)) * 1000));
+      const aGain = (activeMaster.antGain !== undefined && !isNaN(activeMaster.antGain))
+        ? activeMaster.antGain
+        : ((activeMaster.antGainDbi !== undefined && !isNaN(activeMaster.antGainDbi)) ? activeMaster.antGainDbi : 9.0);
+      const cLoss = (activeMaster.cableLoss !== undefined && !isNaN(activeMaster.cableLoss)) ? activeMaster.cableLoss : 1.5;
+      const eirpDbm = pDbm + aGain - cLoss;
       const eirpWatts = Math.pow(10, (eirpDbm - 30) / 10);
+      const gElev = (activeMaster.groundElev !== undefined && !isNaN(activeMaster.groundElev)) ? activeMaster.groundElev : 0;
+      const tHeight = (activeMaster.towerHeight !== undefined && !isNaN(activeMaster.towerHeight)) ? activeMaster.towerHeight : 30;
 
-      document.getElementById('kpi-eirp').innerHTML = `${eirpDbm.toFixed(1)} <span class="kpi-unit">dBm</span>`;
-      document.getElementById('kpi-eirp-watts').innerText = eirpWatts.toFixed(1);
-      document.getElementById('kpi-coverage-area').innerHTML = `${kpiResults.reliableAreaKm2.toLocaleString()} <span class="kpi-unit">ตร.กม.</span>`;
-      document.getElementById('kpi-max-radius').innerHTML = `${activeMaster.maxRadiusKm.toFixed(1)} <span class="kpi-unit">km</span>`;
-      document.getElementById('kpi-ground-elev').innerHTML = `${activeMaster.groundElev.toFixed(1)} <span class="kpi-unit">m</span>`;
-      document.getElementById('kpi-total-tower').innerText = (activeMaster.groundElev + activeMaster.towerHeight).toFixed(1);
+      const elEirp = document.getElementById('kpi-eirp');
+      if (elEirp) elEirp.innerHTML = `${eirpDbm.toFixed(1)} <span class="kpi-unit">dBm</span>`;
+      const elEirpW = document.getElementById('kpi-eirp-watts');
+      if (elEirpW) elEirpW.innerText = Math.round(eirpWatts).toLocaleString();
+      const elCovArea = document.getElementById('kpi-coverage-area');
+      if (elCovArea) elCovArea.innerHTML = `${(kpiResults.reliableAreaKm2 || 0).toLocaleString()} <span class="kpi-unit">ตร.กม.</span>`;
+      const elMaxR = document.getElementById('kpi-max-radius');
+      if (elMaxR) elMaxR.innerHTML = `${(activeMaster.maxRadiusKm || 25).toFixed(1)} <span class="kpi-unit">km</span>`;
+      const elGElev = document.getElementById('kpi-ground-elev');
+      if (elGElev) elGElev.innerHTML = `${gElev.toFixed(1)} <span class="kpi-unit">m</span>`;
+      const elTotTow = document.getElementById('kpi-total-tower');
+      if (elTotTow) elTotTow.innerText = (gElev + tHeight).toFixed(1);
 
       const kpiCount = document.getElementById('kpi-client-count');
       if (kpiCount) kpiCount.innerHTML = `${clientStations.length} <span class="kpi-unit">สถานี</span>`;
@@ -4652,6 +4680,102 @@
       showToast("ดาวน์โหลดไฟล์ Template ลูกข่ายเรียบร้อยแล้ว!");
     }
 
+    // Export Client Stations RF Performance Table to Excel (.xlsx)
+    function exportClientsToExcel() {
+      if (!clientStations || clientStations.length === 0) {
+        showToast("⚠️ ไม่มีข้อมูลสถานีลูกข่ายในตารางสำหรับส่งออก");
+        return;
+      }
+
+      updateClientMarkersAndLinks();
+
+      const activeMaster = (activeMasterIndex >= 0 && masterStations[activeMasterIndex]) ? masterStations[activeMasterIndex] : masterStations[0];
+      const masterName = activeMaster ? activeMaster.name : "สถานีแม่ข่าย";
+
+      const headers = [
+        "ลำดับ",
+        "ชื่อสถานีลูกข่าย",
+        "สถานีแม่ข่ายที่เชื่อมต่อ",
+        "ละติจูด (Lat)",
+        "ลองจิจูด (Lon)",
+        "ความสูงเสาลูกข่าย (เมตร)",
+        "ความสูงระดับน้ำทะเล MSL (เมตร)",
+        "ระยะทางจากแม่ข่าย (กม.)",
+        "มุมทิศ (องศา)",
+        "ระดับสัญญาณรับ RSL (dBm)",
+        "คุณภาพการรับสัญญาณ",
+        "สถานะการครอบคลุม (Coverage)",
+        "Path Loss รวม (dB)",
+        "Diffraction Loss (dB)"
+      ];
+
+      const rows = [headers];
+
+      clientStations.forEach((c, idx) => {
+        const bestM = c.bestMaster || activeMaster;
+        const calc = c.calc || computeLinkToClient(bestM, c);
+        const isCovered = (bestM && calc && calc.rsl >= -100.0 && calc.distKm <= bestM.maxRadiusKm);
+
+        rows.push([
+          idx + 1,
+          c.name,
+          bestM ? bestM.name : masterName,
+          Number(c.lat.toFixed(6)),
+          Number(c.lon.toFixed(6)),
+          Number((c.height || 3).toFixed(1)),
+          Number((c.groundElev || 0).toFixed(1)),
+          calc ? Number(calc.distKm.toFixed(2)) : 0,
+          calc ? Number(calc.azimuth.toFixed(1)) : 0,
+          calc ? Number(calc.rsl.toFixed(1)) : -999,
+          calc ? calc.quality : '-',
+          isCovered ? "🟢 อยู่ในพื้นที่บริการ" : "🔴 หลุดพื้นที่บริการ (บอดสัญญาณ)",
+          calc ? Number(calc.pathLoss.toFixed(1)) : 0,
+          calc ? Number((calc.diffLoss || 0).toFixed(1)) : 0
+        ]);
+      });
+
+      const safeMasterName = masterName.replace(/[^a-zA-Z0-9ก-๙]/g, '_');
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`;
+      const fileName = `Client_Stations_RF_Performance_${safeMasterName}_${dateStr}.xlsx`;
+
+      if (typeof XLSX !== 'undefined') {
+        const ws = XLSX.utils.aoa_to_sheet(rows);
+
+        // Auto-fit column widths
+        ws['!cols'] = headers.map((h, colIdx) => {
+          let maxLen = h.length * 1.5;
+          rows.forEach(r => {
+            const str = r[colIdx] !== undefined && r[colIdx] !== null ? String(r[colIdx]) : '';
+            const len = str.length + (str.match(/[^\u0000-\u007f]/g) || []).length;
+            if (len > maxLen) maxLen = len;
+          });
+          return { wch: Math.min(42, Math.max(10, maxLen + 3)) };
+        });
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Client_RF_Performance");
+        XLSX.writeFile(wb, fileName);
+        showToast(`✅ ส่งออกไฟล์ Excel สำเร็จ: ${fileName}`);
+      } else {
+        // Fallback to UTF-8 CSV with BOM for Excel
+        let csvContent = "\uFEFF";
+        rows.forEach(row => {
+          const escaped = row.map(v => `"${String(v).replace(/"/g, '""')}"`);
+          csvContent += escaped.join(",") + "\n";
+        });
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = fileName.replace('.xlsx', '.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(`✅ ส่งออกไฟล์ CSV สำเร็จ: ${link.download}`);
+      }
+    }
+
     function handleClientExcelUpload(event) {
       const file = event.target.files && event.target.files[0];
       if (!file) return;
@@ -5384,6 +5508,7 @@
 
       const toOverlayX = (lon) => ((lon - bounds.west) / (bounds.east - bounds.west)) * W;
       const toOverlayY = (lat) => ((bounds.north - lat) / (bounds.north - bounds.south)) * H;
+      const subSteps = 2;
 
       targetMasters.forEach(m => {
         if (!m.coverageGrid || m.coverageGrid.length === 0) return;
@@ -5401,50 +5526,68 @@
             const p3 = ray2.radials[s + 1];
             const p4 = ray2.radials[s];
 
-            const rslIn = (p1.rsl + p4.rsl) / 2;
-            const rslOut = (p2.rsl + p3.rsl) / 2;
-
-            const cIn = getAtollColorRgb(rslIn);
-            const cOut = getAtollColorRgb(rslOut);
-            if (!cIn && !cOut) continue;
-
-            const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
-            const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
-
             const x1 = toOverlayX(p1.lon), y1 = toOverlayY(p1.lat);
             const x2 = toOverlayX(p2.lon), y2 = toOverlayY(p2.lat);
             const x3 = toOverlayX(p3.lon), y3 = toOverlayY(p3.lat);
             const x4 = toOverlayX(p4.lon), y4 = toOverlayY(p4.lat);
 
-            const midInX = (x1 + x4) / 2;
-            const midInY = (y1 + y4) / 2;
-            const midOutX = (x2 + x3) / 2;
-            const midOutY = (y2 + y3) / 2;
+            for (let sub = 0; sub < subSteps; sub++) {
+              const fA = sub / subSteps;
+              const fB = (sub + 1) / subSteps;
 
-            if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
-              ctx.fillStyle = colIn;
-              ctx.strokeStyle = colIn;
-            } else {
-              const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
-              grad.addColorStop(0, colIn);
-              grad.addColorStop(1, colOut);
-              ctx.fillStyle = grad;
-              ctx.strokeStyle = grad;
+              const rslIn = p1.rsl + ((fA + fB) / 2) * (p4.rsl - p1.rsl);
+              const rslOut = p2.rsl + ((fA + fB) / 2) * (p3.rsl - p2.rsl);
+
+              const cIn = getAtollColorRgb(rslIn);
+              const cOut = getAtollColorRgb(rslOut);
+              if (!cIn && !cOut) continue;
+
+              const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
+              const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
+
+              const q1x = x1 + fA * (x4 - x1), q1y = y1 + fA * (y4 - y1);
+              const q2x = x2 + fA * (x3 - x2), q2y = y2 + fA * (y3 - y2);
+              const q3x = x2 + fB * (x3 - x2), q3y = y2 + fB * (y3 - y2);
+              const q4x = x1 + fB * (x4 - x1), q4y = y1 + fB * (y4 - y1);
+
+              const midInX = (q1x + q4x) / 2;
+              const midInY = (q1y + q4y) / 2;
+              const midOutX = (q2x + q3x) / 2;
+              const midOutY = (q2y + q3y) / 2;
+
+              if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
+                ctx.fillStyle = colIn;
+              } else {
+                const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
+                grad.addColorStop(0, colIn);
+                grad.addColorStop(1, colOut);
+                ctx.fillStyle = grad;
+              }
+
+              ctx.beginPath();
+              ctx.moveTo(q1x, q1y);
+              ctx.lineTo(q2x, q2y);
+              ctx.lineTo(q3x, q3y);
+              ctx.lineTo(q4x, q4y);
+              ctx.closePath();
+              ctx.fill();
+              // No ctx.stroke() to eliminate wireframe lines!
             }
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.lineTo(x3, y3);
-            ctx.lineTo(x4, y4);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
           }
         }
       });
 
-      const dataUrl = canvas.toDataURL('image/png');
+      // Post-process canvas blur to blend polygon seams silky-smooth like Atoll
+      const smoothCanvas = document.createElement('canvas');
+      smoothCanvas.width = W;
+      smoothCanvas.height = H;
+      const sCtx = smoothCanvas.getContext('2d');
+      if (sCtx.filter !== undefined) {
+        sCtx.filter = 'blur(1.6px)';
+      }
+      sCtx.drawImage(canvas, 0, 0);
+
+      const dataUrl = smoothCanvas.toDataURL('image/png');
       const b64 = dataUrl.split(',')[1];
       const bin = atob(b64);
       const bytes = new Uint8Array(bin.length);
@@ -6033,7 +6176,7 @@
       // 2. Heatmap Polygons
       if (master.coverageGrid && master.coverageGrid.length > 0) {
         const grid = master.coverageGrid;
-        const numRays = grid.length;
+        const subSteps = 2;
         for (let r = 0; r < numRays; r++) {
           const ray1 = grid[r];
           const ray2 = grid[(r + 1) % numRays];
@@ -6045,45 +6188,52 @@
             const p3 = ray2.radials[s + 1];
             const p4 = ray2.radials[s];
 
-            const rslIn = (p1.rsl + p4.rsl) / 2;
-            const rslOut = (p2.rsl + p3.rsl) / 2;
-
-            const cIn = getAtollColorRgb(rslIn);
-            const cOut = getAtollColorRgb(rslOut);
-            if (!cIn && !cOut) continue;
-
-            const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
-            const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
-
             const pt1 = polarToXY(p1.distKm, ray1.azimuthDeg);
             const pt2 = polarToXY(p2.distKm, ray1.azimuthDeg);
             const pt3 = polarToXY(p3.distKm, ray2.azimuthDeg);
             const pt4 = polarToXY(p4.distKm, ray2.azimuthDeg);
 
-            const midInX = (pt1.x + pt4.x) / 2;
-            const midInY = (pt1.y + pt4.y) / 2;
-            const midOutX = (pt2.x + pt3.x) / 2;
-            const midOutY = (pt2.y + pt3.y) / 2;
+            for (let sub = 0; sub < subSteps; sub++) {
+              const fA = sub / subSteps;
+              const fB = (sub + 1) / subSteps;
 
-            if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
-              ctx.fillStyle = colIn;
-              ctx.strokeStyle = colIn;
-            } else {
-              const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
-              grad.addColorStop(0, colIn);
-              grad.addColorStop(1, colOut);
-              ctx.fillStyle = grad;
-              ctx.strokeStyle = grad;
+              const rslIn = p1.rsl + ((fA + fB) / 2) * (p4.rsl - p1.rsl);
+              const rslOut = p2.rsl + ((fA + fB) / 2) * (p3.rsl - p2.rsl);
+
+              const cIn = getAtollColorRgb(rslIn);
+              const cOut = getAtollColorRgb(rslOut);
+              if (!cIn && !cOut) continue;
+
+              const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
+              const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
+
+              const q1x = pt1.x + fA * (pt4.x - pt1.x), q1y = pt1.y + fA * (pt4.y - pt1.y);
+              const q2x = pt2.x + fA * (pt3.x - pt2.x), q2y = pt2.y + fA * (pt3.y - pt2.y);
+              const q3x = pt2.x + fB * (pt3.x - pt2.x), q3y = pt2.y + fB * (pt3.y - pt2.y);
+              const q4x = pt1.x + fB * (pt4.x - pt1.x), q4y = pt1.y + fB * (pt4.y - pt1.y);
+
+              const midInX = (q1x + q4x) / 2;
+              const midInY = (q1y + q4y) / 2;
+              const midOutX = (q2x + q3x) / 2;
+              const midOutY = (q2y + q3y) / 2;
+
+              if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
+                ctx.fillStyle = colIn;
+              } else {
+                const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
+                grad.addColorStop(0, colIn);
+                grad.addColorStop(1, colOut);
+                ctx.fillStyle = grad;
+              }
+
+              ctx.beginPath();
+              ctx.moveTo(q1x, q1y);
+              ctx.lineTo(q2x, q2y);
+              ctx.lineTo(q3x, q3y);
+              ctx.lineTo(q4x, q4y);
+              ctx.closePath();
+              ctx.fill();
             }
-            ctx.lineWidth = 0.6;
-            ctx.beginPath();
-            ctx.moveTo(pt1.x, pt1.y);
-            ctx.lineTo(pt2.x, pt2.y);
-            ctx.lineTo(pt3.x, pt3.y);
-            ctx.lineTo(pt4.x, pt4.y);
-            ctx.closePath();
-            ctx.fill();
-            ctx.stroke();
           }
         }
       }
@@ -6361,6 +6511,7 @@
 
         if (m.coverageGrid && m.coverageGrid.length > 0) {
           const numRays = m.coverageGrid.length;
+          const subSteps = 2;
           for (let r = 0; r < numRays; r++) {
             const ray1 = m.coverageGrid[r];
             const ray2 = m.coverageGrid[(r + 1) % numRays];
@@ -6371,41 +6522,51 @@
               const p3 = ray2.radials[s + 1];
               const p4 = ray2.radials[s];
 
-              const rslIn = (p1.rsl + p4.rsl) / 2;
-              const rslOut = (p2.rsl + p3.rsl) / 2;
-
-              const cIn = getAtollColorRgb(rslIn);
-              const cOut = getAtollColorRgb(rslOut);
-              if (!cIn && !cOut) continue;
-
-              const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
-              const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
-
               const x1 = toX(p1.lon), y1 = toY(p1.lat);
               const x2 = toX(p2.lon), y2 = toY(p2.lat);
               const x3 = toX(p3.lon), y3 = toY(p3.lat);
               const x4 = toX(p4.lon), y4 = toY(p4.lat);
 
-              const midInX = (x1 + x4) / 2;
-              const midInY = (y1 + y4) / 2;
-              const midOutX = (x2 + x3) / 2;
-              const midOutY = (y2 + y3) / 2;
+              for (let sub = 0; sub < subSteps; sub++) {
+                const fA = sub / subSteps;
+                const fB = (sub + 1) / subSteps;
 
-              if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
-                ctx.fillStyle = colIn;
-              } else {
-                const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
-                grad.addColorStop(0, colIn);
-                grad.addColorStop(1, colOut);
-                ctx.fillStyle = grad;
+                const rslIn = p1.rsl + ((fA + fB) / 2) * (p4.rsl - p1.rsl);
+                const rslOut = p2.rsl + ((fA + fB) / 2) * (p3.rsl - p2.rsl);
+
+                const cIn = getAtollColorRgb(rslIn);
+                const cOut = getAtollColorRgb(rslOut);
+                if (!cIn && !cOut) continue;
+
+                const colIn = cIn ? cIn.str : 'rgba(233, 7, 8, 0)';
+                const colOut = cOut ? cOut.str : 'rgba(233, 7, 8, 0)';
+
+                const q1x = x1 + fA * (x4 - x1), q1y = y1 + fA * (y4 - y1);
+                const q2x = x2 + fA * (x3 - x2), q2y = y2 + fA * (y3 - y2);
+                const q3x = x2 + fB * (x3 - x2), q3y = y2 + fB * (y3 - y2);
+                const q4x = x1 + fB * (x4 - x1), q4y = y1 + fB * (y4 - y1);
+
+                const midInX = (q1x + q4x) / 2;
+                const midInY = (q1y + q4y) / 2;
+                const midOutX = (q2x + q3x) / 2;
+                const midOutY = (q2y + q3y) / 2;
+
+                if (Math.abs(midInX - midOutX) < 0.1 && Math.abs(midInY - midOutY) < 0.1) {
+                  ctx.fillStyle = colIn;
+                } else {
+                  const grad = ctx.createLinearGradient(midInX, midInY, midOutX, midOutY);
+                  grad.addColorStop(0, colIn);
+                  grad.addColorStop(1, colOut);
+                  ctx.fillStyle = grad;
+                }
+                ctx.beginPath();
+                ctx.moveTo(q1x, q1y);
+                ctx.lineTo(q2x, q2y);
+                ctx.lineTo(q3x, q3y);
+                ctx.lineTo(q4x, q4y);
+                ctx.closePath();
+                ctx.fill();
               }
-              ctx.beginPath();
-              ctx.moveTo(x1, y1);
-              ctx.lineTo(x2, y2);
-              ctx.lineTo(x3, y3);
-              ctx.lineTo(x4, y4);
-              ctx.closePath();
-              ctx.fill();
             }
           }
         }
