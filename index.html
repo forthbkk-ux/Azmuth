@@ -1403,8 +1403,15 @@
         </div>
       </div>
       <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <button type="button" class="btn" onclick="saveCurrentLink()" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: white; border: 1px solid #1d4ed8; padding: 7px 15px; font-size: 0.84rem; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(37, 99, 235, 0.25);" title="บันทึกข้อมูลพิกัดและความสูงของเส้นทางนี้เพื่อดูย้อนหลังหรือส่งออก">
+          💾 <span data-i18n="btn_save_link">บันทึกข้อมูล</span>
+        </button>
+        <button type="button" class="btn" onclick="openHistoryModal()" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 7px 14px; font-size: 0.84rem; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);" title="ดูรายการเส้นทางที่บันทึกไว้และประวัติการคำนวณย้อนหลัง">
+          🕒 <span data-i18n="btn_history">ดูย้อนหลัง</span>
+          <span id="saved-links-count-badge" style="background: #2563eb; color: white; font-size: 0.72rem; padding: 1px 7px; border-radius: 10px; font-weight: 700;">0</span>
+        </button>
         <button type="button" class="btn" onclick="openCurrentLinkAnalysis()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: 1px solid #047857; padding: 7px 16px; font-size: 0.84rem; font-weight: 700; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(16, 185, 129, 0.25);" title="วิเคราะห์แนวคลื่นวิทยุและแสดงรายงานสรุป Microwave Summary Report จากข้อมูลพิกัดและความสูงที่กรอกแบบเรียลไทม์">
-          📊 รายงานสรุปวิเคราะห์ข้อมูล (Real-time Report & PDF)
+          📊 <span data-i18n="btn_report">รายงานสรุปวิเคราะห์ข้อมูล (Real-time Report & PDF)</span>
         </button>
       </div>
     </div>
@@ -1679,6 +1686,9 @@
             <button class="btn btn-outline" onclick="resetCalculator()" style="flex: 1;" title="รีเซ็ตค่ากลับเป็นค่าเริ่มต้น">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
               <span data-i18n="btn_reset">รีเซ็ต</span>
+            </button>
+            <button type="button" class="btn" onclick="saveCurrentLink()" style="background: #f0fdf4; color: #166534; border: 1.5px solid #86efac; flex: 1; justify-content: center; font-weight: 700; padding: 6px 12px; font-size: 0.84rem; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);" title="บันทึกข้อมูลเส้นทางนี้">
+              💾 <span data-i18n="btn_save_short">บันทึก</span>
             </button>
             <button class="btn btn-primary" onclick="calculate()" style="flex: 1.5;" title="คำนวณมุมแอซิมัทและระยะทาง">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -2232,6 +2242,68 @@
     </div>
   </div>
 
+  <!-- Modal for History & Saved Records -->
+  <div class="modal-overlay" id="history-modal" onclick="if(event.target === this) closeHistoryModal()" style="display: none;">
+    <div class="modal-box" style="max-width: 980px; max-height: 88vh;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-bottom: 1px solid #cbd5e1; padding: 1rem 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #2563eb); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 2px 6px rgba(2,132,199,0.3); flex-shrink: 0;">
+            📁
+          </div>
+          <div>
+            <b style="font-size: 1.05rem; color: #0f172a;" id="hist-modal-title">ประวัติและรายการที่บันทึกไว้ (Saved Links & History)</b>
+            <div style="font-size: 0.78rem; color: #64748b;">
+              จัดการรายการเส้นทางไมโครเวฟที่บันทึกไว้ สามารถโหลดข้อมูลกลับมาคำนวณใหม่ หรือเปิดดูรายงานสรุปย้อนหลังได้ทันที
+            </div>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeHistoryModal()" title="ปิดหน้าต่าง">&times;</button>
+      </div>
+
+      <!-- Toolbar & Tabs -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 1.5rem; background: #ffffff; border-bottom: 1px solid #e2e8f0;">
+        <!-- Tabs -->
+        <div style="display: inline-flex; background: #f1f5f9; padding: 3px; border-radius: 8px; gap: 4px;">
+          <button type="button" id="tab-btn-saved" onclick="switchHistoryTab('saved')" style="padding: 6px 14px; font-size: 0.82rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; background: #ffffff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: inline-flex; align-items: center; gap: 6px;">
+            💾 รายการที่บันทึกไว้ (<span id="history-saved-count">0</span>)
+          </button>
+          <button type="button" id="tab-btn-calc" onclick="switchHistoryTab('calc')" style="padding: 6px 14px; font-size: 0.82rem; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; background: transparent; color: #64748b; display: inline-flex; align-items: center; gap: 6px;">
+            🕒 ประวัติการคำนวณล่าสุด (<span id="history-calc-count">0</span>)
+          </button>
+        </div>
+
+        <!-- Search & Actions -->
+        <div style="display: flex; gap: 8px; align-items: center; flex: 1; max-width: 520px; justify-content: flex-end; flex-wrap: wrap;">
+          <input type="text" id="history-search-input" placeholder="🔍 ค้นหาชื่อสถานี, พิกัด, วันที่..." oninput="renderHistoryList()"
+                 style="flex: 1; min-width: 180px; font-size: 0.82rem; padding: 6px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; outline: none; background: #f8fafc;">
+          <button type="button" class="btn" onclick="exportHistoryToExcel()" style="padding: 6px 12px; font-size: 0.78rem; font-weight: 700; color: #166534; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="ส่งออกข้อมูลเป็นไฟล์ Excel (.xlsx)">
+            📊 ส่งออก Excel
+          </button>
+          <button type="button" class="btn" onclick="clearCurrentHistoryTab()" style="padding: 6px 10px; font-size: 0.78rem; font-weight: 600; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="ล้างรายการทั้งหมดในแท็บนี้">
+            🗑️ ล้างทั้งหมด
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (List of Cards) -->
+      <div class="modal-body" style="padding: 1.25rem 1.5rem; background: #f8fafc; overflow-y: auto; max-height: calc(88vh - 180px);">
+        <div id="history-cards-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Dynamically populated cards -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="padding: 0.75rem 1.5rem; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span style="font-size: 0.78rem; color: #64748b;">
+          💡 ข้อมูลถูกบันทึกไว้ใน Browser ของเครื่องนี้อย่างถาวร (Local Storage) สามารถกลับมาดูหรือส่งออกได้ตลอดเวลา
+        </span>
+        <button class="btn btn-outline" onclick="closeHistoryModal()" style="padding: 6px 18px; font-size: 0.82rem; font-weight: 600;">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div class="copy-toast" id="copy-toast">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
@@ -2354,6 +2426,10 @@
         lbl_height_b: "ความสูงสายอากาศ",
         btn_reset: "รีเซ็ต",
         btn_calculate: "คำนวณ (Calculate)",
+        btn_save_link: "บันทึกข้อมูล",
+        btn_save_short: "บันทึก",
+        btn_history: "ดูย้อนหลัง",
+        btn_report: "รายงานสรุปวิเคราะห์ข้อมูล (Real-time Report & PDF)",
         res_azimuth_lbl: "มุมแอซิมัท (Azimuth / Bearing)",
         res_back_azimuth: "Back Azimuth (ย้อนกลับ)",
         res_radians: "หน่วยเรเดียน (Radians)",
@@ -2419,6 +2495,10 @@
         lbl_height_b: "Antenna Height",
         btn_reset: "Reset",
         btn_calculate: "Calculate",
+        btn_save_link: "Save Link",
+        btn_save_short: "Save",
+        btn_history: "History",
+        btn_report: "Summary Analysis Report (Real-time & PDF)",
         res_azimuth_lbl: "Azimuth Angle (Bearing)",
         res_back_azimuth: "Back / Reverse Azimuth",
         res_radians: "Angle in Radians",
@@ -3032,8 +3112,74 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
       }
     }
 
-    // Session history array for Excel export
+    // Session & persistent history and saved links management
     let calcHistory = [];
+    let currentHistoryTab = 'saved';
+
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function getStoredSavedLinks() {
+      try {
+        const raw = localStorage.getItem('microwave_saved_links');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.warn('Error reading microwave_saved_links', e);
+        return [];
+      }
+    }
+
+    function setStoredSavedLinks(links) {
+      try {
+        localStorage.setItem('microwave_saved_links', JSON.stringify(links));
+      } catch (e) {
+        console.warn('Error saving microwave_saved_links', e);
+      }
+    }
+
+    function getStoredCalcHistory() {
+      try {
+        const raw = localStorage.getItem('microwave_calc_history');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.warn('Error reading microwave_calc_history', e);
+        return [];
+      }
+    }
+
+    function setStoredCalcHistory(history) {
+      try {
+        localStorage.setItem('microwave_calc_history', JSON.stringify(history));
+      } catch (e) {
+        console.warn('Error saving microwave_calc_history', e);
+      }
+    }
+
+    function updateHistoryBadges() {
+      const saved = getStoredSavedLinks();
+      const calc = calcHistory || [];
+      const badge = document.getElementById('saved-links-count-badge');
+      if (badge) badge.innerText = saved.length;
+      const countSaved = document.getElementById('history-saved-count');
+      if (countSaved) countSaved.innerText = saved.length;
+      const countCalc = document.getElementById('history-calc-count');
+      if (countCalc) countCalc.innerText = calc.length;
+    }
+
+    function initHistoryStorage() {
+      const storedHistory = getStoredCalcHistory();
+      if (Array.isArray(storedHistory) && storedHistory.length > 0) {
+        calcHistory = storedHistory;
+      }
+      updateHistoryBadges();
+    }
 
     function recordHistoryPoint(lat1, lon1, lat2, lon2, az, backAz, compassPt, distKm) {
       if (isNaN(lat1) || isNaN(lon1) || isNaN(lat2) || isNaN(lon2)) return;
@@ -3061,19 +3207,30 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
       const hA = parseFloat(document.getElementById('height-a')?.value) || tA || 15;
       const tB = parseFloat(document.getElementById('tower-height-b')?.value) || parseFloat(document.getElementById('height-b')?.value) || 45;
       const hB = parseFloat(document.getElementById('height-b')?.value) || tB || 45;
+      const nameA = document.getElementById('point-a-name')?.value.trim() || (currentLang === 'th' ? 'สถานีต้นทาง A' : 'Point A');
+      const nameB = document.getElementById('point-b-name')?.value.trim() || (currentLang === 'th' ? 'สถานีปลายทาง B' : 'Point B');
+      const dishSize = document.getElementById('microwave-dish-select')?.value || 'auto';
+      const freqGHz = parseFloat(document.getElementById('fresnel-freq-ghz')?.value) || 7.5;
+      const radioModel = document.getElementById('main-radio-model-select')?.value || '';
 
       const entry = {
+        id: 'calc_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
         timestamp: timeStr,
+        nameA: nameA,
         latA: parseFloat(lat1.toFixed(6)),
         lonA: parseFloat(lon1.toFixed(6)),
         dmsA: dmsA,
         towerA: tA,
         heightA: hA,
+        nameB: nameB,
         latB: parseFloat(lat2.toFixed(6)),
         lonB: parseFloat(lon2.toFixed(6)),
         dmsB: dmsB,
         towerB: tB,
         heightB: hB,
+        dishSize: dishSize,
+        freqGHz: freqGHz,
+        radioModel: radioModel,
         azimuth: parseFloat(az.toFixed(2)),
         direction: dirStr,
         quadrant: quad,
@@ -3086,15 +3243,656 @@ d = 2 × 6,371 × atan2(√${a.toFixed(7)}, √${Math.max(0, 1 - a).toFixed(7)})
       };
 
       if (calcHistory.length > 0) {
-        const last = calcHistory[calcHistory.length - 1];
-        if (last.latA === entry.latA && last.lonA === entry.lonA &&
+        const last = calcHistory[0];
+        if (last && last.latA === entry.latA && last.lonA === entry.lonA &&
             last.latB === entry.latB && last.lonB === entry.lonB &&
-            last.azimuth === entry.azimuth) {
+            last.azimuth === entry.azimuth && last.towerA === entry.towerA &&
+            last.towerB === entry.towerB && last.dishSize === entry.dishSize) {
           return;
         }
       }
-      calcHistory.push(entry);
-      if (calcHistory.length > 150) calcHistory.shift();
+      calcHistory.unshift(entry);
+      if (calcHistory.length > 150) calcHistory.pop();
+      setStoredCalcHistory(calcHistory.slice(0, 100));
+      updateHistoryBadges();
+
+      const modal = document.getElementById('history-modal');
+      if (modal && modal.style.display !== 'none' && currentHistoryTab === 'calc') {
+        renderHistoryList();
+      }
+    }
+
+    function saveCurrentLink() {
+      const lat1Deg = parseFloat(document.getElementById('lat-a').value);
+      const lon1Deg = parseFloat(document.getElementById('lon-a').value);
+      const lat2Deg = parseFloat(document.getElementById('lat-b').value);
+      const lon2Deg = parseFloat(document.getElementById('lon-b').value);
+
+      if (isNaN(lat1Deg) || isNaN(lon1Deg) || isNaN(lat2Deg) || isNaN(lon2Deg)) {
+        alert(currentLang === 'th'
+          ? '⚠️ กรุณาระบุพิกัดสถานีต้นทางและสถานีปลายทางให้ครบถ้วนก่อนบันทึกข้อมูล'
+          : '⚠️ Please specify coordinates for both Point A and Point B before saving.');
+        return;
+      }
+
+      const nameA = document.getElementById('point-a-name')?.value.trim() || (currentLang === 'th' ? 'สถานีต้นทาง A' : 'Point A');
+      const nameB = document.getElementById('point-b-name')?.value.trim() || (currentLang === 'th' ? 'สถานีปลายทาง B' : 'Point B');
+      const distKm = currentCalculatedDistanceKm > 0 ? currentCalculatedDistanceKm.toFixed(3) : (document.getElementById('res-distance')?.innerText || '0.000');
+      const az = document.getElementById('res-azimuth')?.innerText || '--';
+      const dir = document.getElementById('res-compass-abbr')?.innerText || '';
+
+      const defaultTitle = `${nameA} ➔ ${nameB} (${distKm} km)`;
+      const promptMsg = currentLang === 'th'
+        ? `💾 บันทึกข้อมูลเส้นทางไมโครเวฟ:\nระบุชื่อหรือคำอธิบายสำหรับบันทึกนี้:`
+        : `💾 Save Microwave Link:\nEnter title or description for this record:`;
+
+      const userTitle = prompt(promptMsg, defaultTitle);
+      if (userTitle === null) return;
+
+      const finalTitle = userTitle.trim() || defaultTitle;
+      const towerA = parseFloat(document.getElementById('tower-height-a')?.value) || parseFloat(document.getElementById('height-a')?.value) || 15;
+      const heightA = parseFloat(document.getElementById('height-a')?.value) || towerA || 15;
+      const towerB = parseFloat(document.getElementById('tower-height-b')?.value) || parseFloat(document.getElementById('height-b')?.value) || 45;
+      const heightB = parseFloat(document.getElementById('height-b')?.value) || towerB || 45;
+      const dishSize = document.getElementById('microwave-dish-select')?.value || 'auto';
+      const freqGHz = parseFloat(document.getElementById('fresnel-freq-ghz')?.value) || 7.5;
+      const radioModel = document.getElementById('main-radio-model-select')?.value || '';
+
+      const now = new Date();
+      const timeStr = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0');
+
+      let reportSnapshot = null;
+      try {
+        if (typeof getRealtimeReportData === 'function') {
+          reportSnapshot = getRealtimeReportData();
+        }
+      } catch (e) {
+        console.warn('Report snapshot error:', e);
+      }
+
+      const newRecord = {
+        id: 'link_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        title: finalTitle,
+        timestamp: timeStr,
+        nameA: nameA,
+        latA: parseFloat(lat1Deg.toFixed(6)),
+        lonA: parseFloat(lon1Deg.toFixed(6)),
+        towerA: towerA,
+        heightA: heightA,
+        nameB: nameB,
+        latB: parseFloat(lat2Deg.toFixed(6)),
+        lonB: parseFloat(lon2Deg.toFixed(6)),
+        towerB: towerB,
+        heightB: heightB,
+        dishSize: dishSize,
+        freqGHz: freqGHz,
+        radioModel: radioModel,
+        distKm: parseFloat(distKm),
+        azimuth: az,
+        direction: dir,
+        reportData: reportSnapshot
+      };
+
+      const saved = getStoredSavedLinks();
+      saved.unshift(newRecord);
+      setStoredSavedLinks(saved);
+      updateHistoryBadges();
+
+      showToast(currentLang === 'th' ? `💾 บันทึก "${finalTitle}" เรียบร้อยแล้ว!` : `💾 Saved "${finalTitle}" successfully!`);
+
+      const modal = document.getElementById('history-modal');
+      if (modal && modal.style.display !== 'none' && currentHistoryTab === 'saved') {
+        renderHistoryList();
+      }
+    }
+
+    function openHistoryModal(tab = 'saved') {
+      const m = document.getElementById('history-modal');
+      if (m) {
+        m.style.display = 'flex';
+        switchHistoryTab(tab);
+      }
+    }
+
+    function closeHistoryModal() {
+      const m = document.getElementById('history-modal');
+      if (m) {
+        m.style.display = 'none';
+      }
+    }
+
+    function switchHistoryTab(tab) {
+      currentHistoryTab = tab;
+      const btnSaved = document.getElementById('tab-btn-saved');
+      const btnCalc = document.getElementById('tab-btn-calc');
+      if (tab === 'saved') {
+        if (btnSaved) {
+          btnSaved.style.background = '#ffffff';
+          btnSaved.style.color = '#2563eb';
+          btnSaved.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+          btnSaved.style.fontWeight = '700';
+        }
+        if (btnCalc) {
+          btnCalc.style.background = 'transparent';
+          btnCalc.style.color = '#64748b';
+          btnCalc.style.boxShadow = 'none';
+          btnCalc.style.fontWeight = '600';
+        }
+      } else {
+        if (btnCalc) {
+          btnCalc.style.background = '#ffffff';
+          btnCalc.style.color = '#2563eb';
+          btnCalc.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+          btnCalc.style.fontWeight = '700';
+        }
+        if (btnSaved) {
+          btnSaved.style.background = 'transparent';
+          btnSaved.style.color = '#64748b';
+          btnSaved.style.boxShadow = 'none';
+          btnSaved.style.fontWeight = '600';
+        }
+      }
+      renderHistoryList();
+    }
+
+    function renderHistoryList() {
+      const container = document.getElementById('history-cards-container');
+      if (!container) return;
+
+      const searchInput = document.getElementById('history-search-input');
+      const q = (searchInput?.value || '').toLowerCase().trim();
+
+      if (currentHistoryTab === 'saved') {
+        const savedLinks = getStoredSavedLinks();
+        const filtered = savedLinks.filter(item => {
+          if (!q) return true;
+          const matchTitle = (item.title || '').toLowerCase().includes(q);
+          const matchA = (item.nameA || '').toLowerCase().includes(q) || String(item.latA).includes(q) || String(item.lonA).includes(q);
+          const matchB = (item.nameB || '').toLowerCase().includes(q) || String(item.latB).includes(q) || String(item.lonB).includes(q);
+          const matchTime = (item.timestamp || '').toLowerCase().includes(q);
+          const matchRadio = (item.radioModel || '').toLowerCase().includes(q);
+          return matchTitle || matchA || matchB || matchTime || matchRadio;
+        });
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+              <div style="font-size: 3rem; margin-bottom: 0.5rem;">💾</div>
+              <div style="font-size: 1rem; font-weight: 700; color: #334155;">
+                ${q ? (currentLang === 'th' ? 'ไม่พบรายการที่ตรงกับคำค้นหา' : 'No matching saved links found') : (currentLang === 'th' ? 'ยังไม่มีรายการเส้นทางที่บันทึกไว้' : 'No saved links yet')}
+              </div>
+              <div style="font-size: 0.82rem; margin-top: 6px; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                ${q ? (currentLang === 'th' ? 'ลองค้นหาด้วยคำอื่น หรือล้างช่องค้นหาเพื่อดูรายการทั้งหมด' : 'Try another search term or clear the search input') : (currentLang === 'th' ? 'เมื่อท่านตั้งค่าพารามิเตอร์สถานีแล้ว สามารถกดปุ่ม "💾 บันทึกข้อมูล" ที่แถบด้านบนหรือข้างปุ่มคำนวณ เพื่อเก็บข้อมูลไว้ดูย้อนหลังหรือส่งออกได้ตลอดเวลา' : 'Configure your link parameters and click "💾 Save Link" in the top banner to save records.')}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = filtered.map(item => `
+          <div class="history-item-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 10px;">
+            <!-- Header Row -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+              <div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                  <span>💾</span>
+                  <span>${escapeHtml(item.title)}</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">
+                  🕒 วันเวลาบันทึก: ${item.timestamp}
+                </div>
+              </div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <span style="background: #e0f2fe; color: #0369a1; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #bae6fd;">
+                  📏 ${item.distKm} km
+                </span>
+                <span style="background: #fef3c7; color: #b45309; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #fde68a;">
+                  🧭 Az: ${item.azimuth}° ${item.direction ? '(' + item.direction + ')' : ''}
+                </span>
+                <span style="background: #f1f5f9; color: #475569; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 12px;">
+                  📡 ${item.freqGHz || 7.5} GHz
+                </span>
+                <span style="background: #f1f5f9; color: #475569; font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 12px;">
+                  🎯 จาน: ${item.dishSize || 'Auto'}
+                </span>
+              </div>
+            </div>
+
+            <!-- Detail Grid: Station A & Station B -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; background: #f8fafc; border-radius: 8px; padding: 10px 12px; border: 1px solid #e2e8f0; font-size: 0.8rem;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: #0369a1;">
+                  <span style="background: #0284c7; color: white; border-radius: 4px; padding: 1px 6px; font-size: 0.72rem;">A</span>
+                  <span>${escapeHtml(item.nameA || 'สถานีต้นทาง A')}</span>
+                </div>
+                <div style="color: #334155; margin-top: 4px;">
+                  พิกัด: <b>${item.latA}°, ${item.lonA}°</b>
+                </div>
+                <div style="color: #64748b; font-size: 0.76rem; margin-top: 2px;">
+                  เสา: <b>${item.towerA} m</b> | สายอากาศ: <b>${item.heightA} m</b>
+                </div>
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 6px; font-weight: 700; color: #059669;">
+                  <span style="background: #10b981; color: white; border-radius: 4px; padding: 1px 6px; font-size: 0.72rem;">B</span>
+                  <span>${escapeHtml(item.nameB || 'สถานีปลายทาง B')}</span>
+                </div>
+                <div style="color: #334155; margin-top: 4px;">
+                  พิกัด: <b>${item.latB}°, ${item.lonB}°</b>
+                </div>
+                <div style="color: #64748b; font-size: 0.76rem; margin-top: 2px;">
+                  เสา: <b>${item.towerB} m</b> | สายอากาศ: <b>${item.heightB} m</b>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+              <div style="font-size: 0.76rem; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                📻 <b>วิทยุ:</b> <span>${escapeHtml(item.radioModel || 'ค่าเริ่มต้น')}</span>
+              </div>
+              <div style="display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
+                <button type="button" class="btn" onclick="loadSavedLink('${item.id}')" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="นำข้อมูลกลับมาคำนวณและแสดงผลบนแผนที่">
+                  📥 โหลดค่าคำนวณ
+                </button>
+                <button type="button" class="btn" onclick="viewSavedLinkReport('${item.id}')" style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="เปิดดูรายงาน Microwave Summary Report ในแท็บใหม่">
+                  📄 ดูรายงาน
+                </button>
+                <button type="button" class="btn" onclick="renameSavedLink('${item.id}')" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer;" title="แก้ไขชื่อรายการ">
+                  ✏️ เปลี่ยนชื่อ
+                </button>
+                <button type="button" class="btn" onclick="deleteSavedLink('${item.id}')" style="background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer;" title="ลบรายการนี้">
+                  🗑️ ลบ
+                </button>
+              </div>
+            </div>
+          </div>
+        `).join('');
+
+      } else {
+        // Calculation History Tab
+        const historyList = calcHistory || [];
+        const filtered = historyList.filter(item => {
+          if (!q) return true;
+          const matchA = (item.nameA || '').toLowerCase().includes(q) || String(item.latA).includes(q) || String(item.lonA).includes(q);
+          const matchB = (item.nameB || '').toLowerCase().includes(q) || String(item.latB).includes(q) || String(item.lonB).includes(q);
+          const matchTime = (item.timestamp || '').toLowerCase().includes(q);
+          const matchDist = String(item.distKm).includes(q);
+          return matchA || matchB || matchTime || matchDist;
+        });
+
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+              <div style="font-size: 3rem; margin-bottom: 0.5rem;">🕒</div>
+              <div style="font-size: 1rem; font-weight: 700; color: #334155;">
+                ${q ? (currentLang === 'th' ? 'ไม่พบประวัติที่ตรงกับคำค้นหา' : 'No matching calculation history found') : (currentLang === 'th' ? 'ยังไม่มีประวัติการคำนวณล่าสุด' : 'No calculation history recorded yet')}
+              </div>
+              <div style="font-size: 0.82rem; margin-top: 6px; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                ${currentLang === 'th' ? 'การคำนวณเส้นทางและพิกัดทุกครั้งจะถูกบันทึกประวัติไว้ที่นี่โดยอัตโนมัติ เพื่อให้ท่านสามารถเรียกคืนค่าหรือเปิดรายงานย้อนหลังได้สะดวก' : 'Every calculation is automatically logged here so you can reload or review reports.'}
+              </div>
+            </div>
+          `;
+          return;
+        }
+
+        container.innerHTML = filtered.map(item => {
+          const originalIndex = calcHistory.indexOf(item);
+          return `
+            <div class="history-item-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 8px;">
+              <!-- Header Row -->
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="background: #f1f5f9; color: #475569; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px;">#${originalIndex + 1}</span>
+                  <b style="font-size: 0.92rem; color: #0f172a;">${escapeHtml(item.nameA || 'สถานีต้นทาง A')} ➔ ${escapeHtml(item.nameB || 'สถานีปลายทาง B')}</b>
+                  <span style="font-size: 0.75rem; color: #94a3b8;">(${item.timestamp})</span>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                  <span style="background: #e0f2fe; color: #0369a1; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #bae6fd;">
+                    📏 ${item.distKm} km
+                  </span>
+                  <span style="background: #fef3c7; color: #b45309; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #fde68a;">
+                    🧭 Az: ${item.azimuth}° ${item.direction ? '(' + item.direction + ')' : ''}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Station Quick Summary -->
+              <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #475569; background: #f8fafc; padding: 6px 10px; border-radius: 6px; flex-wrap: wrap; gap: 6px; border: 1px solid #f1f5f9;">
+                <div>
+                  A: <b>${item.latA}°, ${item.lonA}°</b> (เสา ${item.towerA || 15}m, สายอากาศ ${item.heightA || 15}m)
+                </div>
+                <div>
+                  B: <b>${item.latB}°, ${item.lonB}°</b> (เสา ${item.towerB || 45}m, สายอากาศ ${item.heightB || 45}m)
+                </div>
+              </div>
+
+              <!-- Footer with actions -->
+              <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px; padding-top: 4px;">
+                <div style="font-size: 0.75rem; color: #64748b;">
+                  📡 ${item.freqGHz || 7.5} GHz | 🎯 จาน: ${item.dishSize || 'Auto'} | 📻 ${escapeHtml(item.radioModel || 'ค่าเริ่มต้น')}
+                </div>
+                <div style="display: flex; gap: 6px; align-items: center;">
+                  <button type="button" class="btn" onclick="loadCalcHistory(${originalIndex})" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
+                    📥 โหลดค่า
+                  </button>
+                  <button type="button" class="btn" onclick="viewCalcHistoryReport(${originalIndex})" style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 0.75rem; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer;">
+                    📄 ดูรายงาน
+                  </button>
+                  <button type="button" class="btn" onclick="deleteCalcHistory(${originalIndex})" style="background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; font-size: 0.75rem; font-weight: 600; padding: 4px 8px; border-radius: 6px; cursor: pointer;" title="ลบรายการนี้">
+                    🗑️
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function loadSavedLink(id, shouldCloseModal = true) {
+      const saved = getStoredSavedLinks();
+      const item = saved.find(l => l.id === id);
+      if (!item) return;
+
+      if (document.getElementById('point-a-name')) document.getElementById('point-a-name').value = item.nameA || '';
+      if (document.getElementById('lat-a')) document.getElementById('lat-a').value = item.latA;
+      if (document.getElementById('lon-a')) document.getElementById('lon-a').value = item.lonA;
+      if (document.getElementById('tower-height-a')) document.getElementById('tower-height-a').value = item.towerA || 15;
+      if (document.getElementById('height-a')) {
+        const hA = document.getElementById('height-a');
+        hA.value = item.heightA || item.towerA || 15;
+        hA.dataset.autoSynced = 'false';
+      }
+
+      if (document.getElementById('point-b-name')) document.getElementById('point-b-name').value = item.nameB || '';
+      if (document.getElementById('lat-b')) document.getElementById('lat-b').value = item.latB;
+      if (document.getElementById('lon-b')) document.getElementById('lon-b').value = item.lonB;
+      if (document.getElementById('tower-height-b')) document.getElementById('tower-height-b').value = item.towerB || 45;
+      if (document.getElementById('height-b')) {
+        const hB = document.getElementById('height-b');
+        hB.value = item.heightB || item.towerB || 45;
+        hB.dataset.autoSynced = 'false';
+      }
+
+      if (item.freqGHz && document.getElementById('fresnel-freq-ghz')) {
+        document.getElementById('fresnel-freq-ghz').value = item.freqGHz;
+      }
+      if (item.dishSize && document.getElementById('microwave-dish-select')) {
+        document.getElementById('microwave-dish-select').value = item.dishSize;
+      }
+      if (item.radioModel && document.getElementById('main-radio-model-select')) {
+        document.getElementById('main-radio-model-select').value = item.radioModel;
+        const curRf = document.getElementById('cur-rf-model-select');
+        if (curRf) curRf.value = item.radioModel;
+      }
+
+      syncDdToDms('A');
+      syncDdToDms('B');
+
+      calculate();
+
+      if (shouldCloseModal) {
+        closeHistoryModal();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      showToast(currentLang === 'th' ? `📥 โหลดข้อมูล "${item.title}" เรียบร้อยแล้ว!` : `📥 Loaded "${item.title}"!`);
+    }
+
+    function loadCalcHistory(index, shouldCloseModal = true) {
+      const item = calcHistory[index];
+      if (!item) return;
+
+      if (document.getElementById('point-a-name') && item.nameA) document.getElementById('point-a-name').value = item.nameA;
+      if (document.getElementById('lat-a')) document.getElementById('lat-a').value = item.latA;
+      if (document.getElementById('lon-a')) document.getElementById('lon-a').value = item.lonA;
+      if (document.getElementById('tower-height-a')) document.getElementById('tower-height-a').value = item.towerA || 15;
+      if (document.getElementById('height-a')) {
+        const hA = document.getElementById('height-a');
+        hA.value = item.heightA || item.towerA || 15;
+        hA.dataset.autoSynced = 'false';
+      }
+
+      if (document.getElementById('point-b-name') && item.nameB) document.getElementById('point-b-name').value = item.nameB;
+      if (document.getElementById('lat-b')) document.getElementById('lat-b').value = item.latB;
+      if (document.getElementById('lon-b')) document.getElementById('lon-b').value = item.lonB;
+      if (document.getElementById('tower-height-b')) document.getElementById('tower-height-b').value = item.towerB || 45;
+      if (document.getElementById('height-b')) {
+        const hB = document.getElementById('height-b');
+        hB.value = item.heightB || item.towerB || 45;
+        hB.dataset.autoSynced = 'false';
+      }
+
+      if (item.freqGHz && document.getElementById('fresnel-freq-ghz')) {
+        document.getElementById('fresnel-freq-ghz').value = item.freqGHz;
+      }
+      if (item.dishSize && document.getElementById('microwave-dish-select')) {
+        document.getElementById('microwave-dish-select').value = item.dishSize;
+      }
+      if (item.radioModel && document.getElementById('main-radio-model-select')) {
+        document.getElementById('main-radio-model-select').value = item.radioModel;
+        const curRf = document.getElementById('cur-rf-model-select');
+        if (curRf) curRf.value = item.radioModel;
+      }
+
+      syncDdToDms('A');
+      syncDdToDms('B');
+
+      calculate();
+
+      if (shouldCloseModal) {
+        closeHistoryModal();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      const title = `${item.nameA || 'Point A'} ➔ ${item.nameB || 'Point B'}`;
+      showToast(currentLang === 'th' ? `📥 โหลดข้อมูล "${title}" เรียบร้อยแล้ว!` : `📥 Loaded "${title}"!`);
+    }
+
+    function viewSavedLinkReport(id) {
+      const saved = getStoredSavedLinks();
+      const item = saved.find(l => l.id === id);
+      if (!item) return;
+
+      if (item.reportData) {
+        try {
+          localStorage.setItem('realtime_microwave_report_data', JSON.stringify(item.reportData));
+          const hash = '#data=' + encodeURIComponent(JSON.stringify(item.reportData));
+          window.open('Microwave_Report.html' + hash, '_blank');
+          return;
+        } catch (e) {
+          console.warn('Error opening saved report from snapshot', e);
+        }
+      }
+
+      // Fallback: load parameters into page and open report
+      loadSavedLink(id, false);
+      openRealtimeReport(false);
+    }
+
+    function viewCalcHistoryReport(index) {
+      loadCalcHistory(index, false);
+      openRealtimeReport(false);
+    }
+
+    function renameSavedLink(id) {
+      const saved = getStoredSavedLinks();
+      const item = saved.find(l => l.id === id);
+      if (!item) return;
+
+      const promptMsg = currentLang === 'th' ? "เปลี่ยนชื่อรายการบันทึก:" : "Rename link title:";
+      const newTitle = prompt(promptMsg, item.title || '');
+      if (newTitle === null) return;
+
+      if (newTitle.trim()) {
+        item.title = newTitle.trim();
+        setStoredSavedLinks(saved);
+        renderHistoryList();
+        showToast(currentLang === 'th' ? "✏️ แก้ไขชื่อรายการเรียบร้อยแล้ว!" : "Title updated successfully!");
+      }
+    }
+
+    function deleteSavedLink(id) {
+      const msg = currentLang === 'th' ? "คุณต้องการลบรายการนี้ใช่หรือไม่?" : "Are you sure you want to delete this link?";
+      if (!confirm(msg)) return;
+
+      let saved = getStoredSavedLinks();
+      saved = saved.filter(item => item.id !== id);
+      setStoredSavedLinks(saved);
+      updateHistoryBadges();
+      renderHistoryList();
+      showToast(currentLang === 'th' ? "🗑️ ลบรายการเรียบร้อยแล้ว" : "Link deleted successfully");
+    }
+
+    function deleteCalcHistory(index) {
+      if (index >= 0 && index < calcHistory.length) {
+        calcHistory.splice(index, 1);
+        setStoredCalcHistory(calcHistory.slice(0, 100));
+        updateHistoryBadges();
+        renderHistoryList();
+        showToast(currentLang === 'th' ? "🗑️ ลบประวัติเรียบร้อยแล้ว" : "History record deleted");
+      }
+    }
+
+    function clearCurrentHistoryTab() {
+      if (currentHistoryTab === 'saved') {
+        const saved = getStoredSavedLinks();
+        if (saved.length === 0) return;
+        const msg = currentLang === 'th'
+          ? "คุณต้องการล้างรายการที่บันทึกไว้ทั้งหมดหรือไม่? (การกระทำนี้ไม่สามารถย้อนกลับได้)"
+          : "Are you sure you want to clear all saved links? (This cannot be undone)";
+        if (confirm(msg)) {
+          localStorage.removeItem('microwave_saved_links');
+          updateHistoryBadges();
+          renderHistoryList();
+          showToast(currentLang === 'th' ? "🗑️ ล้างรายการบันทึกทั้งหมดแล้ว" : "All saved links cleared");
+        }
+      } else {
+        if (!calcHistory || calcHistory.length === 0) return;
+        const msg = currentLang === 'th'
+          ? "คุณต้องการล้างประวัติการคำนวณทั้งหมดหรือไม่?"
+          : "Are you sure you want to clear all calculation history?";
+        if (confirm(msg)) {
+          calcHistory = [];
+          localStorage.removeItem('microwave_calc_history');
+          updateHistoryBadges();
+          renderHistoryList();
+          showToast(currentLang === 'th' ? "🗑️ ล้างประวัติการคำนวณแล้ว" : "Calculation history cleared");
+        }
+      }
+    }
+
+    function exportHistoryToExcel() {
+      const savedLinks = getStoredSavedLinks();
+      const historyList = calcHistory || [];
+
+      if (savedLinks.length === 0 && historyList.length === 0) {
+        alert(currentLang === 'th' ? "ไม่มีข้อมูลที่บันทึกไว้หรือประวัติการคำนวณสำหรับส่งออก" : "No saved links or calculation history to export.");
+        return;
+      }
+
+      if (typeof XLSX !== 'undefined') {
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: Saved Links
+        const savedHeaders = [
+          "ลำดับ (No.)", "ชื่อรายการ (Link Title)", "วันเวลาที่บันทึก (Timestamp)",
+          "สถานีต้นทาง (Station A)", "ละติจูด A (Lat)", "ลองจิจูด A (Lon)", "ความสูงเสา A (m)", "ความสูงสายอากาศ A (m)",
+          "สถานีปลายทาง (Station B)", "ละติจูด B (Lat)", "ลองจิจูด B (Lon)", "ความสูงเสา B (m)", "ความสูงสายอากาศ B (m)",
+          "ระยะทาง (Distance km)", "มุมแอซิมัท (Azimuth °)", "ทิศทาง (Direction)",
+          "ความถี่ (Frequency GHz)", "ขนาดหน้าจาน (Dish Size)", "รุ่นอุปกรณ์วิทยุ (Radio Model)"
+        ];
+
+        const savedRows = [savedHeaders];
+        savedLinks.forEach((item, idx) => {
+          savedRows.push([
+            idx + 1,
+            item.title || '',
+            item.timestamp || '',
+            item.nameA || '',
+            item.latA ?? '',
+            item.lonA ?? '',
+            item.towerA ?? '',
+            item.heightA ?? '',
+            item.nameB || '',
+            item.latB ?? '',
+            item.lonB ?? '',
+            item.towerB ?? '',
+            item.heightB ?? '',
+            item.distKm ?? '',
+            item.azimuth ?? '',
+            item.direction ?? '',
+            item.freqGHz ?? '',
+            item.dishSize ?? '',
+            item.radioModel ?? ''
+          ]);
+        });
+
+        const wsSaved = XLSX.utils.aoa_to_sheet(savedRows);
+        XLSX.utils.book_append_sheet(wb, wsSaved, "Saved Links");
+
+        // Sheet 2: Calculation History
+        const historyHeaders = [
+          "ลำดับ (No.)", "วันเวลา (Timestamp)",
+          "สถานีต้นทาง (Station A)", "ละติจูด A (Lat)", "ลองจิจูด A (Lon)", "ความสูงเสา A (m)", "ความสูงสายอากาศ A (m)",
+          "สถานีปลายทาง (Station B)", "ละติจูด B (Lat)", "ลองจิจูด B (Lon)", "ความสูงเสา B (m)", "ความสูงสายอากาศ B (m)",
+          "ระยะทาง (Distance km)", "มุมแอซิมัท (Azimuth °)", "ทิศทาง (Direction)", "Back Azimuth (°)",
+          "ความถี่ (Frequency GHz)", "ขนาดหน้าจาน (Dish Size)", "รุ่นอุปกรณ์วิทยุ (Radio Model)", "Google Maps"
+        ];
+
+        const historyRows = [historyHeaders];
+        historyList.forEach((item, idx) => {
+          historyRows.push([
+            idx + 1,
+            item.timestamp || '',
+            item.nameA || '',
+            item.latA ?? '',
+            item.lonA ?? '',
+            item.towerA ?? '',
+            item.heightA ?? '',
+            item.nameB || '',
+            item.latB ?? '',
+            item.lonB ?? '',
+            item.towerB ?? '',
+            item.heightB ?? '',
+            item.distKm ?? '',
+            item.azimuth ?? '',
+            item.direction ?? '',
+            item.backAzimuth ?? '',
+            item.freqGHz ?? '',
+            item.dishSize ?? '',
+            item.radioModel ?? '',
+            item.gmapsUrl || ''
+          ]);
+        });
+
+        const wsHistory = XLSX.utils.aoa_to_sheet(historyRows);
+        XLSX.utils.book_append_sheet(wb, wsHistory, "Calculation History");
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `Microwave_Saved_Links_and_History_${dateStr}.xlsx`);
+        showToast(currentLang === 'th' ? "📊 ส่งออกไฟล์ Excel เรียบร้อยแล้ว!" : "📊 Excel file exported successfully!");
+      } else {
+        // Fallback: CSV export
+        let csv = "\uFEFFลำดับ,ชื่อรายการ,วันเวลา,สถานี A,Lat A,Lon A,เสา A (m),สายอากาศ A (m),สถานี B,Lat B,Lon B,เสา B (m),สายอากาศ B (m),ระยะทาง (km),Azimuth,ทิศทาง,ความถี่ (GHz),หน้าจาน,รุ่นวิทยุ\r\n";
+        savedLinks.forEach((item, idx) => {
+          csv += `"${idx + 1}","${(item.title||'').replace(/"/g, '""')}","${item.timestamp}","${(item.nameA||'').replace(/"/g, '""')}","${item.latA}","${item.lonA}","${item.towerA}","${item.heightA}","${(item.nameB||'').replace(/"/g, '""')}","${item.latB}","${item.lonB}","${item.towerB}","${item.heightB}","${item.distKm}","${item.azimuth}","${item.direction}","${item.freqGHz}","${item.dishSize}","${(item.radioModel||'').replace(/"/g, '""')}"\r\n`;
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Microwave_Saved_Links_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast(currentLang === 'th' ? "📊 ส่งออกไฟล์ CSV เรียบร้อยแล้ว!" : "📊 CSV exported successfully!");
+      }
     }
 
     function showToast(msg) {
@@ -6113,6 +6911,7 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      initHistoryStorage();
       initMap();
       calculate();
       initElevationCanvasEvents();

@@ -1184,10 +1184,13 @@
         <button class="btn btn-outline" onclick="exportToKMZ()" title="ส่งออกไฟล์ Google Earth (.KMZ) แสดงภาพ Heatmap สีเต็มผืนเหมือนรูปที่ 2" style="color: #0284c7; border-color: #38bdf8; background: #f0f9ff; font-weight: 700;">
           🌐 <span>ส่งออก Google Earth (.KMZ)</span>
         </button>
-        <!-- ซ่อนปุ่มรายงาน PDF ตามที่ผู้ใช้ระบุ -->
-        <!-- <button class="btn btn-outline" onclick="openCoveragePdfModal()" title="ส่งออกรายงานสรุป PDF โดยเลือกสถานีแม่ข่าย" style="display: none; color: #7c3aed; border-color: #c4b5fd; background: #f5f3ff; font-weight: 700;">
-          📑 <span>รายงาน PDF</span>
-        </button> -->
+        <button type="button" class="btn" onclick="saveCurrentSimulationProject()" style="background: linear-gradient(135deg, #0284c7, #2563eb); color: white; border: 1px solid #1d4ed8; font-weight: 700; padding: 7px 14px; box-shadow: 0 2px 5px rgba(37,99,235,0.25);" title="บันทึกข้อมูลสถานีแม่ข่ายและลูกข่าย">
+          💾 <span>บันทึกข้อมูล</span>
+        </button>
+        <button type="button" class="btn btn-outline" onclick="openSimHistoryModal()" style="font-weight: 700; display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; background: white;" title="ดูรายการโครงข่ายที่บันทึกไว้และประวัติย้อนหลัง">
+          🕒 <span>ดูย้อนหลัง</span>
+          <span id="sim-header-count-badge" style="background: #2563eb; color: white; font-size: 0.72rem; padding: 1px 7px; border-radius: 10px; font-weight: 700;">0</span>
+        </button>
         <button class="btn btn-sim" onclick="runFullCoverageSimulation()" title="เริ่มคำนวณและจำลองพื้นที่ครอบคลุม">
           ⚡ <span>ประมวลผล Coverage</span>
         </button>
@@ -1348,6 +1351,17 @@
           <button type="button" class="btn btn-sim" style="width: 100%; padding: 12px; font-size: 0.95rem; font-weight: 700; margin-top: 0.75rem;" onclick="recalculateAllMasterCoverages()">
             ⚡ ประมวลผล Coverage ทุกสถานีแม่ข่าย
           </button>
+
+          <!-- Save & History Section (บันทึกข้อมูล & ดูย้อนหลัง) -->
+          <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button type="button" class="btn" onclick="saveCurrentSimulationProject()" style="flex: 1; background: linear-gradient(135deg, #0284c7, #2563eb); color: white; border: 1px solid #1d4ed8; padding: 10px 12px; font-size: 0.86rem; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 5px rgba(37,99,235,0.25);" title="บันทึกข้อมูลสถานีแม่ข่ายและลูกข่ายทั้งหมด">
+              💾 <span>บันทึกข้อมูล</span>
+            </button>
+            <button type="button" class="btn" onclick="openSimHistoryModal()" style="flex: 1; background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 10px 12px; font-size: 0.86rem; font-weight: 700; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);" title="ดูรายการโครงข่ายที่บันทึกไว้และประวัติย้อนหลัง">
+              🕒 <span>ดูย้อนหลัง</span>
+              <span id="sim-saved-count-badge" style="background: #2563eb; color: white; font-size: 0.72rem; padding: 1px 7px; border-radius: 10px; font-weight: 700;">0</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -2060,6 +2074,67 @@
         </div>
       </div>
     </div>
+
+  <!-- Modal for Simulation History & Saved Projects -->
+  <div id="sim-history-modal" class="modal-backdrop" onclick="if(event.target === this) closeSimHistoryModal()" style="display: none;">
+    <div class="modal-dialog" style="max-width: 980px; max-height: 88vh;">
+      <div class="modal-header" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-bottom: 1px solid #cbd5e1; padding: 1rem 1.5rem;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #0284c7, #2563eb); color: white; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 2px 6px rgba(2,132,199,0.3); flex-shrink: 0;">
+            📁
+          </div>
+          <div>
+            <b style="font-size: 1.05rem; color: #0f172a;" id="sim-hist-modal-title">ประวัติและโครงข่ายที่บันทึกไว้ (Saved RF Projects & History)</b>
+            <div style="font-size: 0.78rem; color: #64748b;">
+              จัดการรายการโครงข่ายสถานีแม่ข่ายและลูกข่ายที่บันทึกไว้ สามารถโหลดข้อมูลกลับมาจำลองใหม่ หรือส่งออกเป็น Excel ได้ทันที
+            </div>
+          </div>
+        </div>
+        <button type="button" class="modal-close" onclick="closeSimHistoryModal()" title="ปิดหน้าต่าง">✕</button>
+      </div>
+
+      <!-- Toolbar & Tabs -->
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; padding: 10px 1.5rem; background: #ffffff; border-bottom: 1px solid #e2e8f0;">
+        <!-- Tabs -->
+        <div style="display: inline-flex; background: #f1f5f9; padding: 3px; border-radius: 8px; gap: 4px;">
+          <button type="button" id="tab-sim-saved" onclick="switchSimHistoryTab('saved')" style="padding: 6px 14px; font-size: 0.82rem; font-weight: 700; border: none; border-radius: 6px; cursor: pointer; background: #ffffff; color: #2563eb; box-shadow: 0 1px 3px rgba(0,0,0,0.08); display: inline-flex; align-items: center; gap: 6px;">
+            💾 โครงข่ายที่บันทึกไว้ (<span id="sim-tab-saved-count">0</span>)
+          </button>
+          <button type="button" id="tab-sim-calc" onclick="switchSimHistoryTab('calc')" style="padding: 6px 14px; font-size: 0.82rem; font-weight: 600; border: none; border-radius: 6px; cursor: pointer; background: transparent; color: #64748b; display: inline-flex; align-items: center; gap: 6px;">
+            🕒 ประวัติการประมวลผลล่าสุด (<span id="sim-tab-calc-count">0</span>)
+          </button>
+        </div>
+
+        <!-- Search & Actions -->
+        <div style="display: flex; gap: 8px; align-items: center; flex: 1; max-width: 520px; justify-content: flex-end; flex-wrap: wrap;">
+          <input type="text" id="sim-history-search-input" placeholder="🔍 ค้นหาชื่อโครงข่าย, สถานี, พิกัด, วันที่..." oninput="renderSimHistoryList()"
+                 style="flex: 1; min-width: 180px; font-size: 0.82rem; padding: 6px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; outline: none; background: #f8fafc;">
+          <button type="button" class="btn" onclick="exportSimHistoryToExcel()" style="padding: 6px 12px; font-size: 0.78rem; font-weight: 700; color: #166534; background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="ส่งออกข้อมูลเป็นไฟล์ Excel (.xlsx)">
+            📊 ส่งออก Excel
+          </button>
+          <button type="button" class="btn" onclick="clearCurrentSimHistoryTab()" style="padding: 6px 10px; font-size: 0.78rem; font-weight: 600; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;" title="ล้างรายการทั้งหมดในแท็บนี้">
+            🗑️ ล้างทั้งหมด
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Cards List) -->
+      <div class="modal-body" style="padding: 1.25rem 1.5rem; background: #f8fafc; overflow-y: auto; max-height: calc(88vh - 180px);">
+        <div id="sim-history-cards-container" style="display: flex; flex-direction: column; gap: 10px;">
+          <!-- Dynamically generated cards -->
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div style="padding: 0.75rem 1.5rem; background: #ffffff; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <span style="font-size: 0.78rem; color: #64748b;">
+          💡 ข้อมูลโครงข่ายถูกบันทึกไว้ใน Browser ของเครื่องนี้อย่างถาวร (Local Storage) สามารถโหลดกลับมาจำลองใหม่ได้ตลอดเวลา
+        </span>
+        <button type="button" class="btn btn-outline" onclick="closeSimHistoryModal()" style="padding: 6px 18px; font-size: 0.82rem; font-weight: 600;">
+          ปิดหน้าต่าง
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Leaflet JS -->
@@ -2376,6 +2451,7 @@
       bindInputs();
 
       // 3. Initialize Clean State (No default stations)
+      initSimHistoryStorage();
       renderMasterStationsList();
       updateClientMarkersAndLinks();
       renderClientTable();
@@ -3005,6 +3081,9 @@
         drawRadialProfileCanvas(masterStations[activeMasterIndex].currentProfileAzimuth || 270);
       }
       showToast("ประมวลผล Coverage ทุกสถานีแม่ข่ายเรียบร้อยแล้ว!");
+      if (typeof recordSimCalculationHistory === 'function') {
+        recordSimCalculationHistory();
+      }
     }
 
     const recalculateAllMasterCoverages = runFullCoverageSimulation;
@@ -7313,6 +7392,553 @@
     // Print Dialog Trigger
     function printCoveragePdf() {
       window.print();
+    }
+
+    /* ==========================================================================
+       Saved RF Projects & Simulation History Management
+       ========================================================================== */
+    let currentSimHistoryTab = 'saved';
+
+    function getStoredSimProjects() {
+      try {
+        const raw = localStorage.getItem('rf_coverage_saved_projects');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.warn('Error reading rf_coverage_saved_projects', e);
+        return [];
+      }
+    }
+
+    function setStoredSimProjects(projects) {
+      try {
+        localStorage.setItem('rf_coverage_saved_projects', JSON.stringify(projects));
+      } catch (e) {
+        console.warn('Error saving rf_coverage_saved_projects', e);
+      }
+    }
+
+    function getStoredSimCalcHistory() {
+      try {
+        const raw = localStorage.getItem('rf_coverage_calc_history');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        console.warn('Error reading rf_coverage_calc_history', e);
+        return [];
+      }
+    }
+
+    function setStoredSimCalcHistory(history) {
+      try {
+        localStorage.setItem('rf_coverage_calc_history', JSON.stringify(history));
+      } catch (e) {
+        console.warn('Error saving rf_coverage_calc_history', e);
+      }
+    }
+
+    function updateSimHistoryBadges() {
+      const saved = getStoredSimProjects();
+      const calc = getStoredSimCalcHistory();
+
+      const badgeSidebar = document.getElementById('sim-saved-count-badge');
+      if (badgeSidebar) badgeSidebar.innerText = saved.length;
+
+      const badgeHeader = document.getElementById('sim-header-count-badge');
+      if (badgeHeader) badgeHeader.innerText = saved.length;
+
+      const badgeTabSaved = document.getElementById('sim-tab-saved-count');
+      if (badgeTabSaved) badgeTabSaved.innerText = saved.length;
+
+      const badgeTabCalc = document.getElementById('sim-tab-calc-count');
+      if (badgeTabCalc) badgeTabCalc.innerText = calc.length;
+    }
+
+    function initSimHistoryStorage() {
+      updateSimHistoryBadges();
+    }
+
+    function createProjectSnapshot(title) {
+      const now = new Date();
+      const timeStr = now.getFullYear() + '-' +
+        String(now.getMonth() + 1).padStart(2, '0') + '-' +
+        String(now.getDate()).padStart(2, '0') + ' ' +
+        String(now.getHours()).padStart(2, '0') + ':' +
+        String(now.getMinutes()).padStart(2, '0') + ':' +
+        String(now.getSeconds()).padStart(2, '0');
+
+      // Clean master stations (strip heavy coverageGrid arrays to keep localStorage light)
+      const cleanMasters = masterStations.map(m => {
+        const copy = Object.assign({}, m);
+        delete copy.coverageGrid;
+        return copy;
+      });
+
+      const cleanClients = clientStations.map(c => Object.assign({}, c));
+
+      const areaText = document.getElementById('kpi-coverage-area')?.innerText || '-';
+      const radiusText = document.getElementById('kpi-max-radius')?.innerText || '-';
+      const eirpText = document.getElementById('kpi-eirp')?.innerText || '-';
+
+      return {
+        id: 'rf_proj_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+        title: title,
+        timestamp: timeStr,
+        masterCount: cleanMasters.length,
+        clientCount: cleanClients.length,
+        masterStations: cleanMasters,
+        clientStations: cleanClients,
+        activeMasterIndex: activeMasterIndex,
+        kpi: {
+          area: areaText,
+          radius: radiusText,
+          eirp: eirpText
+        }
+      };
+    }
+
+    function saveCurrentSimulationProject() {
+      if (masterStations.length === 0 && clientStations.length === 0) {
+        alert(document.getElementById('btn-en')?.classList.contains('active')
+          ? "⚠️ No master or client stations to save. Please add at least one station."
+          : "⚠️ ยังไม่มีข้อมูลสถานีแม่ข่ายหรือลูกข่าย กรุณาเพิ่มสถานีอย่างน้อย 1 สถานีก่อนบันทึก");
+        return;
+      }
+
+      const defaultTitle = masterStations.length === 1
+        ? `${masterStations[0].name} (${masterStations[0].freqMHz} MHz) & ${clientStations.length} ลูกข่าย`
+        : `โครงข่าย ${masterStations.length} แม่ข่าย & ${clientStations.length} ลูกข่าย`;
+
+      const promptMsg = document.getElementById('btn-en')?.classList.contains('active')
+        ? "💾 Save RF Coverage Project:\nEnter a title or description for this project:"
+        : "💾 บันทึกข้อมูลโครงข่าย RF Coverage:\nระบุชื่อหรือคำอธิบายสำหรับโครงข่ายนี้:";
+
+      const userTitle = prompt(promptMsg, defaultTitle);
+      if (userTitle === null) return;
+
+      const finalTitle = userTitle.trim() || defaultTitle;
+      const project = createProjectSnapshot(finalTitle);
+
+      const saved = getStoredSimProjects();
+      saved.unshift(project);
+      setStoredSimProjects(saved);
+      updateSimHistoryBadges();
+
+      showToast(document.getElementById('btn-en')?.classList.contains('active')
+        ? `💾 Saved "${finalTitle}" successfully!`
+        : `💾 บันทึก "${finalTitle}" เรียบร้อยแล้ว!`);
+
+      const modal = document.getElementById('sim-history-modal');
+      if (modal && modal.style.display !== 'none' && currentSimHistoryTab === 'saved') {
+        renderSimHistoryList();
+      }
+    }
+
+    function recordSimCalculationHistory() {
+      if (masterStations.length === 0) return;
+
+      const title = masterStations.length === 1
+        ? `จำลอง ${masterStations[0].name} (${masterStations[0].freqMHz}MHz)`
+        : `จำลองโครงข่าย ${masterStations.length} แม่ข่าย & ${clientStations.length} ลูกข่าย`;
+
+      const snapshot = createProjectSnapshot(title);
+      let history = getStoredSimCalcHistory();
+
+      if (history.length > 0) {
+        const last = history[0];
+        if (last && last.masterCount === snapshot.masterCount &&
+            last.clientCount === snapshot.clientCount &&
+            JSON.stringify(last.masterStations.map(m => [m.lat, m.lon, m.towerHeight, m.freqMHz])) ===
+            JSON.stringify(snapshot.masterStations.map(m => [m.lat, m.lon, m.towerHeight, m.freqMHz]))) {
+          return;
+        }
+      }
+
+      history.unshift(snapshot);
+      if (history.length > 50) history = history.slice(0, 50);
+      setStoredSimCalcHistory(history);
+      updateSimHistoryBadges();
+
+      const modal = document.getElementById('sim-history-modal');
+      if (modal && modal.style.display !== 'none' && currentSimHistoryTab === 'calc') {
+        renderSimHistoryList();
+      }
+    }
+
+    function openSimHistoryModal(tab = 'saved') {
+      const modal = document.getElementById('sim-history-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        switchSimHistoryTab(tab);
+      }
+    }
+
+    function closeSimHistoryModal() {
+      const modal = document.getElementById('sim-history-modal');
+      if (modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    function switchSimHistoryTab(tab) {
+      currentSimHistoryTab = tab;
+      const btnSaved = document.getElementById('tab-sim-saved');
+      const btnCalc = document.getElementById('tab-sim-calc');
+
+      if (tab === 'saved') {
+        if (btnSaved) {
+          btnSaved.style.background = '#ffffff';
+          btnSaved.style.color = '#2563eb';
+          btnSaved.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+          btnSaved.style.fontWeight = '700';
+        }
+        if (btnCalc) {
+          btnCalc.style.background = 'transparent';
+          btnCalc.style.color = '#64748b';
+          btnCalc.style.boxShadow = 'none';
+          btnCalc.style.fontWeight = '600';
+        }
+      } else {
+        if (btnCalc) {
+          btnCalc.style.background = '#ffffff';
+          btnCalc.style.color = '#2563eb';
+          btnCalc.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+          btnCalc.style.fontWeight = '700';
+        }
+        if (btnSaved) {
+          btnSaved.style.background = 'transparent';
+          btnSaved.style.color = '#64748b';
+          btnSaved.style.boxShadow = 'none';
+          btnSaved.style.fontWeight = '600';
+        }
+      }
+      renderSimHistoryList();
+    }
+
+    function renderSimHistoryList() {
+      const container = document.getElementById('sim-history-cards-container');
+      if (!container) return;
+
+      const searchInput = document.getElementById('sim-history-search-input');
+      const q = (searchInput?.value || '').toLowerCase().trim();
+      const isEnglish = document.getElementById('btn-en')?.classList.contains('active');
+
+      const isCalc = (currentSimHistoryTab === 'calc');
+      const list = isCalc ? getStoredSimCalcHistory() : getStoredSimProjects();
+
+      const filtered = list.filter(item => {
+        if (!q) return true;
+        const matchTitle = (item.title || '').toLowerCase().includes(q);
+        const matchTime = (item.timestamp || '').toLowerCase().includes(q);
+        const matchMasters = (item.masterStations || []).some(m =>
+          (m.name || '').toLowerCase().includes(q) ||
+          String(m.lat).includes(q) ||
+          String(m.lon).includes(q) ||
+          String(m.freqMHz).includes(q)
+        );
+        const matchClients = (item.clientStations || []).some(c =>
+          (c.name || '').toLowerCase().includes(q) ||
+          String(c.lat).includes(q) ||
+          String(c.lon).includes(q)
+        );
+        return matchTitle || matchTime || matchMasters || matchClients;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+            <div style="font-size: 3rem; margin-bottom: 0.5rem;">${isCalc ? '🕒' : '💾'}</div>
+            <div style="font-size: 1rem; font-weight: 700; color: #334155;">
+              ${q ? (isEnglish ? 'No matching projects found' : 'ไม่พบรายการที่ตรงกับคำค้นหา') : (isCalc ? (isEnglish ? 'No simulation history recorded yet' : 'ยังไม่มีประวัติการประมวลผลล่าสุด') : (isEnglish ? 'No saved projects yet' : 'ยังไม่มีโครงข่ายที่บันทึกไว้'))}
+            </div>
+            <div style="font-size: 0.82rem; margin-top: 6px; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+              ${q ? (isEnglish ? 'Try another search term or clear the search field.' : 'ลองค้นหาด้วยคำอื่น หรือล้างช่องค้นหาเพื่อดูรายการทั้งหมด') : (isCalc ? (isEnglish ? 'Simulations are automatically recorded here for instant review.' : 'การประมวลผล Coverage ทุกครั้งจะถูกบันทึกประวัติไว้ที่นี่โดยอัตโนมัติ') : (isEnglish ? 'Click "💾 Save Project" in the control panel to save your configured stations.' : 'เมื่อท่านจัดตั้งสถานีแม่ข่ายและลูกข่ายแล้ว สามารถกดปุ่ม "💾 บันทึกข้อมูล" เพื่อเก็บโครงข่ายไว้ดูหรือจำลองย้อนหลังได้ตลอดเวลา'))}
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => `
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 10px;">
+          <!-- Header Row -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+            <div>
+              <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <span>${isCalc ? '🕒' : '💾'}</span>
+                <span>${escapeHtml(item.title)}</span>
+              </div>
+              <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">
+                🕒 ${isEnglish ? 'Saved at:' : 'วันเวลาบันทึก:'} ${item.timestamp}
+              </div>
+            </div>
+            <!-- Badges -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+              <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #bfdbfe;">
+                🗼 แม่ข่าย: ${item.masterCount} สถานี
+              </span>
+              <span style="background: #f0fdf4; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #bbf7d0;">
+                📱 ลูกข่าย: ${item.clientCount} สถานี
+              </span>
+              ${item.kpi?.area && item.kpi.area !== '-' ? `
+              <span style="background: #fef3c7; color: #b45309; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #fde68a;">
+                🗺️ ${escapeHtml(item.kpi.area)}
+              </span>` : ''}
+            </div>
+          </div>
+
+          <!-- Stations List Overview -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; background: #f8fafc; border-radius: 8px; padding: 10px 12px; border: 1px solid #e2e8f0; font-size: 0.8rem;">
+            <!-- Masters Overview -->
+            <div>
+              <div style="font-weight: 700; color: #0369a1; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                🗼 สถานีแม่ข่าย (${item.masterStations.length}):
+              </div>
+              <div style="max-height: 85px; overflow-y: auto; color: #334155; line-height: 1.45;">
+                ${item.masterStations.map(m => `
+                  <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    • <b>${escapeHtml(m.name)}</b> (${m.lat.toFixed(4)}, ${m.lon.toFixed(4)} | เสา ${m.towerHeight}m | ${m.freqMHz}MHz)
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            <!-- Clients Overview -->
+            <div>
+              <div style="font-weight: 700; color: #15803d; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                📱 สถานีลูกข่าย (${item.clientStations.length}):
+              </div>
+              <div style="max-height: 85px; overflow-y: auto; color: #334155; line-height: 1.45;">
+                ${item.clientStations.length > 0 ? item.clientStations.map(c => `
+                  <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                    • <b>${escapeHtml(c.name)}</b> (${c.lat.toFixed(4)}, ${c.lon.toFixed(4)} | เสา ${c.height}m)
+                  </div>
+                `).join('') : '<span style="color:#94a3b8;">ไม่มีสถานีลูกข่าย</span>'}
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 6px; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+            <button type="button" class="btn" onclick="loadSimProject('${item.id}', ${isCalc})" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.78rem; font-weight: 700; padding: 5px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="โหลดโครงข่ายนี้กลับมาจำลองบนแผนที่">
+              📥 โหลดโครงข่าย (Load)
+            </button>
+            ${!isCalc ? `
+            <button type="button" class="btn" onclick="renameSimProject('${item.id}')" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer;" title="แก้ไขชื่อโครงข่าย">
+              ✏️ เปลี่ยนชื่อ
+            </button>` : ''}
+            <button type="button" class="btn" onclick="${isCalc ? `deleteSimCalcHistory('${item.id}')` : `deleteSimProject('${item.id}')`}" style="background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer;" title="ลบรายการนี้">
+              🗑️ ลบ
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadSimProject(id, isCalc = false) {
+      const list = isCalc ? getStoredSimCalcHistory() : getStoredSimProjects();
+      const proj = list.find(p => p.id === id);
+      if (!proj) return;
+
+      masterStations = (proj.masterStations || []).map(m => Object.assign({}, m));
+      clientStations = (proj.clientStations || []).map(c => Object.assign({}, c));
+
+      activeMasterIndex = (proj.activeMasterIndex >= 0 && proj.activeMasterIndex < masterStations.length)
+        ? proj.activeMasterIndex
+        : (masterStations.length > 0 ? 0 : -1);
+
+      if (activeMasterIndex >= 0 && masterStations[activeMasterIndex]) {
+        Object.assign(simState, masterStations[activeMasterIndex]);
+      }
+
+      renderMasterStationsList();
+      updateMasterMarkers();
+      updateClientMarkersAndLinks();
+      renderClientTable();
+      updateKpiDisplay();
+      updateDistributionTable();
+
+      if (map) {
+        const latlngs = [];
+        masterStations.forEach(m => latlngs.push([m.lat, m.lon]));
+        clientStations.forEach(c => latlngs.push([c.lat, c.lon]));
+        if (latlngs.length > 0) {
+          const bounds = L.latLngBounds(latlngs);
+          map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+        }
+      }
+
+      closeSimHistoryModal();
+      showToast(`📥 โหลดโครงข่าย "${proj.title}" เรียบร้อยแล้ว!`);
+
+      if (masterStations.length > 0) {
+        await runFullCoverageSimulation();
+      }
+    }
+
+    function renameSimProject(id) {
+      const saved = getStoredSimProjects();
+      const item = saved.find(p => p.id === id);
+      if (!item) return;
+
+      const promptMsg = document.getElementById('btn-en')?.classList.contains('active')
+        ? "Rename RF Project:"
+        : "เปลี่ยนชื่อโครงข่าย:";
+      const newTitle = prompt(promptMsg, item.title || '');
+      if (newTitle === null) return;
+
+      if (newTitle.trim()) {
+        item.title = newTitle.trim();
+        setStoredSimProjects(saved);
+        renderSimHistoryList();
+        showToast("✏️ เปลี่ยนชื่อโครงข่ายเรียบร้อยแล้ว!");
+      }
+    }
+
+    function deleteSimProject(id) {
+      if (!confirm("คุณต้องการลบโครงข่ายนี้ใช่หรือไม่?")) return;
+      let saved = getStoredSimProjects();
+      saved = saved.filter(p => p.id !== id);
+      setStoredSimProjects(saved);
+      updateSimHistoryBadges();
+      renderSimHistoryList();
+      showToast("🗑️ ลบโครงข่ายเรียบร้อยแล้ว");
+    }
+
+    function deleteSimCalcHistory(id) {
+      if (!confirm("คุณต้องการลบประวัตินี้ใช่หรือไม่?")) return;
+      let history = getStoredSimCalcHistory();
+      history = history.filter(h => h.id !== id);
+      setStoredSimCalcHistory(history);
+      updateSimHistoryBadges();
+      renderSimHistoryList();
+      showToast("🗑️ ลบประวัติเรียบร้อยแล้ว");
+    }
+
+    function clearCurrentSimHistoryTab() {
+      if (currentSimHistoryTab === 'saved') {
+        const saved = getStoredSimProjects();
+        if (saved.length === 0) return;
+        if (confirm("คุณต้องการล้างโครงข่ายที่บันทึกไว้ทั้งหมดหรือไม่? (ไม่สามารถย้อนกลับได้)")) {
+          localStorage.removeItem('rf_coverage_saved_projects');
+          updateSimHistoryBadges();
+          renderSimHistoryList();
+          showToast("🗑️ ล้างโครงข่ายที่บันทึกไว้ทั้งหมดแล้ว");
+        }
+      } else {
+        const calc = getStoredSimCalcHistory();
+        if (calc.length === 0) return;
+        if (confirm("คุณต้องการล้างประวัติการประมวลผลทั้งหมดหรือไม่?")) {
+          localStorage.removeItem('rf_coverage_calc_history');
+          updateSimHistoryBadges();
+          renderSimHistoryList();
+          showToast("🗑️ ล้างประวัติทั้งหมดแล้ว");
+        }
+      }
+    }
+
+    function exportSimHistoryToExcel() {
+      const savedProjects = getStoredSimProjects();
+      const calcHistory = getStoredSimCalcHistory();
+
+      if (savedProjects.length === 0 && calcHistory.length === 0) {
+        alert("ไม่มีข้อมูลโครงข่ายที่บันทึกไว้หรือประวัติการคำนวณสำหรับส่งออก");
+        return;
+      }
+
+      if (typeof XLSX !== 'undefined') {
+        const wb = XLSX.utils.book_new();
+
+        // Sheet 1: Master Stations
+        const masterHeaders = [
+          "ลำดับ", "ชื่อโครงข่าย (Project)", "วันเวลา (Timestamp)", "ชื่อสถานีแม่ข่าย (Master)",
+          "ละติจูด (Lat)", "ลองจิจูด (Lon)", "ความสูงเสา (m)", "ระดับดิน MSL (m)",
+          "ความถี่ (MHz)", "กำลังส่ง (Watts)", "กำลังส่ง (dBm)", "สูญเสียสายนำ (dB)",
+          "ชนิดสายอากาศ", "อัตราขยาย (dBi)", "มุมกวาด (Azimuth)", "ความกว้างลำคลื่น (Beamwidth)",
+          "มุมก้มเงย (Tilt)", "โมเดลแพร่คลื่น (Prop Model)", "รัศมีคำนวณ (km)"
+        ];
+        const masterRows = [masterHeaders];
+        let mIdx = 1;
+
+        const projectsToExport = savedProjects.length > 0 ? savedProjects : calcHistory;
+        projectsToExport.forEach(proj => {
+          (proj.masterStations || []).forEach(m => {
+            masterRows.push([
+              mIdx++,
+              proj.title || '',
+              proj.timestamp || '',
+              m.name || '',
+              m.lat ?? '',
+              m.lon ?? '',
+              m.towerHeight ?? '',
+              m.groundElev ?? '',
+              m.freqMHz ?? '',
+              m.powerWatts ?? '',
+              m.powerDbm ?? '',
+              m.cableLoss ?? '',
+              m.antType ?? '',
+              m.antGain ?? '',
+              m.antAzimuth ?? '',
+              m.antBeamwidth ?? '',
+              m.antTilt ?? '',
+              m.propModel ?? '',
+              m.maxRadiusKm ?? ''
+            ]);
+          });
+        });
+
+        const wsMasters = XLSX.utils.aoa_to_sheet(masterRows);
+        XLSX.utils.book_append_sheet(wb, wsMasters, "Master Stations");
+
+        // Sheet 2: Client Stations
+        const clientHeaders = [
+          "ลำดับ", "ชื่อโครงข่าย (Project)", "วันเวลา (Timestamp)", "ชื่อสถานีลูกข่าย (Client)",
+          "ละติจูด (Lat)", "ลองจิจูด (Lon)", "ความสูงเสา (m)", "ระดับดิน MSL (m)"
+        ];
+        const clientRows = [clientHeaders];
+        let cIdx = 1;
+
+        projectsToExport.forEach(proj => {
+          (proj.clientStations || []).forEach(c => {
+            clientRows.push([
+              cIdx++,
+              proj.title || '',
+              proj.timestamp || '',
+              c.name || '',
+              c.lat ?? '',
+              c.lon ?? '',
+              c.height ?? '',
+              c.groundElev ?? ''
+            ]);
+          });
+        });
+
+        const wsClients = XLSX.utils.aoa_to_sheet(clientRows);
+        XLSX.utils.book_append_sheet(wb, wsClients, "Client Stations");
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        XLSX.writeFile(wb, `RF_Coverage_Projects_${dateStr}.xlsx`);
+        showToast("📊 ส่งออกไฟล์ Excel เรียบร้อยแล้ว!");
+      } else {
+        // Fallback: CSV export
+        let csv = "\uFEFFลำดับ,ชื่อโครงข่าย,วันเวลา,ประเภท,ชื่อสถานี,Lat,Lon,ความสูงเสา,ความถี่\r\n";
+        let count = 1;
+        const projectsToExport = savedProjects.length > 0 ? savedProjects : calcHistory;
+        projectsToExport.forEach(proj => {
+          (proj.masterStations || []).forEach(m => {
+            csv += `"${count++}","${(proj.title||'').replace(/"/g, '""')}","${proj.timestamp}","แม่ข่าย","${(m.name||'').replace(/"/g, '""')}","${m.lat}","${m.lon}","${m.towerHeight}","${m.freqMHz}"\r\n`;
+          });
+          (proj.clientStations || []).forEach(c => {
+            csv += `"${count++}","${(proj.title||'').replace(/"/g, '""')}","${proj.timestamp}","ลูกข่าย","${(c.name||'').replace(/"/g, '""')}","${c.lat}","${c.lon}","${c.height}","-"\r\n`;
+          });
+        });
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `RF_Coverage_Projects_${new Date().toISOString().slice(0, 10)}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast("📊 ส่งออกไฟล์ CSV เรียบร้อยแล้ว!");
+      }
     }
 
     function showToast(msg) {
