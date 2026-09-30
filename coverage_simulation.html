@@ -1327,9 +1327,9 @@
             </div>
 
             <div style="display: flex; gap: 6px; margin-bottom: 8px;">
-              <input type="text" id="new-client-name" class="form-input" style="flex: 2; padding: 5px 8px; font-size: 0.8rem;" placeholder="ชื่อลูกข่ายใหม่..." onkeydown="if(event.key==='Enter') openClientModal('add')" />
-              <input type="number" step="0.5" min="1" id="new-client-height" class="form-input" style="width: 70px; padding: 5px 8px; font-size: 0.8rem;" value="3.0" placeholder="เสา m" title="ความสูงเสาลูกข่าย (เมตร)" onkeydown="if(event.key==='Enter') openClientModal('add')" />
-              <button type="button" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem; font-weight: 700;" onclick="openClientModal('add')" title="กดเพิ่มสถานีลูกข่าย">
+              <input type="text" id="new-client-name" class="form-input" style="flex: 2; padding: 5px 8px; font-size: 0.8rem;" placeholder="ชื่อลูกข่ายใหม่..." onkeydown="if(event.key==='Enter') quickAddClientFromSidebar()" />
+              <input type="number" step="0.5" min="1" id="new-client-height" class="form-input" style="width: 70px; padding: 5px 8px; font-size: 0.8rem;" value="3.0" placeholder="เสา m" title="ความสูงเสาลูกข่าย (เมตร)" onkeydown="if(event.key==='Enter') quickAddClientFromSidebar()" />
+              <button type="button" class="btn btn-primary" style="padding: 5px 10px; font-size: 0.8rem; font-weight: 700;" onclick="quickAddClientFromSidebar()" title="กดเพิ่มสถานีลูกข่ายทันที">
                 ➕ เพิ่ม
               </button>
             </div>
@@ -2074,9 +2074,10 @@
         </div>
       </div>
     </div>
+  </div>
 
   <!-- Modal for Simulation History & Saved Projects -->
-  <div id="sim-history-modal" class="modal-backdrop" onclick="if(event.target === this) closeSimHistoryModal()" style="display: none;">
+  <div id="sim-history-modal" class="modal-backdrop" onclick="if(event.target === this) closeSimHistoryModal()" style="display: none; z-index: 100000;">
     <div class="modal-dialog" style="max-width: 980px; max-height: 88vh;">
       <div class="modal-header" style="background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-bottom: 1px solid #cbd5e1; padding: 1rem 1.5rem;">
         <div style="display: flex; align-items: center; gap: 10px;">
@@ -5035,7 +5036,8 @@
       if (idx < 0 || idx >= clientStations.length) return;
       const c = clientStations[idx];
       if (map) {
-        map.setView([c.lat, c.lon], Math.max(map.getZoom(), 14));
+        const currentZoom = (typeof map.getZoom === 'function' ? map.getZoom() : 14) || 14;
+        map.setView([c.lat, c.lon], Math.max(currentZoom, 14));
         showToast(`ซูมไปยัง ${c.name}`);
       }
     }
@@ -5105,6 +5107,77 @@
       showToast('📍 คลิกบนแผนที่ ณ จุดที่ต้องการตั้งสถานีลูกข่าย');
     }
 
+    function quickAddClientFromSidebar() {
+      const nameInput = document.getElementById('new-client-name');
+      const heightInput = document.getElementById('new-client-height');
+
+      const name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `ลูกข่าย ${clientStations.length + 1}`;
+      const height = (heightInput && parseFloat(heightInput.value)) ? parseFloat(heightInput.value) : 3.0;
+
+      // Determine initial coordinates:
+      let lat = 14.8698;
+      let lon = 99.8518;
+
+      if (activeMasterIndex >= 0 && masterStations[activeMasterIndex]) {
+        lat = masterStations[activeMasterIndex].lat;
+        lon = masterStations[activeMasterIndex].lon;
+      } else if (masterStations.length > 0) {
+        lat = masterStations[0].lat;
+        lon = masterStations[0].lon;
+      } else if (map && typeof map.getCenter === 'function') {
+        const center = map.getCenter();
+        lat = center.lat;
+        lon = center.lng;
+      }
+
+      // Add a slight spatial offset so markers don't overlap exactly on the master station or existing clients
+      if (clientStations.length > 0) {
+        const step = clientStations.length;
+        const angle = (step * 55) * (Math.PI / 180);
+        const radiusDeg = 0.02 + (Math.floor(step / 6) * 0.015);
+        lat += radiusDeg * Math.sin(angle);
+        lon += radiusDeg * Math.cos(angle);
+      } else {
+        lat += 0.025;
+        lon += 0.025;
+      }
+
+      const newClient = {
+        id: Date.now(),
+        name: name,
+        lat: parseFloat(lat.toFixed(6)),
+        lon: parseFloat(lon.toFixed(6)),
+        height: height,
+        groundElev: null
+      };
+
+      clientStations.push(newClient);
+      if (nameInput) nameInput.value = '';
+
+      updateClientMarkersAndLinks();
+      renderClientTable();
+
+      // Pan map to new client safely
+      if (map) {
+        const zoom = (typeof map.getZoom === 'function' ? map.getZoom() : 12) || 12;
+        map.setView([newClient.lat, newClient.lon], Math.max(zoom, 12));
+        setTimeout(() => {
+          if (clientMarkersGroup) {
+            clientMarkersGroup.eachLayer(layer => {
+              if (layer && typeof layer.getLatLng === 'function') {
+                const pos = layer.getLatLng();
+                if (pos && Math.abs(pos.lat - newClient.lat) < 0.0001 && Math.abs(pos.lng - newClient.lon) < 0.0001) {
+                  if (typeof layer.openTooltip === 'function') layer.openTooltip();
+                }
+              }
+            });
+          }
+        }, 300);
+      }
+
+      showToast(`✅ เพิ่มสถานีลูกข่าย "${name}" เรียบร้อยแล้ว (สามารถลากหมุดบนแผนที่เพื่อย้ายตำแหน่งได้)`);
+    }
+
     function openClientModal(mode = 'add', idx = -1, clickLat = null, clickLon = null) {
       const modal = document.getElementById('client-params-modal');
       if (!modal) return;
@@ -5119,8 +5192,8 @@
         const c = clientStations[modalClientTargetIndex];
         if (title) title.innerHTML = `✏️ แก้ไขข้อมูลสถานีลูกข่าย: <b>${c.name}</b>`;
         document.getElementById('modal-client-name').value = c.name;
-        document.getElementById('modal-client-lat').value = c.lat.toFixed(6);
-        document.getElementById('modal-client-lon').value = c.lon.toFixed(6);
+        document.getElementById('modal-client-lat').value = Number(c.lat).toFixed(6);
+        document.getElementById('modal-client-lon').value = Number(c.lon).toFixed(6);
         document.getElementById('modal-client-height').value = c.height;
         document.getElementById('modal-client-ground-elev').value = (c.groundElev !== null && c.groundElev !== undefined && !isNaN(c.groundElev)) ? c.groundElev : '';
       } else {
@@ -5136,13 +5209,16 @@
         if (clickLat !== null && clickLon !== null) {
           lat = clickLat;
           lon = clickLon;
-        } else if (map) {
-          const center = map.getCenter();
-          lat = center.lat;
-          lon = center.lng;
+        } else if (activeMasterIndex >= 0 && masterStations[activeMasterIndex]) {
+          lat = masterStations[activeMasterIndex].lat + 0.02;
+          lon = masterStations[activeMasterIndex].lon + 0.02;
         } else if (masterStations.length > 0) {
           lat = masterStations[0].lat + 0.02;
           lon = masterStations[0].lon + 0.02;
+        } else if (map && typeof map.getCenter === 'function') {
+          const center = map.getCenter();
+          lat = center.lat;
+          lon = center.lng;
         }
 
         document.getElementById('modal-client-lat').value = lat.toFixed(6);
@@ -5174,13 +5250,40 @@
       const elevEl = document.getElementById('modal-client-ground-elev');
 
       const name = (nameEl && nameEl.value.trim()) ? nameEl.value.trim() : `ลูกข่าย ${clientStations.length + 1}`;
-      const lat = parseFloat(latEl ? latEl.value : NaN);
-      const lon = parseFloat(lonEl ? lonEl.value : NaN);
+      
+      let latStr = latEl ? latEl.value.trim() : '';
+      let lonStr = lonEl ? lonEl.value.trim() : '';
+
+      // Smart paste support: if user pasted "14.882, 99.865" into Lat
+      if (latStr.includes(',') && (!lonStr || lonStr === '')) {
+        const parts = latStr.split(/[\s,]+/);
+        if (parts.length >= 2) {
+          latStr = parts[0];
+          lonStr = parts[1];
+          if (latEl) latEl.value = latStr;
+          if (lonEl) lonEl.value = lonStr;
+        }
+      }
+
+      let lat = parseFloat(latStr.replace(',', '.'));
+      let lon = parseFloat(lonStr.replace(',', '.'));
       const height = parseFloat(heightEl ? heightEl.value : 3.0) || 3.0;
       const groundElev = elevEl && elevEl.value !== '' ? (parseFloat(elevEl.value) || null) : null;
 
+      // Intelligent fallback if coordinates are empty
+      if (isNaN(lat) || isNaN(lon)) {
+        if (map && typeof map.getCenter === 'function') {
+          const c = map.getCenter();
+          lat = isNaN(lat) ? c.lat : lat;
+          lon = isNaN(lon) ? c.lng : lon;
+        } else if (masterStations.length > 0) {
+          lat = isNaN(lat) ? masterStations[0].lat + 0.02 : lat;
+          lon = isNaN(lon) ? masterStations[0].lon + 0.02 : lon;
+        }
+      }
+
       if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) {
-        alert("กรุณากรอกพิกัดละติจูดและลองจิจูดให้ถูกต้อง");
+        alert("กรุณากรอกพิกัดละติจูดและลองจิจูดให้ถูกต้อง (เช่น 14.882000, 99.865000)");
         return;
       }
 
@@ -5212,15 +5315,18 @@
       updateClientMarkersAndLinks();
       renderClientTable();
 
-      // Pan map to the client station and open its tooltip
+      // Pan map to the client station and open its tooltip safely
       if (map) {
-        map.setView([lat, lon], Math.max(map.getZoom(), 12));
+        const zoom = (typeof map.getZoom === 'function' ? map.getZoom() : 12) || 12;
+        map.setView([lat, lon], Math.max(zoom, 12));
         setTimeout(() => {
           if (clientMarkersGroup) {
             clientMarkersGroup.eachLayer(layer => {
-              const pos = layer.getLatLng();
-              if (Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lon) < 0.0001) {
-                if (layer.openTooltip) layer.openTooltip();
+              if (layer && typeof layer.getLatLng === 'function') {
+                const pos = layer.getLatLng();
+                if (pos && Math.abs(pos.lat - lat) < 0.0001 && Math.abs(pos.lng - lon) < 0.0001) {
+                  if (typeof layer.openTooltip === 'function') layer.openTooltip();
+                }
               }
             });
           }
@@ -7399,28 +7505,94 @@
        ========================================================================== */
     let currentSimHistoryTab = 'saved';
 
+    function sanitizeStoredProjects(projects) {
+      if (!Array.isArray(projects)) return [];
+      return projects.map(p => {
+        if (!p || typeof p !== 'object') return null;
+        if (Array.isArray(p.masterStations)) {
+          p.masterStations.forEach(m => {
+            if (m && typeof m === 'object') delete m.coverageGrid;
+          });
+        }
+        if (Array.isArray(p.clientStations)) {
+          p.clientStations = p.clientStations.map(c => {
+            if (!c || typeof c !== 'object') return null;
+            return {
+              id: c.id || Date.now(),
+              name: c.name || 'ลูกข่าย',
+              lat: parseFloat(c.lat) || 0,
+              lon: parseFloat(c.lon) || 0,
+              height: parseFloat(c.height) || 3.0,
+              groundElev: (c.groundElev !== null && c.groundElev !== undefined && !isNaN(c.groundElev)) ? parseFloat(c.groundElev) : null
+            };
+          }).filter(Boolean);
+        }
+        return p;
+      }).filter(Boolean);
+    }
+
     function getStoredSimProjects() {
       try {
         const raw = localStorage.getItem('rf_coverage_saved_projects');
-        return raw ? JSON.parse(raw) : [];
+        if (!raw) return [];
+        return sanitizeStoredProjects(JSON.parse(raw));
       } catch (e) {
         console.warn('Error reading rf_coverage_saved_projects', e);
         return [];
       }
     }
 
-    function setStoredSimProjects(projects) {
+    function cleanupLegacyStorageBloat() {
       try {
-        localStorage.setItem('rf_coverage_saved_projects', JSON.stringify(projects));
+        // 1. Purge oversized legacy calculation history
+        const rawCalc = localStorage.getItem('rf_coverage_calc_history');
+        if (rawCalc && rawCalc.length > 250000) { // > 250 KB
+          const parsed = JSON.parse(rawCalc);
+          const sanitized = sanitizeStoredProjects(parsed).slice(0, 10);
+          localStorage.setItem('rf_coverage_calc_history', JSON.stringify(sanitized));
+        }
       } catch (e) {
-        console.warn('Error saving rf_coverage_saved_projects', e);
+        try { localStorage.removeItem('rf_coverage_calc_history'); } catch (e2) {}
+      }
+
+      try {
+        // 2. Sanitize existing saved projects
+        const rawProj = localStorage.getItem('rf_coverage_saved_projects');
+        if (rawProj) {
+          const parsed = JSON.parse(rawProj);
+          const sanitized = sanitizeStoredProjects(parsed);
+          localStorage.setItem('rf_coverage_saved_projects', JSON.stringify(sanitized));
+        }
+      } catch (e) {
+        console.warn('Error sanitizing rf_coverage_saved_projects', e);
+      }
+    }
+
+    function setStoredSimProjects(projects) {
+      const sanitized = sanitizeStoredProjects(projects);
+      try {
+        localStorage.setItem('rf_coverage_saved_projects', JSON.stringify(sanitized));
+        return true;
+      } catch (e) {
+        console.warn('Quota exceeded on rf_coverage_saved_projects, performing emergency purge...', e);
+        try {
+          cleanupLegacyStorageBloat();
+          const trimmed = sanitized.slice(0, 10);
+          localStorage.setItem('rf_coverage_saved_projects', JSON.stringify(trimmed));
+          return true;
+        } catch (e2) {
+          console.error('Failed to save rf_coverage_saved_projects', e2);
+          showToast('⚠️ ไม่สามารถบันทึกลงเบราว์เซอร์ได้ (พื้นที่จัดเก็บเต็ม กรุณาล้างประวัติการจำลอง)');
+          return false;
+        }
       }
     }
 
     function getStoredSimCalcHistory() {
       try {
         const raw = localStorage.getItem('rf_coverage_calc_history');
-        return raw ? JSON.parse(raw) : [];
+        if (!raw) return [];
+        return sanitizeStoredProjects(JSON.parse(raw));
       } catch (e) {
         console.warn('Error reading rf_coverage_calc_history', e);
         return [];
@@ -7428,10 +7600,17 @@
     }
 
     function setStoredSimCalcHistory(history) {
+      const sanitized = sanitizeStoredProjects(history);
       try {
-        localStorage.setItem('rf_coverage_calc_history', JSON.stringify(history));
+        localStorage.setItem('rf_coverage_calc_history', JSON.stringify(sanitized));
       } catch (e) {
-        console.warn('Error saving rf_coverage_calc_history', e);
+        console.warn('Quota exceeded on rf_coverage_calc_history, trimming...', e);
+        try {
+          const trimmed = sanitized.slice(0, 10);
+          localStorage.setItem('rf_coverage_calc_history', JSON.stringify(trimmed));
+        } catch (e2) {
+          console.error('Failed to save rf_coverage_calc_history', e2);
+        }
       }
     }
 
@@ -7453,6 +7632,7 @@
     }
 
     function initSimHistoryStorage() {
+      cleanupLegacyStorageBloat();
       updateSimHistoryBadges();
     }
 
@@ -7472,7 +7652,15 @@
         return copy;
       });
 
-      const cleanClients = clientStations.map(c => Object.assign({}, c));
+      // Strip circular or massive properties from client stations (bestMaster coverageGrid, calc, etc.)
+      const cleanClients = clientStations.map(c => ({
+        id: c.id || Date.now(),
+        name: c.name || `ลูกข่าย`,
+        lat: parseFloat(c.lat) || 0,
+        lon: parseFloat(c.lon) || 0,
+        height: parseFloat(c.height) || 3.0,
+        groundElev: (c.groundElev !== null && c.groundElev !== undefined && !isNaN(c.groundElev)) ? parseFloat(c.groundElev) : null
+      }));
 
       const areaText = document.getElementById('kpi-coverage-area')?.innerText || '-';
       const radiusText = document.getElementById('kpi-max-radius')?.innerText || '-';
@@ -7519,12 +7707,14 @@
 
       const saved = getStoredSimProjects();
       saved.unshift(project);
-      setStoredSimProjects(saved);
+      const isSuccess = setStoredSimProjects(saved);
       updateSimHistoryBadges();
 
-      showToast(document.getElementById('btn-en')?.classList.contains('active')
-        ? `💾 Saved "${finalTitle}" successfully!`
-        : `💾 บันทึก "${finalTitle}" เรียบร้อยแล้ว!`);
+      if (isSuccess !== false) {
+        showToast(document.getElementById('btn-en')?.classList.contains('active')
+          ? `💾 Saved "${finalTitle}" successfully!`
+          : `💾 บันทึก "${finalTitle}" เรียบร้อยแล้ว!`);
+      }
 
       const modal = document.getElementById('sim-history-modal');
       if (modal && modal.style.display !== 'none' && currentSimHistoryTab === 'saved') {
@@ -7567,6 +7757,7 @@
       const modal = document.getElementById('sim-history-modal');
       if (modal) {
         modal.style.display = 'flex';
+        modal.style.zIndex = '100000';
         switchSimHistoryTab(tab);
       }
     }
@@ -7617,119 +7808,136 @@
       const container = document.getElementById('sim-history-cards-container');
       if (!container) return;
 
-      const searchInput = document.getElementById('sim-history-search-input');
-      const q = (searchInput?.value || '').toLowerCase().trim();
-      const isEnglish = document.getElementById('btn-en')?.classList.contains('active');
+      try {
+        const searchInput = document.getElementById('sim-history-search-input');
+        const q = (searchInput?.value || '').toLowerCase().trim();
+        const isEnglish = document.getElementById('btn-en')?.classList.contains('active');
 
-      const isCalc = (currentSimHistoryTab === 'calc');
-      const list = isCalc ? getStoredSimCalcHistory() : getStoredSimProjects();
+        const isCalc = (currentSimHistoryTab === 'calc');
+        const list = isCalc ? getStoredSimCalcHistory() : getStoredSimProjects();
 
-      const filtered = list.filter(item => {
-        if (!q) return true;
-        const matchTitle = (item.title || '').toLowerCase().includes(q);
-        const matchTime = (item.timestamp || '').toLowerCase().includes(q);
-        const matchMasters = (item.masterStations || []).some(m =>
-          (m.name || '').toLowerCase().includes(q) ||
-          String(m.lat).includes(q) ||
-          String(m.lon).includes(q) ||
-          String(m.freqMHz).includes(q)
-        );
-        const matchClients = (item.clientStations || []).some(c =>
-          (c.name || '').toLowerCase().includes(q) ||
-          String(c.lat).includes(q) ||
-          String(c.lon).includes(q)
-        );
-        return matchTitle || matchTime || matchMasters || matchClients;
-      });
+        const filtered = list.filter(item => {
+          if (!q) return true;
+          const matchTitle = (item.title || '').toLowerCase().includes(q);
+          const matchTime = (item.timestamp || '').toLowerCase().includes(q);
+          const matchMasters = (item.masterStations || []).some(m =>
+            (m.name || '').toLowerCase().includes(q) ||
+            String(m.lat).includes(q) ||
+            String(m.lon).includes(q) ||
+            String(m.freqMHz).includes(q)
+          );
+          const matchClients = (item.clientStations || []).some(c =>
+            (c.name || '').toLowerCase().includes(q) ||
+            String(c.lat).includes(q) ||
+            String(c.lon).includes(q)
+          );
+          return matchTitle || matchTime || matchMasters || matchClients;
+        });
 
-      if (filtered.length === 0) {
-        container.innerHTML = `
-          <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
-            <div style="font-size: 3rem; margin-bottom: 0.5rem;">${isCalc ? '🕒' : '💾'}</div>
-            <div style="font-size: 1rem; font-weight: 700; color: #334155;">
-              ${q ? (isEnglish ? 'No matching projects found' : 'ไม่พบรายการที่ตรงกับคำค้นหา') : (isCalc ? (isEnglish ? 'No simulation history recorded yet' : 'ยังไม่มีประวัติการประมวลผลล่าสุด') : (isEnglish ? 'No saved projects yet' : 'ยังไม่มีโครงข่ายที่บันทึกไว้'))}
+        if (filtered.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
+              <div style="font-size: 3rem; margin-bottom: 0.5rem;">${isCalc ? '🕒' : '💾'}</div>
+              <div style="font-size: 1rem; font-weight: 700; color: #334155;">
+                ${q ? (isEnglish ? 'No matching projects found' : 'ไม่พบรายการที่ตรงกับคำค้นหา') : (isCalc ? (isEnglish ? 'No simulation history recorded yet' : 'ยังไม่มีประวัติการประมวลผลล่าสุด') : (isEnglish ? 'No saved projects yet' : 'ยังไม่มีโครงข่ายที่บันทึกไว้'))}
+              </div>
+              <div style="font-size: 0.82rem; margin-top: 6px; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+                ${q ? (isEnglish ? 'Try another search term or clear the search field.' : 'ลองค้นหาด้วยคำอื่น หรือล้างช่องค้นหาเพื่อดูรายการทั้งหมด') : (isCalc ? (isEnglish ? 'Simulations are automatically recorded here for instant review.' : 'การประมวลผล Coverage ทุกครั้งจะถูกบันทึกประวัติไว้ที่นี่โดยอัตโนมัติ') : (isEnglish ? 'Click "💾 Save Project" in the control panel to save your configured stations.' : 'เมื่อท่านจัดตั้งสถานีแม่ข่ายและลูกข่ายแล้ว สามารถกดปุ่ม "💾 บันทึกข้อมูล" เพื่อเก็บโครงข่ายไว้ดูหรือจำลองย้อนหลังได้ตลอดเวลา'))}
+              </div>
             </div>
-            <div style="font-size: 0.82rem; margin-top: 6px; max-width: 440px; margin-left: auto; margin-right: auto; line-height: 1.5;">
-              ${q ? (isEnglish ? 'Try another search term or clear the search field.' : 'ลองค้นหาด้วยคำอื่น หรือล้างช่องค้นหาเพื่อดูรายการทั้งหมด') : (isCalc ? (isEnglish ? 'Simulations are automatically recorded here for instant review.' : 'การประมวลผล Coverage ทุกครั้งจะถูกบันทึกประวัติไว้ที่นี่โดยอัตโนมัติ') : (isEnglish ? 'Click "💾 Save Project" in the control panel to save your configured stations.' : 'เมื่อท่านจัดตั้งสถานีแม่ข่ายและลูกข่ายแล้ว สามารถกดปุ่ม "💾 บันทึกข้อมูล" เพื่อเก็บโครงข่ายไว้ดูหรือจำลองย้อนหลังได้ตลอดเวลา'))}
+          `;
+          return;
+        }
+
+        container.innerHTML = filtered.map(item => `
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 10px;">
+            <!-- Header Row -->
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+              <div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                  <span>${isCalc ? '🕒' : '💾'}</span>
+                  <span>${escapeHtml(item.title)}</span>
+                </div>
+                <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">
+                  🕒 ${isEnglish ? 'Saved at:' : 'วันเวลาบันทึก:'} ${item.timestamp}
+                </div>
+              </div>
+              <!-- Badges -->
+              <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
+                <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #bfdbfe;">
+                  🗼 แม่ข่าย: ${item.masterCount || (item.masterStations ? item.masterStations.length : 0)} สถานี
+                </span>
+                <span style="background: #f0fdf4; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #bbf7d0;">
+                  📱 ลูกข่าย: ${item.clientCount || (item.clientStations ? item.clientStations.length : 0)} สถานี
+                </span>
+                ${item.kpi?.area && item.kpi.area !== '-' ? `
+                <span style="background: #fef3c7; color: #b45309; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #fde68a;">
+                  🗺️ ${escapeHtml(item.kpi.area)}
+                </span>` : ''}
+              </div>
+            </div>
+
+            <!-- Stations List Overview -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; background: #f8fafc; border-radius: 8px; padding: 10px 12px; border: 1px solid #e2e8f0; font-size: 0.8rem;">
+              <!-- Masters Overview -->
+              <div>
+                <div style="font-weight: 700; color: #0369a1; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                  🗼 สถานีแม่ข่าย (${item.masterStations ? item.masterStations.length : 0}):
+                </div>
+                <div style="max-height: 85px; overflow-y: auto; color: #334155; line-height: 1.45;">
+                  ${(item.masterStations || []).map(m => {
+                    const latVal = typeof m.lat === 'number' ? m.lat : parseFloat(m.lat || 0);
+                    const lonVal = typeof m.lon === 'number' ? m.lon : parseFloat(m.lon || 0);
+                    const latStr = !isNaN(latVal) ? latVal.toFixed(4) : '-';
+                    const lonStr = !isNaN(lonVal) ? lonVal.toFixed(4) : '-';
+                    return `
+                      <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        • <b>${escapeHtml(m.name || 'แม่ข่าย')}</b> (${latStr}, ${lonStr} | เสา ${m.towerHeight || 0}m | ${m.freqMHz || 0}MHz)
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              </div>
+              <!-- Clients Overview -->
+              <div>
+                <div style="font-weight: 700; color: #15803d; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                  📱 สถานีลูกข่าย (${item.clientStations ? item.clientStations.length : 0}):
+                </div>
+                <div style="max-height: 85px; overflow-y: auto; color: #334155; line-height: 1.45;">
+                  ${(item.clientStations && item.clientStations.length > 0) ? item.clientStations.map(c => {
+                    const latVal = typeof c.lat === 'number' ? c.lat : parseFloat(c.lat || 0);
+                    const lonVal = typeof c.lon === 'number' ? c.lon : parseFloat(c.lon || 0);
+                    const latStr = !isNaN(latVal) ? latVal.toFixed(4) : '-';
+                    const lonStr = !isNaN(lonVal) ? lonVal.toFixed(4) : '-';
+                    return `
+                      <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        • <b>${escapeHtml(c.name || 'ลูกข่าย')}</b> (${latStr}, ${lonStr} | เสา ${c.height || 0}m)
+                      </div>
+                    `;
+                  }).join('') : '<span style="color:#94a3b8;">ไม่มีสถานีลูกข่าย</span>'}
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 6px; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+              <button type="button" class="btn" onclick="loadSimProject('${item.id}', ${isCalc})" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.78rem; font-weight: 700; padding: 5px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="โหลดโครงข่ายนี้กลับมาจำลองบนแผนที่">
+                📥 โหลดโครงข่าย (Load)
+              </button>
+              ${!isCalc ? `
+              <button type="button" class="btn" onclick="renameSimProject('${item.id}')" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer;" title="แก้ไขชื่อโครงข่าย">
+                ✏️ เปลี่ยนชื่อ
+              </button>` : ''}
+              <button type="button" class="btn" onclick="${isCalc ? `deleteSimCalcHistory('${item.id}')` : `deleteSimProject('${item.id}')`}" style="background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer;" title="ลบรายการนี้">
+                🗑️ ลบ
+              </button>
             </div>
           </div>
-        `;
-        return;
+        `).join('');
+      } catch (err) {
+        console.error('Error rendering sim history list:', err);
+        container.innerHTML = `<div style="color:#dc2626; padding:12px; background:#fef2f2; border-radius:6px;">เกิดข้อผิดพลาดในการโหลดรายการประวัติ: ${escapeHtml(err.message)}</div>`;
       }
-
-      container.innerHTML = filtered.map(item => `
-        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); display: flex; flex-direction: column; gap: 10px;">
-          <!-- Header Row -->
-          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
-            <div>
-              <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                <span>${isCalc ? '🕒' : '💾'}</span>
-                <span>${escapeHtml(item.title)}</span>
-              </div>
-              <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">
-                🕒 ${isEnglish ? 'Saved at:' : 'วันเวลาบันทึก:'} ${item.timestamp}
-              </div>
-            </div>
-            <!-- Badges -->
-            <div style="display: flex; gap: 6px; flex-wrap: wrap; align-items: center;">
-              <span style="background: #eff6ff; color: #1d4ed8; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #bfdbfe;">
-                🗼 แม่ข่าย: ${item.masterCount} สถานี
-              </span>
-              <span style="background: #f0fdf4; color: #15803d; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #bbf7d0;">
-                📱 ลูกข่าย: ${item.clientCount} สถานี
-              </span>
-              ${item.kpi?.area && item.kpi.area !== '-' ? `
-              <span style="background: #fef3c7; color: #b45309; font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 12px; border: 1px solid #fde68a;">
-                🗺️ ${escapeHtml(item.kpi.area)}
-              </span>` : ''}
-            </div>
-          </div>
-
-          <!-- Stations List Overview -->
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px; background: #f8fafc; border-radius: 8px; padding: 10px 12px; border: 1px solid #e2e8f0; font-size: 0.8rem;">
-            <!-- Masters Overview -->
-            <div>
-              <div style="font-weight: 700; color: #0369a1; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                🗼 สถานีแม่ข่าย (${item.masterStations.length}):
-              </div>
-              <div style="max-height: 85px; overflow-y: auto; color: #334155; line-height: 1.45;">
-                ${item.masterStations.map(m => `
-                  <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    • <b>${escapeHtml(m.name)}</b> (${m.lat.toFixed(4)}, ${m.lon.toFixed(4)} | เสา ${m.towerHeight}m | ${m.freqMHz}MHz)
-                  </div>
-                `).join('')}
-              </div>
-            </div>
-            <!-- Clients Overview -->
-            <div>
-              <div style="font-weight: 700; color: #15803d; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
-                📱 สถานีลูกข่าย (${item.clientStations.length}):
-              </div>
-              <div style="max-height: 85px; overflow-y: auto; color: #334155; line-height: 1.45;">
-                ${item.clientStations.length > 0 ? item.clientStations.map(c => `
-                  <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                    • <b>${escapeHtml(c.name)}</b> (${c.lat.toFixed(4)}, ${c.lon.toFixed(4)} | เสา ${c.height}m)
-                  </div>
-                `).join('') : '<span style="color:#94a3b8;">ไม่มีสถานีลูกข่าย</span>'}
-              </div>
-            </div>
-          </div>
-
-          <!-- Actions -->
-          <div style="display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 6px; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
-            <button type="button" class="btn" onclick="loadSimProject('${item.id}', ${isCalc})" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-size: 0.78rem; font-weight: 700; padding: 5px 14px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;" title="โหลดโครงข่ายนี้กลับมาจำลองบนแผนที่">
-              📥 โหลดโครงข่าย (Load)
-            </button>
-            ${!isCalc ? `
-            <button type="button" class="btn" onclick="renameSimProject('${item.id}')" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer;" title="แก้ไขชื่อโครงข่าย">
-              ✏️ เปลี่ยนชื่อ
-            </button>` : ''}
-            <button type="button" class="btn" onclick="${isCalc ? `deleteSimCalcHistory('${item.id}')` : `deleteSimProject('${item.id}')`}" style="background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; font-size: 0.78rem; font-weight: 600; padding: 5px 8px; border-radius: 6px; cursor: pointer;" title="ลบรายการนี้">
-              🗑️ ลบ
-            </button>
-          </div>
-        </div>
-      `).join('');
     }
 
     async function loadSimProject(id, isCalc = false) {
