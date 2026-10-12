@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Decode Plus Codes</title></head>
+<body>
+<div id="out">{"phonThat":{"lat":13.769684375000004,"lon":100.52599687499995},"thumFang":{"lat":13.879465625000002,"lon":100.55299687499999}}</div>
+<script>
+// Open Location Code decoder
+const CODE_ALPHABET = "23456789CFGHJMPQRVWX";
+function decode(code) {
+  code = code.replace("+", "");
+  let latVal = 0, lonVal = 0;
+  let latRes = 20, lonRes = 20;
+  for (let i = 0; i < code.length; i += 2) {
+    latVal += CODE_ALPHABET.indexOf(code[i]) * latRes;
+    lonVal += CODE_ALPHABET.indexOf(code[i+1]) * lonRes;
+    latRes /= 20;
+    lonRes /= 20;
+  }
+  return { lat: latVal - 90 + latRes*10, lon: lonVal - 180 + lonRes*10 };
+}
+
+// In Tha Bo, Nong Khai (approx lat 17.8, lon 102.5)
+// The 4-character prefix for this region:
+// 17.8 + 90 = 107.8 -> 107.8 / 20 = 5 (index 5 = '7'), rem 7.8 -> 7.8 / 1 = 7 (index 7 = 'P')
+// 102.5 + 180 = 282.5 -> 282.5 / 20 = 14 (index 14 = '5'), rem 2.5 -> 2.5 / 1 = 2 (index 2 = '2')
+// Full code prefix is 7P52!
+// Let's test with full code:
+// 7P52 + QG9G+VCF
+// 7P52 + VHH3+Q6P
+
+const fullPhonThat = "7P52QG9GVCF";
+const fullThumFang = "7P52VHH3Q6P";
+
+const p1 = decode(fullPhonThat);
+const p2 = decode(fullThumFang);
+
+document.getElementById('out').innerText = JSON.stringify({
+  phonThat: p1,
+  thumFang: p2
+});
+console.log(document.getElementById('out').innerText);
+</script>
+
+
+</body></html>

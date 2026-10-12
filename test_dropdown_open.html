@@ -1,0 +1,3042 @@
+﻿<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>ระบบจัดผังเสากิลด์วอร์ - Onlyfans & พันธมิตร | Guild Pillar Assignment</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #131b2e;
+      --bg-card: #1c2640;
+      --bg-card-hover: #233050;
+      --border-color: #2e3d64;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-gold: #fbbf24;
+      --accent-gold-dark: #d97706;
+      --accent-blue: #38bdf8;
+      --accent-purple: #a855f7;
+      --accent-green: #22c55e;
+      --accent-red: #ef4444;
+      --accent-orange: #f97316;
+      --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+      --radius: 12px;
+      --font-main: 'Kanit', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      padding-bottom: max(60px, env(safe-area-inset-bottom));
+      overflow-x: hidden;
+    }
+
+    /* Top Navigation Bar */
+    .top-header {
+      background: linear-gradient(180deg, #182239 0%, #0f172a 100%);
+      border-bottom: 2px solid #2e3f68;
+      padding: max(12px, env(safe-area-inset-top)) 16px 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+
+    .header-inner {
+      max-width: 1440px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .guild-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .guild-badge {
+      background: linear-gradient(135deg, #f59e0b, #b45309);
+      color: #000;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.4);
+      flex-shrink: 0;
+    }
+
+    .guild-title-box h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+      line-height: 1.2;
+    }
+
+    .guild-title-box p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.2;
+    }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Language Switcher */
+    .lang-switcher {
+      display: flex;
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+      padding: 2px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.4);
+    }
+
+    .lang-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: var(--font-main);
+      font-size: 0.82rem;
+      font-weight: 500;
+      padding: 5px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 32px;
+    }
+
+    .lang-btn.active {
+      background: var(--accent-gold);
+      color: #0b0f19;
+      font-weight: 700;
+      box-shadow: 0 2px 6px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn {
+      font-family: var(--font-main);
+      font-size: 0.85rem;
+      font-weight: 500;
+      padding: 7px 13px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      min-height: 36px;
+      touch-action: manipulation;
+    }
+
+    .btn-gold {
+      background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+      color: #0b0f19;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+    }
+    .btn-gold:hover, .btn-gold:active {
+      background: linear-gradient(135deg, #fde047 0%, #b45309 100%);
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+    .btn-secondary:hover, .btn-secondary:active {
+      background: var(--bg-card-hover);
+      border-color: var(--accent-blue);
+      color: var(--accent-blue);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+    .btn-danger:hover, .btn-danger:active {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: #ef4444;
+    }
+
+    .btn-sm {
+      padding: 4px 8px;
+      font-size: 0.78rem;
+      min-height: 30px;
+    }
+
+    /* Main Container */
+    .app-container {
+      max-width: 1440px;
+      margin: 16px auto;
+      padding: 0 16px;
+    }
+
+    /* Status Bar Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent-blue);
+    }
+    .stat-card.gold::after { background: var(--accent-gold); }
+    .stat-card.green::after { background: var(--accent-green); }
+    .stat-card.orange::after { background: var(--accent-orange); }
+
+    .stat-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      background: rgba(255,255,255,0.06);
+      flex-shrink: 0;
+    }
+
+    .stat-info h3 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+    }
+    .stat-info p {
+      font-size: 0.76rem;
+      color: var(--text-secondary);
+      line-height: 1.2;
+    }
+
+    /* Tabs & Section Layout */
+    .nav-tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 2px solid var(--border-color);
+      margin-bottom: 20px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .nav-tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: var(--font-main);
+      font-size: 0.92rem;
+      font-weight: 500;
+      padding: 9px 14px;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      white-space: nowrap;
+      position: relative;
+      touch-action: manipulation;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255,255,255,0.04);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-gold);
+      font-weight: 600;
+      background: var(--bg-secondary);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: var(--accent-gold);
+      border-radius: 3px 3px 0 0;
+    }
+
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Map Card Section */
+    .map-wrapper-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 24px;
+    }
+
+    .map-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .map-header h2 {
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #fff;
+    }
+
+    .map-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .custom-switch {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .custom-switch input {
+      accent-color: var(--accent-gold);
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    /* Quick Pillar Selector Pills for Touch/Mobile Devices */
+    .mobile-pillar-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding: 6px 0 10px 0;
+      margin-bottom: 10px;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .mobile-pillar-selector::-webkit-scrollbar {
+      display: none;
+    }
+
+    .mobile-pill-btn {
+      background: var(--bg-card);
+      border: 1px solid #334155;
+      color: #fff;
+      font-family: var(--font-main);
+      font-size: 0.82rem;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 20px;
+      cursor: pointer;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+      min-height: 32px;
+      touch-action: manipulation;
+      transition: all 0.2s;
+    }
+    .mobile-pill-btn.active {
+      background: #0284c7;
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+    }
+
+    /* Map Layout Grid: Map + Side Panel */
+    .map-layout-grid {
+      display: grid;
+      grid-template-columns: 1fr 370px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    /* Interactive Map Stage */
+    .interactive-map-stage {
+      position: relative;
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid #334155;
+      background: #000;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .interactive-map-stage img {
+      width: 100%;
+      height: auto;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* Pillar Pin on Map with Touch-Friendly Hit Area */
+    .map-pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      cursor: pointer;
+      z-index: 10;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+      touch-action: manipulation;
+    }
+
+    /* Extra transparent hit area for easy tapping on touch screens */
+    .map-pin::before {
+      content: '';
+      position: absolute;
+      top: -12px;
+      left: -12px;
+      right: -12px;
+      bottom: -12px;
+    }
+
+    .map-pin:hover {
+      transform: translate(-50%, -50%) scale(1.15);
+      z-index: 25;
+    }
+
+    .map-pin.active {
+      transform: translate(-50%, -50%) scale(1.22);
+      z-index: 30;
+    }
+
+    .pin-hexagon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.92);
+      border: 3px solid var(--accent-gold);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.15rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 16px rgba(251, 191, 36, 0.6), 0 4px 8px rgba(0,0,0,0.6);
+      position: relative;
+    }
+
+    .map-pin.empty .pin-hexagon {
+      border-color: #94a3b8;
+      box-shadow: 0 0 8px rgba(148, 163, 184, 0.3);
+    }
+
+    .map-pin.active .pin-hexagon {
+      background: #0284c7;
+      border-color: #38bdf8;
+      box-shadow: 0 0 24px rgba(56, 189, 248, 0.9);
+      animation: pulse-ring 1.8s infinite;
+    }
+
+    @keyframes pulse-ring {
+      0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.8), 0 0 20px rgba(56, 189, 248, 0.8); }
+      70% { box-shadow: 0 0 0 16px rgba(56, 189, 248, 0), 0 0 30px rgba(56, 189, 248, 0.9); }
+      100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0), 0 0 20px rgba(56, 189, 248, 0.8); }
+    }
+
+    .pin-count-badge {
+      position: absolute;
+      top: -6px;
+      right: -8px;
+      background: #22c55e;
+      color: #000;
+      font-size: 0.72rem;
+      font-weight: 800;
+      padding: 1px 6px;
+      border-radius: 12px;
+      border: 2px solid #0f172a;
+      white-space: nowrap;
+    }
+
+    .map-pin.empty .pin-count-badge {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    /* Names overlay beneath pin */
+    .pin-names-overlay {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 5px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid var(--accent-gold);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 0.72rem;
+      font-weight: 500;
+      color: #e2e8f0;
+      white-space: nowrap;
+      pointer-events: none;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.7);
+      max-width: 170px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+      display: none;
+    }
+
+    .show-overlay .pin-names-overlay {
+      display: block;
+    }
+
+    /* Side Panel Beside Map */
+    .side-panel-card {
+      background: #182238;
+      border: 2px solid #38bdf8;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      position: sticky;
+      top: 80px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      animation: fadeIn 0.25s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .side-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 12px;
+    }
+
+    .side-panel-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .side-pillar-num {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0284c7, #0369a1);
+      color: #fff;
+      font-weight: 800;
+      font-size: 1.35rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+      flex-shrink: 0;
+    }
+
+    .side-panel-nav-btns {
+      display: flex;
+      gap: 4px;
+    }
+
+    .side-nav-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      border-radius: 6px;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      touch-action: manipulation;
+    }
+    .side-nav-btn:hover, .side-nav-btn:active {
+      background: var(--accent-gold);
+      color: #000;
+      border-color: var(--accent-gold);
+    }
+
+    .side-members-box {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 230px;
+      overflow-y: auto;
+      padding-right: 4px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .side-add-box {
+      background: #111a2e;
+      border: 1px solid #293b61;
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .side-add-box h4 {
+      font-size: 0.9rem;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .side-input-group {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* Zone Badges */
+    .zone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      font-weight: 600;
+    }
+    .zone-top-left { background: rgba(56, 189, 248, 0.18); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35); }
+    .zone-top-right { background: rgba(34, 197, 94, 0.18); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.35); }
+    .zone-center { background: rgba(168, 85, 247, 0.18); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.35); }
+    .zone-bottom-left { background: rgba(251, 191, 36, 0.18); color: #fde047; border: 1px solid rgba(251, 191, 36, 0.35); }
+    .zone-bottom-right { background: rgba(249, 115, 22, 0.18); color: #fb923c; border: 1px solid rgba(249, 115, 22, 0.35); }
+    .zone-castle { background: rgba(239, 68, 68, 0.18); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.35); }
+
+    /* Zone Filter Pills */
+    .zone-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+
+    .filter-chip {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-family: var(--font-main);
+      font-size: 0.82rem;
+      padding: 6px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      touch-action: manipulation;
+    }
+    .filter-chip:hover, .filter-chip.active {
+      background: var(--accent-gold);
+      color: #0b0f19;
+      font-weight: 600;
+      border-color: var(--accent-gold);
+    }
+
+    /* Pillars Grid */
+    .pillars-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+      margin-bottom: 30px;
+    }
+
+    .pillar-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .pillar-card:hover {
+      border-color: #475569;
+      box-shadow: 0 12px 28px rgba(0,0,0,0.4);
+    }
+
+    .pillar-card.highlight {
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.4);
+      background: #19243d;
+    }
+
+    .pillar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .pillar-title-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .pillar-number-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #334155, #1e293b);
+      border: 2px solid var(--accent-gold);
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.15rem;
+    }
+
+    .pillar-header-text h3 {
+      font-size: 1.1rem;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .pillar-note {
+      font-size: 0.78rem;
+      color: #e2e8f0;
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid rgba(251, 191, 36, 0.3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-top: 4px;
+    }
+
+    /* Members Assigned Chips in Card */
+    .pillar-members-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex: 1;
+      margin-bottom: 14px;
+      min-height: 50px;
+    }
+
+    .member-chip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-card);
+      border: 1px solid #2a3756;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+
+    .member-chip:hover {
+      background: #253354;
+      border-color: #3b82f6;
+    }
+
+    .member-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #f1f5f9;
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      cursor: pointer;
+    }
+    .member-name:hover {
+      color: var(--accent-gold);
+    }
+
+    .member-avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #334155;
+      color: var(--accent-gold);
+      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .member-chip-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .btn-chip-action {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 3px 6px;
+      border-radius: 4px;
+      line-height: 1;
+      transition: all 0.2s;
+      min-height: 28px;
+      min-width: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+    .btn-chip-action:hover, .btn-chip-action:active {
+      color: var(--accent-gold);
+      background: rgba(251, 191, 36, 0.2);
+    }
+    .btn-chip-action.remove:hover, .btn-chip-action.remove:active {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .empty-pillar-notice {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      font-style: italic;
+      padding: 12px;
+      text-align: center;
+      background: rgba(255,255,255,0.02);
+      border-radius: 6px;
+      border: 1px dashed #334155;
+    }
+
+    /* Add Member Form in Card */
+    .pillar-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .member-select-wrapper {
+      position: relative;
+      display: flex;
+      gap: 6px;
+    }
+
+    .member-select {
+      flex: 1;
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      color: #f1f5f9;
+      font-family: var(--font-main);
+      font-size: 0.85rem;
+      padding: 8px 10px;
+      border-radius: 6px;
+      outline: none;
+      cursor: pointer;
+      min-height: 38px;
+    }
+    .member-select:focus {
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+    }
+
+    .member-select optgroup {
+      background: #1e293b;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+    .member-select option {
+      background: #0f172a;
+      color: #fff;
+      font-weight: normal;
+      padding: 6px 4px;
+    }
+
+    .btn-add-quick {
+      background: var(--accent-gold);
+      color: #000;
+      border: none;
+      padding: 0 14px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 38px;
+      touch-action: manipulation;
+    }
+    .btn-add-quick:hover, .btn-add-quick:active {
+      background: #fde047;
+    }
+
+    /* Summary Dashboard Styles */
+    .summary-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      margin-bottom: 30px;
+    }
+
+    .section-header-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .section-header-row h2 {
+      font-size: 1.2rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .search-input-box {
+      position: relative;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .search-input {
+      width: 100%;
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      font-family: var(--font-main);
+      font-size: 0.88rem;
+      padding: 8px 12px 8px 34px;
+      border-radius: 8px;
+      outline: none;
+      min-height: 38px;
+    }
+    .search-input:focus {
+      border-color: var(--accent-blue);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* Summary Tables */
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .styled-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.88rem;
+    }
+
+    .styled-table thead tr {
+      background: #162035;
+      border-bottom: 2px solid var(--border-color);
+    }
+
+    .styled-table th {
+      padding: 10px 14px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .styled-table tbody tr {
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.15s;
+    }
+
+    .styled-table tbody tr:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .styled-table td {
+      padding: 10px 14px;
+      vertical-align: middle;
+    }
+
+    .table-pillar-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #1e293b;
+      border: 1px solid var(--accent-gold);
+      color: var(--accent-gold);
+      font-weight: 700;
+      padding: 3px 9px;
+      border-radius: 6px;
+      min-width: 50px;
+    }
+
+    .table-members-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .table-chip {
+      background: var(--bg-card);
+      border: 1px solid #334155;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      color: #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s;
+      min-height: 28px;
+    }
+    .table-chip:hover {
+      border-color: var(--accent-gold);
+    }
+
+    /* Modal Member Chips */
+    .modal-member-chip {
+      background: var(--bg-card);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .modal-member-chip:hover {
+      background: #243152;
+      border-color: var(--accent-gold);
+    }
+    .modal-member-name-label {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .modal-member-name-label:hover {
+      color: var(--accent-gold);
+    }
+    .chip-action-btn {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+      padding: 3px 5px;
+      border-radius: 4px;
+      color: #94a3b8;
+      transition: all 0.15s;
+      line-height: 1;
+      min-height: 26px;
+      min-width: 26px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: manipulation;
+    }
+    .chip-action-btn:hover {
+      color: var(--accent-gold);
+      background: rgba(251, 191, 36, 0.2);
+    }
+    .chip-action-btn.del:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    /* Text Preview & Copy Box */
+    .text-preview-box {
+      background: #0a0e17;
+      border: 1px solid #233050;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      white-space: pre-wrap;
+      max-height: 380px;
+      overflow-y: auto;
+      line-height: 1.6;
+      margin-bottom: 12px;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Member Manager Drawer / Modal */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      display: flex;
+      flex-direction: column;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-header h3 {
+      color: #fff;
+      font-size: 1.15rem;
+    }
+    .modal-close-btn {
+      background: none;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.4rem;
+      cursor: pointer;
+      padding: 4px 8px;
+      touch-action: manipulation;
+    }
+    .modal-close-btn:hover { color: #fff; }
+
+    .modal-body {
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .form-group label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    .form-control {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      color: #fff;
+      font-family: var(--font-main);
+      font-size: 0.9rem;
+      padding: 9px 12px;
+      border-radius: 8px;
+      outline: none;
+      min-height: 38px;
+    }
+    .form-control:focus {
+      border-color: var(--accent-gold);
+    }
+    textarea.form-control {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    /* Toast Notification */
+    .toast-container {
+      position: fixed;
+      bottom: max(20px, env(safe-area-inset-bottom));
+      right: 16px;
+      left: 16px;
+      max-width: 420px;
+      margin-left: auto;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: #1e293b;
+      border-left: 4px solid var(--accent-gold);
+      color: #fff;
+      padding: 12px 16px;
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: auto;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .toast.success { border-color: var(--accent-green); }
+    .toast.error { border-color: var(--accent-red); }
+
+    /* =======================================================
+       SPECIFIC RESPONSIVE OPTIMIZATIONS (iPads & Mobile Phones)
+       ======================================================= */
+
+    /* iPad Landscape / Medium Desktops (900px - 1180px) */
+    @media (max-width: 1180px) and (min-width: 901px) {
+      .map-layout-grid {
+        grid-template-columns: 1fr 340px;
+        gap: 14px;
+      }
+      .pin-hexagon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.05rem;
+      }
+    }
+
+    /* iPad Portrait & Mobile (<= 900px) */
+    @media (max-width: 900px) {
+      .header-inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .guild-title-box {
+        justify-content: space-between;
+      }
+      .header-actions {
+        width: 100%;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        flex-wrap: nowrap;
+      }
+      .header-actions::-webkit-scrollbar {
+        display: none;
+      }
+      .header-actions .btn, .header-actions .lang-switcher {
+        flex-shrink: 0;
+      }
+
+      /* Stats: 2x2 grid on mobile & tablet portrait */
+      .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .stat-card {
+        padding: 10px 12px;
+      }
+      .stat-info h3 {
+        font-size: 1.15rem;
+      }
+
+      /* Stack Map & Side Panel */
+      .map-layout-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+      .side-panel-card {
+        position: static;
+        width: 100%;
+      }
+
+      /* Smaller pins on small screens */
+      .pin-hexagon {
+        width: 36px;
+        height: 36px;
+        font-size: 0.95rem;
+      }
+      .pin-count-badge {
+        font-size: 0.65rem;
+        padding: 0 4px;
+        top: -4px;
+        right: -5px;
+      }
+
+      /* Pillars Grid: 1 column on small phones */
+      .pillars-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .search-input-box {
+        max-width: 100%;
+      }
+    }
+
+    /* Small Mobile Phones (<= 480px) */
+    @media (max-width: 480px) {
+      .guild-title-box h1 {
+        font-size: 1.05rem;
+      }
+      .guild-badge {
+        padding: 4px 8px;
+        font-size: 0.88rem;
+      }
+      .pin-hexagon {
+        width: 30px;
+        height: 30px;
+        font-size: 0.85rem;
+        border-width: 2px;
+      }
+      .pin-count-badge {
+        font-size: 0.6rem;
+        padding: 0 3px;
+        top: -4px;
+        right: -4px;
+      }
+      .side-panel-card {
+        padding: 14px;
+      }
+      .styled-table th, .styled-table td {
+        padding: 8px 10px;
+        font-size: 0.82rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navigation Bar -->
+  <header class="top-header">
+    <div class="header-inner">
+      <div class="guild-title-box">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div class="guild-badge">⚔️ ONLYFANS</div>
+          <div>
+            <h1 id="i18n-appTitle">ผังจัดเสากิลด์วอร์ (Guild Pillar Plan)</h1>
+            <p id="i18n-appSubtitle">ระบบจัดเสาและสมาชิกแบบไม่ซ้ำกัน พร้อมแดชบอร์ดสรุปรายชื่อ</p>
+          </div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <!-- Language Switcher -->
+        <div class="lang-switcher">
+          <button class="lang-btn active" id="btnLangTh" onclick="setLanguage('th')">🇹🇭 ไทย</button>
+          <button class="lang-btn" id="btnLangEn" onclick="setLanguage('en')">🇬🇧 EN</button>
+        </div>
+
+        <button class="btn btn-gold" id="btnCopyChatSummary">
+          <span id="i18n-btnCopyChat">📋 คัดลอกส่ง LINE/Discord</span>
+        </button>
+        <button class="btn btn-secondary" id="btnOpenMemberManager">
+          <span id="i18n-btnManageMembers">👥 จัดการสมาชิก</span> (<span id="countTotalMembersBtn">0</span>)
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container">
+
+    <!-- Status Bar Cards -->
+    <div class="stats-grid">
+      <div class="stat-card gold">
+        <div class="stat-icon">🏛️</div>
+        <div class="stat-info">
+          <h3 id="statTotalPillars">15</h3>
+          <p id="i18n-statTotalPillars">จำนวนเสาทั้งหมด</p>
+        </div>
+      </div>
+      <div class="stat-card green">
+        <div class="stat-icon">✅</div>
+        <div class="stat-info">
+          <h3 id="statAssignedMembers">0</h3>
+          <p id="i18n-statAssigned">สมาชิกที่ลงเสาแล้ว</p>
+        </div>
+      </div>
+      <div class="stat-card orange">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-info">
+          <h3 id="statUnassignedMembers">0</h3>
+          <p id="i18n-statUnassigned">สมาชิกที่ยังว่าง</p>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🛡️</div>
+        <div class="stat-info">
+          <h3 id="statAllMembers">0</h3>
+          <p id="i18n-statTotalRoster">สมาชิกทั้งหมดในระบบ</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-map" id="i18n-tabMap">
+        🗺️ แผนผังเสา & จัดการสมาชิก
+      </button>
+      <button class="tab-btn" data-tab="tab-summary-pillar" id="i18n-tabPillarTable">
+        📋 ตารางสรุปรายเสา (1–15)
+      </button>
+      <button class="tab-btn" data-tab="tab-summary-members" id="i18n-tabMemberDir">
+        👤 สรุปรายชื่อสมาชิก (A-Z)
+      </button>
+      <button class="tab-btn" data-tab="tab-text-format" id="i18n-tabChatText">
+        💬 ข้อความสำหรับส่งแชท
+      </button>
+    </div>
+
+    <!-- TAB 1: Map & Pillar Assignment -->
+    <section id="tab-map" class="tab-content active">
+
+      <!-- Interactive Map Wrapper with Side Panel Layout -->
+      <div class="map-wrapper-card">
+        <div class="map-header">
+          <h2 id="i18n-mapHeader">🗺️ แผนผังเสากิลด์ (คลิกที่หมายเลขเสาเพื่อเปิดหน้าต่างจัดการสมาชิกด้านข้าง)</h2>
+          <div class="map-options">
+            <label class="custom-switch">
+              <input type="checkbox" id="toggleMapNames">
+              <span id="i18n-showNamesOnMap">👁️ แสดงรายชื่อบนแผนที่</span>
+            </label>
+            <div class="legend" style="display:flex; gap:8px; font-size:0.8rem; color:var(--text-secondary);">
+              <span style="display:inline-flex; align-items:center; gap:4px;">
+                <span style="width:10px; height:10px; background:#22c55e; border-radius:50%;"></span>
+                <span id="i18n-legendAssigned">มีคนลง</span>
+              </span>
+              <span style="display:inline-flex; align-items:center; gap:4px;">
+                <span style="width:10px; height:10px; background:#ef4444; border-radius:50%;"></span>
+                <span id="i18n-legendEmpty">ยังว่าง</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Selector Pills for Mobile & iPad Screen -->
+        <div class="mobile-pillar-selector" id="mobilePillarPills">
+          <!-- Rendered by JS -->
+        </div>
+
+        <!-- 2-Column Grid: Map on Left, Side Panel on Right -->
+        <div class="map-layout-grid">
+          <!-- The Image Stage with Clickable Hexagon Markers -->
+          <div class="interactive-map-stage" id="mapStage">
+            <img id="mapImage" src="S__23117853.jpg" alt="Guild Map" />
+            <div id="mapPinsContainer"></div>
+          </div>
+
+          <!-- Side Panel (หน้าต่างด้านข้างเมื่อคลิกที่หมายเลขเสา) -->
+          <div class="side-panel-card" id="pillarSidePanel">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone Filter Bar -->
+      <div class="zone-filter-bar" id="zoneFilterContainer">
+        <!-- Rendered dynamically for language support -->
+      </div>
+
+      <!-- Pillars Assignment Grid -->
+      <div class="pillars-grid" id="pillarsGrid">
+        <!-- Rendered by JS -->
+      </div>
+    </section>
+
+    <!-- TAB 2: Table Summary by Pillar -->
+    <section id="tab-summary-pillar" class="tab-content">
+      <div class="summary-section">
+        <div class="section-header-row">
+          <div>
+            <h2 id="i18n-tableTitle">📋 สรุปข้อมูลประจำเสา 1–15</h2>
+            <p style="color:var(--text-secondary); font-size:0.85rem;" id="i18n-tableSubtitle">แสดงภาพรวมรายชื่อสมาชิกและข้อมูลประจำเสาแบบละเอียด</p>
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="copyTableText()">
+            <span id="i18n-btnCopyTable">📋 คัดลอกตาราง</span>
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="styled-table" id="summaryPillarTable">
+            <thead>
+              <tr>
+                <th style="width: 100px;" id="i18n-colPillar">หมายเลขเสา</th>
+                <th style="width: 150px;" id="i18n-colZone">โซนพื้นที่</th>
+                <th style="width: 150px;" id="i18n-colNote">รายละเอียดเพิ่มเติม</th>
+                <th id="i18n-colMembers">รายชื่อสมาชิก (Member)</th>
+                <th style="width: 100px; text-align:center;" id="i18n-colCount">จำนวน (คน)</th>
+              </tr>
+            </thead>
+            <tbody id="summaryPillarTableBody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Member Directory (A-Z) -->
+    <section id="tab-summary-members" class="tab-content">
+      <div class="summary-section">
+        <div class="section-header-row">
+          <div>
+            <h2 id="i18n-rosterTitle">👤 ทำเนียบสมาชิกและเสาที่ได้รับมอบหมาย</h2>
+            <p style="color:var(--text-secondary); font-size:0.85rem;" id="i18n-rosterSubtitle">ตรวจสอบว่าสมาชิกแต่ละคนประจำอยู่เสาไหน ป้องกันการตกหล่น</p>
+          </div>
+          <div class="search-input-box">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="searchMemberInput" placeholder="ค้นหาชื่อสมาชิก..." />
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="styled-table" id="summaryMembersTable">
+            <thead>
+              <tr>
+                <th style="width: 50px;" id="i18n-colIndex">#</th>
+                <th id="i18n-colMemberName">ชื่อสมาชิก</th>
+                <th style="width: 110px;" id="i18n-colMemberPillar">หมายเลขเสา</th>
+                <th style="width: 130px;" id="i18n-colMemberZone">โซนพื้นที่</th>
+                <th style="width: 100px;" id="i18n-colStatus">สถานะ</th>
+                <th style="width: 180px; text-align:center;" id="i18n-colAction">การจัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="summaryMembersTableBody">
+              <!-- Rendered by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: Text Preview for Chat -->
+    <section id="tab-text-format" class="tab-content">
+      <div class="summary-section">
+        <div class="section-header-row">
+          <div>
+            <h2 id="i18n-chatFormatTitle">💬 ข้อความสรุปสำหรับส่งใน LINE / Discord</h2>
+            <p style="color:var(--text-secondary); font-size:0.85rem;" id="i18n-chatFormatSubtitle">จัดรูปแบบข้อความพร้อมอีโมจิ สามารถกดปุ่มคัดลอกแล้วนำไปวางในกลุ่มแชทได้ทันที</p>
+          </div>
+          <button class="btn btn-gold" id="btnCopyChatTextTab">
+            <span id="i18n-btnCopyText">📋 คัดลอกข้อความ</span>
+          </button>
+        </div>
+
+        <div class="text-preview-box" id="chatPreviewText"></div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Member Manager Modal -->
+  <div class="modal-backdrop" id="memberManagerModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3 id="i18n-modalTitle">👥 จัดการรายชื่อสมาชิกกิลด์</h3>
+        <button class="modal-close-btn" id="btnCloseModal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label id="i18n-modalAddSingle">➕ เพิ่มสมาชิกใหม่ทีละคน:</label>
+          <div style="display:flex; gap:8px;">
+            <input type="text" class="form-control" id="newSingleMemberInput" placeholder="พิมพ์ชื่อสมาชิก เช่น เทพสายฟ้า" />
+            <button class="btn btn-gold" id="btnAddSingleMember">
+              <span id="i18n-modalBtnAdd">เพิ่ม</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label id="i18n-modalAddBatch">📝 เพิ่มสมาชิกหลายคนพร้อมกัน (วางชื่อคั่นด้วยขึ้นบรรทัดใหม่หรือเครื่องหมายจุลภาค ,):</label>
+          <textarea class="form-control" id="newBatchMembersInput" placeholder="ตาหนึ่ง&#10;AgustD&#10;ลั่นล้า"></textarea>
+          <button class="btn btn-secondary btn-sm" id="btnAddBatchMembers" style="align-self:flex-end; margin-top:4px;">
+            <span id="i18n-modalBtnAddBatch">➕ เพิ่มสมาชิกทั้งหมด</span>
+          </button>
+        </div>
+
+        <div style="border-top: 1px solid var(--border-color); padding-top: 12px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h4 style="font-size:0.95rem; color:#fff;">
+              <span id="i18n-modalRosterTotal">รายชื่อสมาชิกในระบบทั้งหมด</span> (<span id="modalTotalMembersCount">0</span> <span id="i18n-modalUnit">คน</span>)
+            </h4>
+            <span style="font-size:0.75rem; color:var(--text-secondary);">(คลิก ✏️ เพื่อเปลี่ยนชื่อ หรือ 🗑️ เพื่อลบ)</span>
+          </div>
+          <div id="modalMemberList" style="max-height:220px; overflow-y:auto; display:flex; flex-wrap:wrap; gap:8px; padding:4px 0; -webkit-overflow-scrolling:touch;">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    // Internationalization (i18n) Dictionary
+    const I18N = {
+      th: {
+        appTitle: "ผังจัดเสากิลด์วอร์ (Guild Pillar Plan)",
+        appSubtitle: "ระบบจัดเสาและสมาชิกแบบไม่ซ้ำกัน พร้อมแดชบอร์ดสรุปรายชื่อ",
+        btnCopyChat: "📋 คัดลอกส่ง LINE/Discord",
+        btnManageMembers: "👥 จัดการสมาชิก",
+        btnResetDefault: "🔄 ค่าเริ่มต้น (Excel)",
+        btnPrint: "🖨️ พิมพ์",
+        statTotalPillars: "จำนวนเสาทั้งหมด",
+        statAssigned: "สมาชิกที่ลงเสาแล้ว",
+        statUnassigned: "สมาชิกที่ยังว่าง",
+        statTotalRoster: "สมาชิกทั้งหมดในระบบ",
+        tabMap: "🗺️ แผนผังเสา & จัดการสมาชิก",
+        tabPillarTable: "📋 ตารางสรุปรายเสา (1–15)",
+        tabMemberDir: "👤 สรุปรายชื่อสมาชิก (A-Z)",
+        tabChatText: "💬 ข้อความสำหรับส่งแชท",
+        mapHeader: "🗺️ แผนผังเสากิลด์ (คลิกที่หมายเลขเสาเพื่อเปิดหน้าต่างจัดการสมาชิกด้านข้าง)",
+        showNamesOnMap: "👁️ แสดงรายชื่อบนแผนที่",
+        legendAssigned: "มีคนลง",
+        legendEmpty: "ยังว่าง",
+        filterZoneLabel: "🔍 กรองโซน:",
+        filterZones: {
+          all: "ทั้งหมด (15 เสา)",
+          "ซ้ายบน": "ซ้ายบน (เสา 1, 2)",
+          "บนขวา": "บนขวา (เสา 3, 4)",
+          "เสากลาง": "เสากลาง (เสา 5, 6, 8, 10, 11)",
+          "หน้าบ้านปราสาท": "หน้าบ้านปราสาท (เสา 7)",
+          "ตรงข้ามปราสาท": "ตรงข้ามปราสาท (เสา 9)",
+          "ล่างซ้าย": "ล่างซ้าย (เสา 12, 13)",
+          "ล่างขวา": "ล่างขวา (เสา 14, 15)"
+        },
+        pillar: "เสา",
+        membersUnit: "สมาชิก",
+        clearPillar: "ล้างเสา",
+        emptyPillar: "ยังไม่มีสมาชิกประจำเสานี้",
+        selectPlaceholder: "+ เลือกสมาชิกที่มีอยู่...",
+        optAvailable: "🟢 สมาชิกที่ยังว่าง",
+        optMove: "🟡 ย้ายจากเสาอื่น (ป้องกันการซ้ำ)",
+        moveFromText: (pId, name) => `[เสา ${pId}] ${name} ➔ ย้ายมานี่`,
+        typeNewPlaceholder: "พิมพ์ชื่อสมาชิกใหม่...",
+        quickAddBtn: "➕ เพิ่ม",
+        sidePanelTitle: "จัดการสมาชิกประจำเสา",
+        sidePanelInputHeader: "➕ เพิ่มสมาชิกใหม่เข้าเสานี้ทันที:",
+        sidePanelSelectHeader: "📋 เลือกจากรายชื่อสมาชิกในระบบ:",
+        tableTitle: "📋 สรุปข้อมูลประจำเสา 1–15",
+        tableSubtitle: "แสดงภาพรวมรายชื่อสมาชิกและข้อมูลประจำเสาแบบละเอียด",
+        btnCopyTable: "📋 คัดลอกตาราง",
+        colPillar: "หมายเลขเสา",
+        colZone: "โซนพื้นที่",
+        colNote: "รายละเอียดเพิ่มเติม",
+        colMembers: "รายชื่อสมาชิก (Member)",
+        colCount: "จำนวน (คน)",
+        noMembers: "- ยังไม่มีสมาชิก -",
+        rosterTitle: "👤 ทำเนียบสมาชิกและเสาที่ได้รับมอบหมาย",
+        rosterSubtitle: "ตรวจสอบว่าสมาชิกแต่ละคนประจำอยู่เสาไหน ป้องกันการตกหล่น",
+        searchPlaceholder: "ค้นหาชื่อสมาชิก...",
+        colIndex: "#",
+        colMemberName: "ชื่อสมาชิก",
+        colStatus: "สถานะ",
+        colAction: "การจัดการ",
+        statusAssigned: "✅ ประจำเสา",
+        statusAvailable: "⏳ ว่าง",
+        btnUnassign: "ปลดเสา",
+        btnAssign: "ลงเสา",
+        btnRename: "✏️ เปลี่ยนชื่อ",
+        btnDelete: "🗑️ ลบ",
+        noMemberFound: "ไม่พบรายชื่อสมาชิกที่ค้นหา",
+        chatFormatTitle: "💬 ข้อความสรุปสำหรับส่งใน LINE / Discord",
+        chatFormatSubtitle: "จัดรูปแบบข้อความพร้อมอีโมจิ สามารถกดปุ่มคัดลอกแล้วนำไปวางในกลุ่มแชทได้ทันที",
+        btnCopyText: "📋 คัดลอกข้อความ",
+        modalTitle: "👥 จัดการรายชื่อสมาชิกกิลด์",
+        modalAddSingle: "➕ เพิ่มสมาชิกใหม่ทีละคน:",
+        modalSinglePlaceholder: "พิมพ์ชื่อสมาชิก เช่น เทพสายฟ้า",
+        modalBtnAdd: "เพิ่ม",
+        modalAddBatch: "📝 เพิ่มสมาชิกหลายคนพร้อมกัน (วางชื่อคั่นด้วยขึ้นบรรทัดใหม่หรือเครื่องหมายจุลภาค ,):",
+        modalBatchPlaceholder: "ตาหนึ่ง\nAgustD\nลั่นล้า",
+        modalBtnAddBatch: "➕ เพิ่มสมาชิกทั้งหมด",
+        modalRosterTotal: "รายชื่อสมาชิกในระบบทั้งหมด",
+        modalUnit: "คน",
+        promptChoosePillar: (name) => `เลือกหมายเลขเสา (1 - 15) ที่ต้องการให้ "${name}" ไปประจำ:`,
+        promptPillarInvalid: "กรุณาระบุหมายเลขเสาระหว่าง 1 ถึง 15 ครับ",
+        promptRename: (name) => `ระบุชื่อใหม่สำหรับสมาชิก "${name}":`,
+        confirmReset: "ต้องการรีเซ็ตการจัดเสากลับเป็นค่าเริ่มต้นตามไฟล์ Excel หรือไม่?\n(ข้อมูลที่แก้ไขจะถูกแทนที่)",
+        confirmClearPillar: (pId) => `ต้องการล้างสมาชิกทั้งหมดในเสา ${pId} หรือไม่?`,
+        confirmDeleteMember: (name) => `ต้องการลบสมาชิก "${name}" ออกจากระบบกิลด์ทั้งหมดหรือไม่?`,
+        toastResetSuccess: "รีเซ็ตข้อมูลเป็นค่าเริ่มต้นจากไฟล์ Excel แล้ว",
+        toastAlreadyAtPillar: (name, pId) => `สมาชิก "${name}" อยู่ที่เสา ${pId} อยู่แล้ว`,
+        toastMoveSuccess: (name, oldP, newP) => `ย้าย "${name}" จากเสา ${oldP} ➔ เสา ${newP} เรียบร้อย (ไม่ซ้ำกัน)`,
+        toastAddSuccess: (name, pId) => `เพิ่ม "${name}" เข้าเสา ${pId} เรียบร้อย`,
+        toastUnassignSuccess: (name, pId) => `นำ "${name}" ออกจากเสา ${pId} แล้ว`,
+        toastClearSuccess: (pId) => `ล้างสมาชิกในเสา ${pId} เรียบร้อย`,
+        toastMemberExists: (name) => `มีสมาชิกชื่อ "${name}" ในระบบแล้ว`,
+        toastAddMemberSuccess: (name) => `เพิ่มสมาชิก "${name}" เข้าสู่ระบบแล้ว`,
+        toastRenameSuccess: (oldName, newName) => `เปลี่ยนชื่อจาก "${oldName}" เป็น "${newName}" เรียบร้อยแล้ว`,
+        toastDeleteSuccess: (name) => `ลบสมาชิก "${name}" ออกจากระบบแล้ว`,
+        toastBatchAdded: (count) => `เพิ่มสมาชิกใหม่สำเร็จ ${count} คน`,
+        toastBatchNone: "ไม่มีสมาชิกใหม่ที่ถูกเพิ่ม (อาจมีชื่อซ้ำอยู่แล้ว)",
+        toastCopiedChat: "คัดลอกข้อความสรุปเรียบร้อย! นำไปวางใน LINE หรือ Discord ได้เลย",
+        toastCopiedTable: "คัดลอกข้อมูลตารางเรียบร้อยแล้ว",
+        toastCopyError: "ไม่สามารถคัดลอกได้ กรุณาคัดลอกด้วยตนเอง",
+        zones: {
+          "ซ้ายบน": "ซ้ายบน",
+          "บนขวา": "บนขวา",
+          "เสากลาง": "เสากลาง",
+          "หน้าบ้านปราสาท": "หน้าบ้านปราสาท",
+          "ตรงข้ามปราสาท": "ตรงข้ามปราสาท",
+          "ล่างซ้าย": "ล่างซ้าย",
+          "ล่างขวา": "ล่างขวา"
+        },
+        notes: {
+          "ซ้ายบน": "ซ้ายบน",
+          "ขวาบน": "ขวาบน",
+          "กลาง": "กลาง",
+          "ซ้ายล่าง": "ซ้ายล่าง",
+          "ขวาล่าง": "ขวาล่าง",
+          "กิล GELATO": "กิล GELATO"
+        },
+        chatHeader: (dateStr) => `📋 ผังจัดเสากิลด์ ONLYFANS (อัปเดต: ${dateStr})\n═══════════════════════════════\n`,
+        chatZonePrefix: (name) => `\n🏰 [โซน ${name}]\n`,
+        chatPillarLine: (pId, note, mems, count) => `  • เสา ${pId}${note}: ${mems} [${count} คน]\n`,
+        chatAssignedTotal: (count) => "",
+        chatUnassignedList: (count, list) => `⏳ สมาชิกที่ยังว่าง (${count} คน): ${list}\n`
+      },
+      en: {
+        appTitle: "Guild War Pillar Plan",
+        appSubtitle: "Unique Member Pillar Assignment & Summary Dashboard",
+        btnCopyChat: "📋 Copy for LINE/Discord",
+        btnManageMembers: "👥 Manage Members",
+        btnResetDefault: "🔄 Reset to Default (Excel)",
+        btnPrint: "🖨️ Print",
+        statTotalPillars: "Total Pillars",
+        statAssigned: "Assigned Members",
+        statUnassigned: "Unassigned Members",
+        statTotalRoster: "Total Guild Roster",
+        tabMap: "🗺️ Map & Pillar Assignment",
+        tabPillarTable: "📋 Pillar Summary (1–15)",
+        tabMemberDir: "👤 Member Directory (A-Z)",
+        tabChatText: "💬 Chat Summary Format",
+        mapHeader: "🗺️ Interactive Guild Map (Click any pillar to open member management panel)",
+        showNamesOnMap: "👁️ Show Names on Map",
+        legendAssigned: "Assigned",
+        legendEmpty: "Empty",
+        filterZoneLabel: "🔍 Filter Zone:",
+        filterZones: {
+          all: "All (15 Pillars)",
+          "ซ้ายบน": "Top Left (Pillars 1, 2)",
+          "บนขวา": "Top Right (Pillars 3, 4)",
+          "เสากลาง": "Center (Pillars 5, 6, 8, 10, 11)",
+          "หน้าบ้านปราสาท": "Castle Front (Pillar 7)",
+          "ตรงข้ามปราสาท": "Castle Opposite (Pillar 9)",
+          "ล่างซ้าย": "Bottom Left (Pillars 12, 13)",
+          "ล่างขวา": "Bottom Right (Pillars 14, 15)"
+        },
+        pillar: "Pillar",
+        membersUnit: "Members",
+        clearPillar: "Clear",
+        emptyPillar: "No members assigned yet",
+        selectPlaceholder: "+ Select existing member...",
+        optAvailable: "🟢 Available Members",
+        optMove: "🟡 Move from other pillar (No duplicates)",
+        moveFromText: (pId, name) => `[Pillar ${pId}] ${name} ➔ Move here`,
+        typeNewPlaceholder: "Type new member name...",
+        quickAddBtn: "➕ Add",
+        sidePanelTitle: "Manage Pillar Members",
+        sidePanelInputHeader: "➕ Add New Member Directly:",
+        sidePanelSelectHeader: "📋 Select from Guild Roster:",
+        tableTitle: "📋 Pillar Summary Table (1–15)",
+        tableSubtitle: "Comprehensive overview of assigned members and zone details",
+        btnCopyTable: "📋 Copy Table",
+        colPillar: "Pillar #",
+        colZone: "Zone",
+        colNote: "Notes / Details",
+        colMembers: "Assigned Members",
+        colCount: "Count",
+        noMembers: "- No members assigned -",
+        rosterTitle: "👤 Member Directory & Pillar Assignment",
+        rosterSubtitle: "Verify where every member is deployed to prevent missing personnel",
+        searchPlaceholder: "Search member name...",
+        colIndex: "#",
+        colMemberName: "Member Name",
+        colStatus: "Status",
+        colAction: "Actions",
+        statusAssigned: "✅ Assigned",
+        statusAvailable: "⏳ Available",
+        btnUnassign: "Unassign",
+        btnAssign: "Assign",
+        btnRename: "✏️ Rename",
+        btnDelete: "🗑️ Delete",
+        noMemberFound: "No matching members found",
+        chatFormatTitle: "💬 Formatted Text for LINE / Discord",
+        chatFormatSubtitle: "Pre-formatted with emojis and grouped zones, ready to paste in guild chat",
+        btnCopyText: "📋 Copy Text",
+        modalTitle: "👥 Manage Guild Members",
+        modalAddSingle: "➕ Add Single Member:",
+        modalSinglePlaceholder: "e.g. ShadowHunter",
+        modalBtnAdd: "Add",
+        modalAddBatch: "📝 Bulk Add Members (separated by new line or comma ,):",
+        modalBatchPlaceholder: "Member1\nMember2\nMember3",
+        modalBtnAddBatch: "➕ Add All Members",
+        modalRosterTotal: "All Members in System",
+        modalUnit: "members",
+        promptChoosePillar: (name) => `Select Pillar number (1 - 15) to assign "${name}":`,
+        promptPillarInvalid: "Please enter a pillar number between 1 and 15.",
+        promptRename: (name) => `Enter new name for "${name}":`,
+        confirmReset: "Do you want to reset all pillar assignments back to Excel defaults?\n(Current changes will be overwritten)",
+        confirmClearPillar: (pId) => `Clear all members assigned to Pillar ${pId}?`,
+        confirmDeleteMember: (name) => `Delete member "${name}" permanently from the roster?`,
+        toastResetSuccess: "Pillar assignments reset to Excel default successfully",
+        toastAlreadyAtPillar: (name, pId) => `Member "${name}" is already at Pillar ${pId}`,
+        toastMoveSuccess: (name, oldP, newP) => `Moved "${name}" from Pillar ${oldP} ➔ Pillar ${newP} (No duplicates)`,
+        toastAddSuccess: (name, pId) => `Added "${name}" to Pillar ${pId}`,
+        toastUnassignSuccess: (name, pId) => `Removed "${name}" from Pillar ${pId}`,
+        toastClearSuccess: (pId) => `Cleared Pillar ${pId}`,
+        toastMemberExists: (name) => `Member "${name}" already exists in the system`,
+        toastAddMemberSuccess: (name) => `Added member "${name}" to roster`,
+        toastRenameSuccess: (oldName, newName) => `Renamed "${oldName}" to "${newName}" successfully`,
+        toastDeleteSuccess: (name) => `Deleted "${name}" from system`,
+        toastBatchAdded: (count) => `Successfully added ${count} new members`,
+        toastBatchNone: "No new members added (names may already exist)",
+        toastCopiedChat: "Summary copied to clipboard! Ready to paste into LINE / Discord",
+        toastCopiedTable: "Table data copied to clipboard",
+        toastCopyError: "Failed to copy. Please copy manually",
+        zones: {
+          "ซ้ายบน": "Top Left",
+          "บนขวา": "Top Right",
+          "เสากลาง": "Center",
+          "หน้าบ้านปราสาท": "Castle Front",
+          "ตรงข้ามปราสาท": "Castle Opposite",
+          "ล่างซ้าย": "Bottom Left",
+          "ล่างขวา": "Bottom Right"
+        },
+        notes: {
+          "ซ้ายบน": "Top Left",
+          "ขวาบน": "Top Right",
+          "กลาง": "Center",
+          "ซ้ายล่าง": "Bottom Left",
+          "ขวาล่าง": "Bottom Right",
+          "กิล GELATO": "GELATO Guild"
+        },
+        chatHeader: (dateStr) => `📋 ONLYFANS GUILD PILLAR PLAN (Updated: ${dateStr})\n═══════════════════════════════\n`,
+        chatZonePrefix: (name) => `\n🏰 [Zone: ${name}]\n`,
+        chatPillarLine: (pId, note, mems, count) => `  • Pillar ${pId}${note}: ${mems} [${count} players]\n`,
+        chatAssignedTotal: (count) => "",
+        chatUnassignedList: (count, list) => `⏳ Available / Unassigned (${count}): ${list}\n`
+      }
+    };
+
+    // Current language state
+    let currentLang = localStorage.getItem("GUILD_PILLAR_LANG") || "th";
+
+    // Current selected pillar on map (default: Pillar 1)
+    let currentSelectedPillarId = 1;
+
+    function t(key) {
+      return I18N[currentLang][key] || I18N['th'][key] || key;
+    }
+
+    function translateZone(zoneName) {
+      return I18N[currentLang].zones[zoneName] || zoneName;
+    }
+
+    function translateNote(noteName) {
+      if (!noteName) return '';
+      return I18N[currentLang].notes[noteName] || noteName;
+    }
+
+    window.setLanguage = function(lang) {
+      currentLang = lang;
+      localStorage.setItem("GUILD_PILLAR_LANG", lang);
+      document.getElementById('btnLangTh').classList.toggle('active', lang === 'th');
+      document.getElementById('btnLangEn').classList.toggle('active', lang === 'en');
+      document.documentElement.lang = lang;
+      applyLanguageToStaticUI();
+      renderAll();
+    };
+
+    function applyLanguageToStaticUI() {
+      const cur = I18N[currentLang];
+      document.getElementById('i18n-appTitle').textContent = cur.appTitle;
+      document.getElementById('i18n-appSubtitle').textContent = cur.appSubtitle;
+      document.getElementById('i18n-btnCopyChat').textContent = cur.btnCopyChat;
+      document.getElementById('i18n-btnManageMembers').textContent = cur.btnManageMembers;
+      document.getElementById('i18n-statTotalPillars').textContent = cur.statTotalPillars;
+      document.getElementById('i18n-statAssigned').textContent = cur.statAssigned;
+      document.getElementById('i18n-statUnassigned').textContent = cur.statUnassigned;
+      document.getElementById('i18n-statTotalRoster').textContent = cur.statTotalRoster;
+
+      document.getElementById('i18n-tabMap').textContent = cur.tabMap;
+      document.getElementById('i18n-tabPillarTable').textContent = cur.tabPillarTable;
+      document.getElementById('i18n-tabMemberDir').textContent = cur.tabMemberDir;
+      document.getElementById('i18n-tabChatText').textContent = cur.tabChatText;
+
+      document.getElementById('i18n-mapHeader').textContent = cur.mapHeader;
+      document.getElementById('i18n-showNamesOnMap').textContent = cur.showNamesOnMap;
+      document.getElementById('i18n-legendAssigned').textContent = cur.legendAssigned;
+      document.getElementById('i18n-legendEmpty').textContent = cur.legendEmpty;
+
+      document.getElementById('i18n-tableTitle').textContent = cur.tableTitle;
+      document.getElementById('i18n-tableSubtitle').textContent = cur.tableSubtitle;
+      document.getElementById('i18n-btnCopyTable').textContent = cur.btnCopyTable;
+      document.getElementById('i18n-colPillar').textContent = cur.colPillar;
+      document.getElementById('i18n-colZone').textContent = cur.colZone;
+      document.getElementById('i18n-colNote').textContent = cur.colNote;
+      document.getElementById('i18n-colMembers').textContent = cur.colMembers;
+      document.getElementById('i18n-colCount').textContent = cur.colCount;
+
+      document.getElementById('i18n-rosterTitle').textContent = cur.rosterTitle;
+      document.getElementById('i18n-rosterSubtitle').textContent = cur.rosterSubtitle;
+      document.getElementById('searchMemberInput').placeholder = cur.searchPlaceholder;
+      document.getElementById('i18n-colIndex').textContent = cur.colIndex;
+      document.getElementById('i18n-colMemberName').textContent = cur.colMemberName;
+      document.getElementById('i18n-colMemberPillar').textContent = cur.colPillar;
+      document.getElementById('i18n-colMemberZone').textContent = cur.colZone;
+      document.getElementById('i18n-colStatus').textContent = cur.colStatus;
+      document.getElementById('i18n-colAction').textContent = cur.colAction;
+
+      document.getElementById('i18n-chatFormatTitle').textContent = cur.chatFormatTitle;
+      document.getElementById('i18n-chatFormatSubtitle').textContent = cur.chatFormatSubtitle;
+      document.getElementById('i18n-btnCopyText').textContent = cur.btnCopyText;
+
+      document.getElementById('i18n-modalTitle').textContent = cur.modalTitle;
+      document.getElementById('i18n-modalAddSingle').textContent = cur.modalAddSingle;
+      document.getElementById('newSingleMemberInput').placeholder = cur.modalSinglePlaceholder;
+      document.getElementById('i18n-modalBtnAdd').textContent = cur.modalBtnAdd;
+      document.getElementById('i18n-modalAddBatch').textContent = cur.modalAddBatch;
+      document.getElementById('newBatchMembersInput').placeholder = cur.modalBatchPlaceholder;
+      document.getElementById('i18n-modalBtnAddBatch').textContent = cur.modalBtnAddBatch;
+      document.getElementById('i18n-modalRosterTotal').textContent = cur.modalRosterTotal;
+      document.getElementById('i18n-modalUnit').textContent = cur.modalUnit;
+
+      renderZoneFilterBar();
+      renderMobilePillarSelector();
+    }
+
+    // Initial Data from Excel: Guild_Pillar_Grouped_Members.xlsx
+    const INITIAL_PILLARS = [
+      { id: 1,  zone: "ซ้ายบน",         note: "",           x: 30.05, y: 28.48, defaultMembers: ["ตาหนึ่ง", "AgustD", "ลั่นล้า"] },
+      { id: 2,  zone: "ซ้ายบน",         note: "",           x: 40.56, y: 29.55, defaultMembers: ["หัวหน้าลี", "คิมแทงจ๋วย", "Xavier", "ดื้อยา"] },
+      { id: 3,  zone: "บนขวา",          note: "",           x: 58.19, y: 29.23, defaultMembers: ["วาว้า", "พระนะจ๊ะ", "กำนันตี่", "ตาโบ้"] },
+      { id: 4,  zone: "บนขวา",          note: "",           x: 69.18, y: 29.01, defaultMembers: ["พะยูน", "ตาตี่"] },
+      { id: 5,  zone: "เสากลาง",        note: "ซ้ายบน",      x: 43.65, y: 40.69, defaultMembers: ["EEROR403", "2235619", "Gnite"] },
+      { id: 6,  zone: "เสากลาง",        note: "ขวาบน",      x: 55.70, y: 40.58, defaultMembers: ["Young_J", "ถุงปุ๋ยย"] },
+      { id: 7,  zone: "หน้าบ้านปราสาท", note: "",           x: 27.02, y: 51.07, defaultMembers: ["ตาโย", "Only fans (ทุกคนในกิลทั้งหมดที่ไม่มีรายชื่อ ช่วยกันเสาและขุด)"] },
+      { id: 8,  zone: "เสากลาง",        note: "กลาง",       x: 49.70, y: 51.18, defaultMembers: ["เทพเมฆาอัคคี", "Nomchompoo"] },
+      { id: 9,  zone: "ตรงข้ามปราสาท",  note: "",           x: 72.21, y: 50.96, defaultMembers: ["บอล", "Svaa1"] },
+      { id: 10, zone: "เสากลาง",        note: "ซ้ายล่าง",    x: 43.41, y: 62.74, defaultMembers: ["หมอผีหวีเป๋", "มังกระดาวยอ", "แฟรงก์เฟิร์ต"] },
+      { id: 11, zone: "เสากลาง",        note: "ขวาล่าง",    x: 55.94, y: 62.63, defaultMembers: ["ครูลำดวน", "อู่อันโหว", "LooneyToon"] },
+      { id: 12, zone: "ล่างซ้าย",        note: "",           x: 29.93, y: 73.88, defaultMembers: ["Chabuay", "กระเจี้ยว"] },
+      { id: 13, zone: "ล่างซ้าย",        note: "",           x: 40.44, y: 73.88, defaultMembers: ["ตาโอ๊ต", "SCBEASY"] },
+      { id: 14, zone: "ล่างขวา",        note: "",           x: 58.61, y: 73.77, defaultMembers: ["สมเด็จแบงค์", "มาคสลิ้งเเตก", "เฟ่ยดุสิต"] },
+      { id: 15, zone: "ล่างขวา",        note: "",           x: 69.12, y: 73.88, defaultMembers: ["Than789", "Tiwwcom"] }
+    ];
+
+    // App State
+    let appState = {
+      pillars: [],
+      allMembers: []
+    };
+
+    let activeZoneFilter = 'all';
+
+    const STORAGE_KEY = "ONLYFANS_GUILD_PILLARS_V3";
+
+    // Initialize or Load from LocalStorage
+    function initData(forceReset = false) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (!forceReset && saved) {
+        try {
+          appState = JSON.parse(saved);
+        } catch (e) {
+          console.error("Failed to parse saved state, using default:", e);
+          loadDefaults();
+        }
+      } else {
+        loadDefaults();
+      }
+      ensureConsistency();
+      saveToStorage();
+      applyLanguageToStaticUI();
+      renderAll();
+      if (forceReset) {
+        showToast(t('toastResetSuccess'), "success");
+      }
+    }
+
+    function loadDefaults() {
+      const allMembersSet = new Set();
+      const pillars = INITIAL_PILLARS.map(p => {
+        p.defaultMembers.forEach(m => allMembersSet.add(m));
+        return {
+          id: p.id,
+          zone: p.zone,
+          note: p.note,
+          x: p.x,
+          y: p.y,
+          members: [...p.defaultMembers]
+        };
+      });
+      appState = {
+        pillars: pillars,
+        allMembers: Array.from(allMembersSet)
+      };
+      saveToStorage();
+    }
+
+    // Ensure member consistency: Unique across pillars
+    function ensureConsistency() {
+      const seen = new Set();
+      const allMems = new Set(appState.allMembers || []);
+
+      appState.pillars.forEach(p => {
+        if (p.id === 15 && (p.note === "กิล GELATO" || p.note === "GELATO Guild")) {
+          p.note = "";
+        }
+        const uniquePillarMembers = [];
+        p.members.forEach(m => {
+          m = m.trim();
+          if (m && !seen.has(m)) {
+            seen.add(m);
+            uniquePillarMembers.push(m);
+            allMems.add(m);
+          }
+        });
+        p.members = uniquePillarMembers;
+      });
+
+      appState.allMembers = Array.from(allMems);
+    }
+
+    function saveToStorage() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+    }
+
+    // Helper: Find which pillar a member currently belongs to
+    function getMemberPillar(memberName) {
+      for (const p of appState.pillars) {
+        if (p.members.includes(memberName)) {
+          return p.id;
+        }
+      }
+      return null;
+    }
+
+    // Rename a Member Across Entire App
+    window.renameMember = function(oldName, newName) {
+      newName = newName.trim();
+      if (!newName || newName === oldName) return;
+
+      if (appState.allMembers.includes(newName)) {
+        showToast(t('toastMemberExists')(newName), "error");
+        return;
+      }
+
+      // Update in allMembers list
+      const idx = appState.allMembers.indexOf(oldName);
+      if (idx !== -1) {
+        appState.allMembers[idx] = newName;
+      }
+
+      // Update in pillars
+      appState.pillars.forEach(p => {
+        const mIdx = p.members.indexOf(oldName);
+        if (mIdx !== -1) {
+          p.members[mIdx] = newName;
+        }
+      });
+
+      saveToStorage();
+      renderAll();
+      showToast(t('toastRenameSuccess')(oldName, newName), "success");
+    };
+
+    // Prompt user to rename a member
+    window.promptRenameMember = function(oldName) {
+      const cur = I18N[currentLang];
+      const newName = prompt(cur.promptRename(oldName), oldName);
+      if (newName !== null && newName.trim()) {
+        renameMember(oldName, newName.trim());
+      }
+    };
+
+    // Delete a Member Permanently from System
+    window.deleteMemberFromSystem = function(name) {
+      const cur = I18N[currentLang];
+      if (confirm(cur.confirmDeleteMember(name))) {
+        // Remove from allMembers
+        appState.allMembers = appState.allMembers.filter(m => m !== name);
+
+        // Remove from any assigned pillars
+        appState.pillars.forEach(p => {
+          p.members = p.members.filter(m => m !== name);
+        });
+
+        saveToStorage();
+        renderAll();
+        showToast(t('toastDeleteSuccess')(name), "info");
+      }
+    };
+
+    // Assign a member to a pillar (automatically removing from any other pillar first to guarantee uniqueness!)
+    function assignMemberToPillar(memberName, targetPillarId) {
+      memberName = memberName.trim();
+      if (!memberName) return;
+
+      if (!appState.allMembers.includes(memberName)) {
+        appState.allMembers.push(memberName);
+      }
+
+      const currentPillarId = getMemberPillar(memberName);
+      if (currentPillarId === targetPillarId) {
+        showToast(t('toastAlreadyAtPillar')(memberName, targetPillarId), "info");
+        return;
+      }
+
+      if (currentPillarId !== null) {
+        const oldP = appState.pillars.find(p => p.id === currentPillarId);
+        if (oldP) {
+          oldP.members = oldP.members.filter(m => m !== memberName);
+        }
+      }
+
+      const newP = appState.pillars.find(p => p.id === targetPillarId);
+      if (newP && !newP.members.includes(memberName)) {
+        newP.members.push(memberName);
+      }
+
+      saveToStorage();
+      renderAll();
+
+      if (currentPillarId !== null) {
+        showToast(t('toastMoveSuccess')(memberName, currentPillarId, targetPillarId), "success");
+      } else {
+        showToast(t('toastAddSuccess')(memberName, targetPillarId), "success");
+      }
+    }
+
+    // Remove member from a pillar
+    function unassignMember(memberName, pillarId) {
+      const p = appState.pillars.find(x => x.id === pillarId);
+      if (p) {
+        p.members = p.members.filter(m => m !== memberName);
+        saveToStorage();
+        renderAll();
+        showToast(t('toastUnassignSuccess')(memberName, pillarId), "info");
+      }
+    }
+
+    // Clear all members from a pillar
+    function clearPillar(pillarId) {
+      const p = appState.pillars.find(x => x.id === pillarId);
+      if (p && confirm(t('confirmClearPillar')(pillarId))) {
+        p.members = [];
+        saveToStorage();
+        renderAll();
+        showToast(t('toastClearSuccess')(pillarId), "info");
+      }
+    }
+
+    // Add new member to system
+    function addMemberToSystem(name) {
+      name = name.trim();
+      if (!name) return;
+      if (appState.allMembers.includes(name)) {
+        showToast(t('toastMemberExists')(name), "error");
+        return;
+      }
+      appState.allMembers.push(name);
+      saveToStorage();
+      renderAll();
+      showToast(t('toastAddMemberSuccess')(name), "success");
+    }
+
+    // Zone Badge Helper
+    function getZoneBadgeClass(zone) {
+      switch (zone) {
+        case 'ซ้ายบน': return 'zone-top-left';
+        case 'บนขวา': return 'zone-top-right';
+        case 'เสากลาง': return 'zone-center';
+        case 'ล่างซ้าย': return 'zone-bottom-left';
+        case 'ล่างขวา': return 'zone-bottom-right';
+        case 'หน้าบ้านปราสาท':
+        case 'ตรงข้ามปราสาท': return 'zone-castle';
+        default: return 'zone-top-left';
+      }
+    }
+
+    // Render Filter Bar with current language
+    function renderZoneFilterBar() {
+      const bar = document.getElementById('zoneFilterContainer');
+      const cur = I18N[currentLang];
+      const zonesMap = cur.filterZones;
+
+      let html = `<span style="font-size:0.85rem; color:var(--text-secondary); margin-right:4px;">${cur.filterZoneLabel}</span>`;
+      Object.keys(zonesMap).forEach(key => {
+        const isActive = activeZoneFilter === key ? 'active' : '';
+        html += `<button class="filter-chip ${isActive}" data-zone="${key}">${zonesMap[key]}</button>`;
+      });
+      bar.innerHTML = html;
+
+      bar.querySelectorAll('.filter-chip').forEach(chip => {
+        chip.addEventListener('click', () => {
+          bar.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          activeZoneFilter = chip.dataset.zone;
+
+          document.querySelectorAll('.pillar-card').forEach(card => {
+            if (activeZoneFilter === 'all' || card.dataset.zone === activeZoneFilter) {
+              card.style.display = 'flex';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      });
+    }
+
+    // Render Quick Selector Pills (Mobile & Tablet)
+    function renderMobilePillarSelector() {
+      const bar = document.getElementById('mobilePillarPills');
+      if (!bar) return;
+      const cur = I18N[currentLang];
+
+      let html = `<span style="font-size:0.78rem; color:var(--text-secondary); white-space:nowrap; margin-right:2px;">⚡ ${cur.pillar}:</span>`;
+      appState.pillars.forEach(p => {
+        const isActive = p.id === currentSelectedPillarId;
+        const count = p.members.length;
+        html += `
+          <button class="mobile-pill-btn ${isActive ? 'active' : ''}" onclick="selectPillar(${p.id})">
+            ${p.id} <span style="font-size:0.7rem; opacity:0.8;">(${count})</span>
+          </button>
+        `;
+      });
+      bar.innerHTML = html;
+    }
+
+    // ==========================================
+    // RENDER FUNCTIONS
+    // ==========================================
+
+    function renderAll() {
+      updateStats();
+      renderMapPins();
+      renderMobilePillarSelector();
+      renderSidePanel();
+      renderPillarCards();
+      renderSummaryPillarTable();
+      renderSummaryMembersTable();
+      renderChatPreviewText();
+      renderModalMemberList();
+    }
+
+    // Update Top Stat Numbers
+    function updateStats() {
+      let assignedCount = 0;
+      appState.pillars.forEach(p => assignedCount += p.members.length);
+      const totalCount = appState.allMembers.length;
+      const unassignedCount = Math.max(0, totalCount - assignedCount);
+
+      document.getElementById('statTotalPillars').textContent = appState.pillars.length;
+      document.getElementById('statAssignedMembers').textContent = assignedCount;
+      document.getElementById('statUnassignedMembers').textContent = unassignedCount;
+      document.getElementById('statAllMembers').textContent = totalCount;
+      document.getElementById('countTotalMembersBtn').textContent = totalCount;
+      document.getElementById('modalTotalMembersCount').textContent = totalCount;
+    }
+
+    // Render Pins on Map
+    function renderMapPins() {
+      const container = document.getElementById('mapPinsContainer');
+      container.innerHTML = '';
+      const cur = I18N[currentLang];
+
+      appState.pillars.forEach(p => {
+        const pin = document.createElement('div');
+        const isActive = p.id === currentSelectedPillarId;
+        pin.className = `map-pin ${p.members.length === 0 ? 'empty' : ''} ${isActive ? 'active' : ''}`;
+        pin.style.left = `${p.x}%`;
+        pin.style.top = `${p.y}%`;
+        const translatedZone = translateZone(p.zone);
+        pin.title = `${cur.pillar} ${p.id} (${translatedZone}) - ${p.members.length} ${cur.membersUnit}: ${p.members.join(', ')}`;
+        pin.dataset.pillarId = p.id;
+
+        const membersPreview = p.members.length > 0 ? p.members.join(', ') : cur.emptyPillar;
+
+        pin.innerHTML = `
+          <div class="pin-hexagon">
+            ${p.id}
+            <span class="pin-count-badge">${p.members.length}</span>
+          </div>
+          <div class="pin-names-overlay">
+            <strong>${cur.pillar} ${p.id}</strong><br>${membersPreview}
+          </div>
+        `;
+
+        pin.addEventListener('click', () => {
+          selectPillar(p.id, true);
+        });
+
+        container.appendChild(pin);
+      });
+    }
+
+    // Select a Pillar (Updates Map Highlight, Quick Pills, & Side Panel)
+    function selectPillar(pillarId, shouldScroll = false) {
+      currentSelectedPillarId = pillarId;
+      renderMapPins();
+      renderMobilePillarSelector();
+      renderSidePanel();
+
+      // On mobile / iPad screens (< 900px), scroll smoothly to the side panel
+      if (shouldScroll && window.innerWidth <= 900) {
+        const panel = document.getElementById('pillarSidePanel');
+        if (panel) {
+          panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }
+
+      setTimeout(() => {
+        const input = document.getElementById('sidePanelNewMemberInput');
+        if (input && window.innerWidth > 900) input.focus();
+      }, 100);
+    }
+
+    // Render Side Panel next to the map
+    function renderSidePanel() {
+      const panel = document.getElementById('pillarSidePanel');
+      const cur = I18N[currentLang];
+      const p = appState.pillars.find(x => x.id === currentSelectedPillarId);
+
+      if (!p) {
+        panel.innerHTML = `
+          <div style="text-align:center; padding:40px 10px; color:var(--text-secondary);">
+            <div style="font-size:3rem; margin-bottom:12px;">🗺️</div>
+            <h3 style="color:#fff; margin-bottom:6px;">${cur.sidePanelTitle}</h3>
+            <p style="font-size:0.85rem;">คลิกที่หมายเลขเสาบนแผนผัง เพื่อจัดการสมาชิก</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Member chips for side panel (with rename button ✏️)
+      let membersHtml = '';
+      if (p.members.length === 0) {
+        membersHtml = `<div class="empty-pillar-notice">${cur.emptyPillar}</div>`;
+      } else {
+        p.members.forEach(m => {
+          const firstChar = m.charAt(0);
+          membersHtml += `
+            <div class="member-chip">
+              <span class="member-name" title="คลิกเพื่อเปลี่ยนชื่อ" onclick="promptRenameMember('${m.replace(/'/g, "\\'")}')">
+                <span class="member-avatar">${firstChar}</span>
+                ${m}
+              </span>
+              <div class="member-chip-actions">
+                <button class="btn-chip-action" title="เปลี่ยนชื่อ (Rename)" onclick="promptRenameMember('${m.replace(/'/g, "\\'")}')">✏️</button>
+                <button class="btn-chip-action remove" title="${cur.btnUnassign}" onclick="unassignMember('${m.replace(/'/g, "\\'")}', ${p.id})">✕</button>
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      // Build Select Options for Side Panel
+      const assignedMap = {};
+      appState.pillars.forEach(x => {
+        x.members.forEach(m => assignedMap[m] = x.id);
+      });
+      const unassignedList = appState.allMembers.filter(m => !assignedMap[m]).sort();
+
+      let optionsHtml = `<option value="">${cur.selectPlaceholder}</option>`;
+      if (unassignedList.length > 0) {
+        optionsHtml += `<optgroup label="${cur.optAvailable} (${unassignedList.length})">`;
+        unassignedList.forEach(m => {
+          optionsHtml += `<option value="${m}">${m}</option>`;
+        });
+        optionsHtml += `</optgroup>`;
+      }
+
+      // Other pillars members
+      const otherAssigned = [];
+      appState.pillars.forEach(otherP => {
+        if (otherP.id !== p.id) {
+          otherP.members.forEach(m => {
+            otherAssigned.push({ name: m, fromPillar: otherP.id });
+          });
+        }
+      });
+      if (otherAssigned.length > 0) {
+        optionsHtml += `<optgroup label="${cur.optMove}">`;
+        otherAssigned.sort((a, b) => a.name.localeCompare(b.name)).forEach(item => {
+          optionsHtml += `<option value="${item.name}">${cur.moveFromText(item.fromPillar, item.name)}</option>`;
+        });
+        optionsHtml += `</optgroup>`;
+      }
+
+      const translatedZone = translateZone(p.zone);
+      const translatedNote = translateNote(p.note);
+
+      const prevId = p.id > 1 ? p.id - 1 : 15;
+      const nextId = p.id < 15 ? p.id + 1 : 1;
+
+      panel.innerHTML = `
+        <div class="side-panel-header">
+          <div class="side-panel-title-box">
+            <div class="side-pillar-num">${p.id}</div>
+            <div>
+              <h3 style="color:#fff; font-size:1.15rem; font-weight:700;">${cur.pillar} ${p.id}</h3>
+              <div style="display:flex; gap:6px; align-items:center; margin-top:2px; flex-wrap:wrap;">
+                <span class="zone-badge ${getZoneBadgeClass(p.zone)}">${translatedZone}</span>
+                ${translatedNote ? `<span class="pillar-note">${translatedNote}</span>` : ''}
+              </div>
+            </div>
+          </div>
+          <div class="side-panel-nav-btns">
+            <button class="side-nav-btn" title="เสาก่อนหน้า (Prev)" onclick="selectPillar(${prevId})">◀</button>
+            <button class="side-nav-btn" title="เสาถัดไป (Next)" onclick="selectPillar(${nextId})">▶</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <span style="font-size:0.85rem; color:var(--text-secondary); font-weight:600;">
+              👥 ${cur.membersUnit} (${p.members.length})
+            </span>
+            ${p.members.length > 0 ? `<button class="btn btn-sm btn-danger" style="padding:2px 8px; font-size:0.75rem;" onclick="clearPillar(${p.id})">${cur.clearPillar}</button>` : ''}
+          </div>
+          <div class="side-members-box">
+            ${membersHtml}
+          </div>
+        </div>
+
+        <div class="side-add-box">
+          <h4>✍️ ${cur.sidePanelInputHeader}</h4>
+          <div class="side-input-group">
+            <input type="text" class="form-control" id="sidePanelNewMemberInput" placeholder="${cur.typeNewPlaceholder}" onkeydown="if(event.key==='Enter') handleAddFromSidePanel(${p.id})">
+            <button class="btn btn-gold" style="padding:0 14px; white-space:nowrap;" onclick="handleAddFromSidePanel(${p.id})">
+              ${cur.quickAddBtn}
+            </button>
+          </div>
+
+          <div style="margin-top:6px;">
+            <span style="font-size:0.8rem; color:var(--text-secondary); display:block; margin-bottom:4px;">
+              ${cur.sidePanelSelectHeader}
+            </span>
+            <select class="member-select" style="width:100%;" onchange="handleSelectMember(${p.id}, this)">
+              ${optionsHtml}
+            </select>
+          </div>
+        </div>
+      `;
+    }
+
+    // Add member handler from Side Panel
+    window.handleAddFromSidePanel = function(pillarId) {
+      const input = document.getElementById('sidePanelNewMemberInput');
+      if (input) {
+        const name = input.value.trim();
+        if (name) {
+          assignMemberToPillar(name, pillarId);
+          input.value = '';
+          if (window.innerWidth > 900) input.focus();
+        }
+      }
+    };
+
+    // Render Pillar Cards in the Grid below
+    function renderPillarCards() {
+      const grid = document.getElementById('pillarsGrid');
+      grid.innerHTML = '';
+      const cur = I18N[currentLang];
+
+      const assignedMap = {};
+      appState.pillars.forEach(p => {
+        p.members.forEach(m => assignedMap[m] = p.id);
+      });
+      const unassignedList = appState.allMembers.filter(m => !assignedMap[m]).sort();
+
+      appState.pillars.forEach(p => {
+        const card = document.createElement('div');
+        const isSelected = p.id === currentSelectedPillarId;
+        card.className = `pillar-card ${isSelected ? 'highlight' : ''}`;
+        card.id = `pillar-card-${p.id}`;
+        card.dataset.zone = p.zone;
+        if (activeZoneFilter !== 'all' && p.zone !== activeZoneFilter) {
+          card.style.display = 'none';
+        }
+
+        let membersHtml = '';
+        if (p.members.length === 0) {
+          membersHtml = `<div class="empty-pillar-notice">${cur.emptyPillar}</div>`;
+        } else {
+          p.members.forEach(m => {
+            const firstChar = m.charAt(0);
+            membersHtml += `
+              <div class="member-chip">
+                <span class="member-name" title="คลิกเพื่อเปลี่ยนชื่อ" onclick="promptRenameMember('${m.replace(/'/g, "\\'")}')">
+                  <span class="member-avatar">${firstChar}</span>
+                  ${m}
+                </span>
+                <div class="member-chip-actions">
+                  <button class="btn-chip-action" title="เปลี่ยนชื่อ (Rename)" onclick="promptRenameMember('${m.replace(/'/g, "\\'")}')">✏️</button>
+                  <button class="btn-chip-action remove" title="${cur.btnUnassign}" onclick="unassignMember('${m.replace(/'/g, "\\'")}', ${p.id})">✕</button>
+                </div>
+              </div>
+            `;
+          });
+        }
+
+        let optionsHtml = `<option value="">${cur.selectPlaceholder}</option>`;
+        if (unassignedList.length > 0) {
+          optionsHtml += `<optgroup label="${cur.optAvailable} (${unassignedList.length})">`;
+          unassignedList.forEach(m => {
+            optionsHtml += `<option value="${m}">${m}</option>`;
+          });
+          optionsHtml += `</optgroup>`;
+        }
+
+        const otherAssigned = [];
+        appState.pillars.forEach(otherP => {
+          if (otherP.id !== p.id) {
+            otherP.members.forEach(m => {
+              otherAssigned.push({ name: m, fromPillar: otherP.id });
+            });
+          }
+        });
+
+        if (otherAssigned.length > 0) {
+          optionsHtml += `<optgroup label="${cur.optMove}">`;
+          otherAssigned.sort((a, b) => a.name.localeCompare(b.name)).forEach(item => {
+            optionsHtml += `<option value="${item.name}">${cur.moveFromText(item.fromPillar, item.name)}</option>`;
+          });
+          optionsHtml += `</optgroup>`;
+        }
+
+        const translatedZone = translateZone(p.zone);
+        const translatedNote = translateNote(p.note);
+
+        card.innerHTML = `
+          <div class="pillar-header">
+            <div class="pillar-title-box">
+              <div class="pillar-number-icon" style="cursor:pointer;" onclick="selectPillar(${p.id}, true)">${p.id}</div>
+              <div class="pillar-header-text">
+                <h3 style="cursor:pointer;" onclick="selectPillar(${p.id}, true)">${cur.pillar} ${p.id}</h3>
+                <span class="zone-badge ${getZoneBadgeClass(p.zone)}">${translatedZone}</span>
+                ${translatedNote ? `<span class="pillar-note">${translatedNote}</span>` : ''}
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <span style="font-size:0.85rem; font-weight:700; color:${p.members.length > 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">
+                ${p.members.length} ${cur.membersUnit}
+              </span>
+              ${p.members.length > 0 ? `<div><button class="btn btn-sm btn-danger" style="margin-top:4px; padding:2px 6px; font-size:0.72rem;" onclick="clearPillar(${p.id})">${cur.clearPillar}</button></div>` : ''}
+            </div>
+          </div>
+
+          <div class="pillar-members-list">
+            ${membersHtml}
+          </div>
+
+          <div class="pillar-actions">
+            <div class="member-select-wrapper">
+              <select class="member-select" id="select-pillar-${p.id}" onchange="handleSelectMember(${p.id}, this)">
+                ${optionsHtml}
+              </select>
+            </div>
+            <div style="display:flex; gap:6px;">
+              <input type="text" class="form-control" id="custom-member-${p.id}" placeholder="${cur.typeNewPlaceholder}" style="font-size:0.8rem; padding:5px 8px; flex:1;" onkeydown="if(event.key==='Enter') handleAddCustomMember(${p.id})">
+              <button class="btn-add-quick" onclick="handleAddCustomMember(${p.id})">+</button>
+            </div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+      });
+    }
+
+    window.handleSelectMember = function(pillarId, selectEl) {
+      const selectedMember = selectEl.value;
+      if (selectedMember) {
+        assignMemberToPillar(selectedMember, pillarId);
+        selectEl.value = '';
+      }
+    };
+
+    window.handleAddCustomMember = function(pillarId) {
+      const inputEl = document.getElementById(`custom-member-${pillarId}`);
+      if (inputEl) {
+        const name = inputEl.value.trim();
+        if (name) {
+          assignMemberToPillar(name, pillarId);
+          inputEl.value = '';
+        }
+      }
+    };
+
+    // Render Tab 2: Pillar Summary Table
+    function renderSummaryPillarTable() {
+      const tbody = document.getElementById('summaryPillarTableBody');
+      tbody.innerHTML = '';
+      const cur = I18N[currentLang];
+
+      appState.pillars.forEach(p => {
+        const tr = document.createElement('tr');
+
+        let chips = '';
+        if (p.members.length === 0) {
+          chips = `<span style="color:var(--text-muted); font-style:italic;">${cur.noMembers}</span>`;
+        } else {
+          chips = `<div class="table-members-chips">` +
+            p.members.map(m => `
+              <span class="table-chip" title="คลิกเพื่อเปลี่ยนชื่อ" onclick="promptRenameMember('${m.replace(/'/g, "\\'")}')" style="cursor:pointer;">
+                👤 ${m} <span style="font-size:0.7rem; color:var(--accent-gold);">✏️</span>
+              </span>
+            `).join('') +
+            `</div>`;
+        }
+
+        const translatedZone = translateZone(p.zone);
+        const translatedNote = translateNote(p.note);
+
+        tr.innerHTML = `
+          <td><span class="table-pillar-badge" style="cursor:pointer;" onclick="selectPillar(${p.id}, true)">${cur.pillar} ${p.id}</span></td>
+          <td><span class="zone-badge ${getZoneBadgeClass(p.zone)}">${translatedZone}</span></td>
+          <td>${translatedNote ? `<span class="pillar-note">${translatedNote}</span>` : '<span style="color:var(--text-muted);">-</span>'}</td>
+          <td>${chips}</td>
+          <td style="text-align:center; font-weight:700; color:${p.members.length > 0 ? 'var(--accent-green)' : 'var(--accent-red)'};">${p.members.length}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Render Tab 3: Member Directory Table
+    function renderSummaryMembersTable() {
+      const tbody = document.getElementById('summaryMembersTableBody');
+      const filterText = (document.getElementById('searchMemberInput').value || '').toLowerCase().trim();
+      tbody.innerHTML = '';
+      const cur = I18N[currentLang];
+
+      const list = appState.allMembers.map(m => {
+        const pillarId = getMemberPillar(m);
+        const pillar = pillarId ? appState.pillars.find(p => p.id === pillarId) : null;
+        return {
+          name: m,
+          pillarId: pillarId,
+          zone: pillar ? pillar.zone : null,
+          note: pillar ? pillar.note : null
+        };
+      });
+
+      list.sort((a, b) => {
+        if (a.pillarId && !b.pillarId) return -1;
+        if (!a.pillarId && b.pillarId) return 1;
+        return a.name.localeCompare(b.name, currentLang === 'th' ? 'th' : 'en');
+      });
+
+      let count = 0;
+      list.forEach((item) => {
+        if (filterText && !item.name.toLowerCase().includes(filterText)) {
+          return;
+        }
+        count++;
+
+        const tr = document.createElement('tr');
+        const isAssigned = item.pillarId !== null;
+        const translatedZone = item.zone ? translateZone(item.zone) : '';
+        const translatedNote = item.note ? translateNote(item.note) : '';
+
+        tr.innerHTML = `
+          <td style="color:var(--text-muted);">${count}</td>
+          <td style="font-weight:600; color:#fff;">
+            👤 ${item.name}
+          </td>
+          <td>
+            ${isAssigned 
+              ? `<span class="table-pillar-badge" style="cursor:pointer;" onclick="selectPillar(${item.pillarId}, true)">${cur.pillar} ${item.pillarId}</span>` 
+              : `<span style="color:var(--text-muted);">-</span>`}
+          </td>
+          <td>
+            ${isAssigned 
+              ? `<span class="zone-badge ${getZoneBadgeClass(item.zone)}">${translatedZone} ${translatedNote ? '('+translatedNote+')' : ''}</span>` 
+              : `<span style="color:var(--text-muted);">-</span>`}
+          </td>
+          <td>
+            ${isAssigned 
+              ? `<span style="color:var(--accent-green); font-size:0.82rem; font-weight:600;">${cur.statusAssigned}</span>` 
+              : `<span style="color:var(--accent-orange); font-size:0.82rem; font-weight:600;">${cur.statusAvailable}</span>`}
+          </td>
+          <td style="text-align:center;">
+            <div style="display:flex; gap:4px; justify-content:center; flex-wrap:nowrap;">
+              <button class="btn btn-sm btn-secondary" style="padding:2px 7px; font-size:0.75rem;" title="เปลี่ยนชื่อ" onclick="promptRenameMember('${item.name.replace(/'/g, "\\'")}')">${cur.btnRename}</button>
+              ${isAssigned 
+                ? `<button class="btn btn-sm btn-danger" style="padding:2px 7px; font-size:0.75rem;" onclick="unassignMember('${item.name.replace(/'/g, "\\'")}', ${item.pillarId})">${cur.btnUnassign}</button>` 
+                : `<button class="btn btn-sm btn-gold" style="padding:2px 7px; font-size:0.75rem;" onclick="promptAssignMember('${item.name.replace(/'/g, "\\'")}')">${cur.btnAssign}</button>`}
+              <button class="btn btn-sm btn-danger" style="padding:2px 6px; font-size:0.75rem;" title="ลบออกจากระบบ" onclick="deleteMemberFromSystem('${item.name.replace(/'/g, "\\'")}')">🗑️</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      if (count === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:var(--text-muted); padding:20px;">${cur.noMemberFound}</td></tr>`;
+      }
+    }
+
+    window.promptAssignMember = function(memberName) {
+      const cur = I18N[currentLang];
+      const pId = prompt(cur.promptChoosePillar(memberName), "1");
+      if (pId !== null) {
+        const num = parseInt(pId);
+        if (num >= 1 && num <= 15) {
+          assignMemberToPillar(memberName, num);
+        } else {
+          alert(cur.promptPillarInvalid);
+        }
+      }
+    };
+
+    // Render Tab 4: Generate Chat Text Preview
+    function generateChatSummary() {
+      const now = new Date();
+      const locale = currentLang === 'th' ? 'th-TH' : 'en-US';
+      const dateStr = now.toLocaleDateString(locale, { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const cur = I18N[currentLang];
+
+      let text = cur.chatHeader(dateStr);
+
+      const zones = [
+        { key: "ซ้ายบน", ids: [1, 2] },
+        { key: "บนขวา", ids: [3, 4] },
+        { key: "เสากลาง", ids: [5, 6, 8, 10, 11] },
+        { key: "หน้าบ้านปราสาท", ids: [7] },
+        { key: "ตรงข้ามปราสาท", ids: [9] },
+        { key: "ล่างซ้าย", ids: [12, 13] },
+        { key: "ล่างขวา", ids: [14, 15] }
+      ];
+
+      zones.forEach(z => {
+        const translatedZoneName = translateZone(z.key);
+        text += cur.chatZonePrefix(translatedZoneName);
+        z.ids.forEach(id => {
+          const p = appState.pillars.find(x => x.id === id);
+          if (p) {
+            const noteText = p.note ? ` (${translateNote(p.note)})` : '';
+            const membersList = p.members.length > 0 ? p.members.join(', ') : cur.emptyPillar;
+            text += cur.chatPillarLine(p.id, noteText, membersList, p.members.length);
+          }
+        });
+      });
+
+      const assignedMap = {};
+      appState.pillars.forEach(p => p.members.forEach(m => assignedMap[m] = true));
+      const unassigned = appState.allMembers.filter(m => !assignedMap[m]);
+
+      text += cur.chatAssignedTotal(Object.keys(assignedMap).length);
+      if (unassigned.length > 0) {
+        text += `\n═══════════════════════════════\n` + cur.chatUnassignedList(unassigned.length, unassigned.join(', '));
+      }
+
+      return text.trim();
+    }
+
+    function renderChatPreviewText() {
+      const box = document.getElementById('chatPreviewText');
+      if (box) {
+        box.textContent = generateChatSummary();
+      }
+    }
+
+    // Modal Member List (with Rename ✏️ and Delete 🗑️)
+    function renderModalMemberList() {
+      const container = document.getElementById('modalMemberList');
+      if (!container) return;
+      container.innerHTML = '';
+      const cur = I18N[currentLang];
+
+      appState.allMembers.forEach(m => {
+        const pillarId = getMemberPillar(m);
+        const chip = document.createElement('div');
+        chip.className = 'modal-member-chip';
+
+        chip.innerHTML = `
+          <span class="modal-member-name-label" title="คลิกเพื่อเปลี่ยนชื่อ" onclick="promptRenameMember('${m.replace(/'/g, "\\'")}')">
+            👤 <strong>${m}</strong>
+            ${pillarId ? `<span style="color:var(--accent-gold); font-size:0.75rem;">(${cur.pillar} ${pillarId})</span>` : `<span style="color:var(--accent-orange); font-size:0.75rem;">(${cur.statusAvailable})</span>`}
+          </span>
+          <div style="display:flex; gap:2px;">
+            <button class="chip-action-btn" title="เปลี่ยนชื่อ (Rename)" onclick="promptRenameMember('${m.replace(/'/g, "\\'")}')">✏️</button>
+            <button class="chip-action-btn del" title="ลบสมาชิก (Delete)" onclick="deleteMemberFromSystem('${m.replace(/'/g, "\\'")}')">🗑️</button>
+          </div>
+        `;
+        container.appendChild(chip);
+      });
+    }
+
+    function copyTextToClipboard(text, successMessage) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(() => {
+          showToast(successMessage, "success");
+        }).catch(() => {
+          fallbackCopyText(text, successMessage);
+        });
+      } else {
+        fallbackCopyText(text, successMessage);
+      }
+    }
+
+    function fallbackCopyText(text, successMessage) {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        showToast(successMessage, "success");
+      } catch (err) {
+        showToast(t('toastCopyError'), "error");
+      }
+      document.body.removeChild(textArea);
+    }
+
+    function copyTableText() {
+      const cur = I18N[currentLang];
+      let text = `${cur.colPillar}\t${cur.colZone}\t${cur.colNote}\t${cur.colMembers}\t${cur.colCount}\n`;
+      appState.pillars.forEach(p => {
+        text += `${cur.pillar} ${p.id}\t${translateZone(p.zone)}\t${translateNote(p.note) || '-'}\t${p.members.join(', ')}\t${p.members.length}\n`;
+      });
+      copyTextToClipboard(text, t('toastCopiedTable'));
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      
+      let icon = 'ℹ️';
+      if (type === 'success') icon = '✅';
+      if (type === 'error') icon = '⚠️';
+
+      toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => toast.classList.add('show'), 10);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    // ==========================================
+    // EVENT LISTENERS
+    // ==========================================
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('btnLangTh').classList.toggle('active', currentLang === 'th');
+      document.getElementById('btnLangEn').classList.toggle('active', currentLang === 'en');
+      document.documentElement.lang = currentLang;
+
+      initData();
+
+      // Tab Switching
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+          btn.classList.add('active');
+          const tabId = btn.dataset.tab;
+          const content = document.getElementById(tabId);
+          if (content) content.classList.add('active');
+
+          if (tabId === 'tab-text-format') renderChatPreviewText();
+          if (tabId === 'tab-summary-members') renderSummaryMembersTable();
+          if (tabId === 'tab-summary-pillar') renderSummaryPillarTable();
+        });
+      });
+
+      // Toggle Member Names on Map
+      const toggleMapNames = document.getElementById('toggleMapNames');
+      toggleMapNames.addEventListener('change', (e) => {
+        const stage = document.getElementById('mapStage');
+        if (e.target.checked) {
+          stage.classList.add('show-overlay');
+        } else {
+          stage.classList.remove('show-overlay');
+        }
+      });
+
+      // Member Search Filter in Tab 3
+      document.getElementById('searchMemberInput').addEventListener('input', () => {
+        renderSummaryMembersTable();
+      });
+
+      // Copy Chat Summary Buttons
+      const copyAction = () => {
+        const summary = generateChatSummary();
+        copyTextToClipboard(summary, t('toastCopiedChat'));
+      };
+      document.getElementById('btnCopyChatSummary').addEventListener('click', copyAction);
+      document.getElementById('btnCopyChatTextTab').addEventListener('click', copyAction);
+
+      // Modal Open / Close
+      const modal = document.getElementById('memberManagerModal');
+      document.getElementById('btnOpenMemberManager').addEventListener('click', () => {
+        renderModalMemberList();
+        modal.classList.add('show');
+      });
+      document.getElementById('btnCloseModal').addEventListener('click', () => {
+        modal.classList.remove('show');
+      });
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.remove('show');
+      });
+
+      // Add Single Member in Modal
+      document.getElementById('btnAddSingleMember').addEventListener('click', () => {
+        const input = document.getElementById('newSingleMemberInput');
+        if (input.value.trim()) {
+          addMemberToSystem(input.value.trim());
+          input.value = '';
+          renderModalMemberList();
+        }
+      });
+      document.getElementById('newSingleMemberInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          document.getElementById('btnAddSingleMember').click();
+        }
+      });
+
+      // Add Batch Members in Modal
+      document.getElementById('btnAddBatchMembers').addEventListener('click', () => {
+        const textarea = document.getElementById('newBatchMembersInput');
+        const raw = textarea.value;
+        if (!raw.trim()) return;
+
+        const names = raw.split(/[\r\n,]+/)
+          .map(n => n.trim())
+          .filter(n => n.length > 0);
+
+        let addedCount = 0;
+        names.forEach(name => {
+          if (!appState.allMembers.includes(name)) {
+            appState.allMembers.push(name);
+            addedCount++;
+          }
+        });
+
+        if (addedCount > 0) {
+          saveToStorage();
+          renderAll();
+          showToast(t('toastBatchAdded')(addedCount), "success");
+          textarea.value = '';
+        } else {
+          showToast(t('toastBatchNone'), "info");
+        }
+      });
+
+    });
+  </script>
+<script>
+window.addEventListener('DOMContentLoaded', () => { setTimeout(() => { toggleCustomDropdown('tambon'); }, 1200); });
+</script>
+</body>
+</html>

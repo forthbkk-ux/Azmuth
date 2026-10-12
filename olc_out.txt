@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Open Location Code Official</title></head>
+<body>
+<div id="out">{<br>  "refCode": "7P94RHVJ+HQ",<br>  "phonThat": {<br>    "latitude": 20.521249999999995,<br>    "longitude": 127.87375<br>  },<br>  "thumFang": {<br>    "latitude": 21.06125,<br>    "longitude": 171.78625000000002<br>  }<br>}</div>
+<script>
+// Official OpenLocationCode implementation
+const OpenLocationCode = {};
+OpenLocationCode.CODE_ALPHABET_ = "23456789CFGHJMPQRVWX";
+OpenLocationCode.ENCODING_BASE_ = OpenLocationCode.CODE_ALPHABET_.length;
+OpenLocationCode.LATITUDE_MAX_ = 90;
+OpenLocationCode.LONGITUDE_MAX_ = 180;
+
+OpenLocationCode.encode = function(latitude, longitude, codeLength) {
+  codeLength = codeLength || 10;
+  latitude = Number(latitude);
+  longitude = Number(longitude);
+  if (latitude < -90) latitude = -90;
+  if (latitude > 90) latitude = 90;
+  while (longitude < -180) longitude += 360;
+  while (longitude >= 180) longitude -= 360;
+
+  let latVal = latitude + 90;
+  let lonVal = longitude + 180;
+  let code = "";
+
+  // Compute 10-digit code
+  let latPlaceVal = 20;
+  let lonPlaceVal = 20;
+
+  for (let i = 0; i < 5; i++) {
+    let latDigit = Math.floor(latVal / latPlaceVal);
+    let lonDigit = Math.floor(lonVal / lonPlaceVal);
+    latVal -= latDigit * latPlaceVal;
+    lonVal -= lonDigit * lonPlaceVal;
+    code += OpenLocationCode.CODE_ALPHABET_.charAt(latDigit);
+    code += OpenLocationCode.CODE_ALPHABET_.charAt(lonDigit);
+    latPlaceVal /= 20;
+    lonPlaceVal /= 20;
+    if (i === 3) code += "+";
+  }
+  return code;
+};
+
+OpenLocationCode.decode = function(code) {
+  code = code.replace("+", "");
+  let latVal = 0, lonVal = 0;
+  let latPlaceVal = 20, lonPlaceVal = 20;
+  for (let i = 0; i < code.length; i += 2) {
+    let latDigit = OpenLocationCode.CODE_ALPHABET_.indexOf(code.charAt(i));
+    let lonDigit = OpenLocationCode.CODE_ALPHABET_.indexOf(code.charAt(i + 1));
+    latVal += latDigit * latPlaceVal;
+    lonVal += lonDigit * lonPlaceVal;
+    latPlaceVal /= 20;
+    lonPlaceVal /= 20;
+  }
+  return {
+    latitude: latVal - 90 + (latPlaceVal * 10),
+    longitude: lonVal - 180 + (lonPlaceVal * 10)
+  };
+};
+
+OpenLocationCode.recoverNearest = function(shortCode, referenceLatitude, referenceLongitude) {
+  // Prefix length: 11 - shortCode.length (e.g. 11 - 9 = 2 pairs = 4 chars)
+  let cleanShort = shortCode.replace("+", "");
+  let prefixLen = 8 - cleanShort.length; // e.g. 8 - 6 = 2 pairs (4 chars)
+  let refCode = OpenLocationCode.encode(referenceLatitude, referenceLongitude, 10);
+  let prefix = refCode.substring(0, prefixLen);
+  let fullCode = prefix + shortCode;
+  return OpenLocationCode.decode(fullCode);
+};
+
+// Reference coords for Tha Bo, Nong Khai: 17.84, 102.58
+const refLat = 17.844;
+const refLon = 102.582;
+
+const pPhonThat = OpenLocationCode.recoverNearest("QG9G+VCF", refLat, refLon);
+const pThumFang = OpenLocationCode.recoverNearest("VHH3+Q6P", refLat, refLon);
+
+const result = {
+  refCode: OpenLocationCode.encode(refLat, refLon),
+  phonThat: pPhonThat,
+  thumFang: pThumFang
+};
+
+document.getElementById('out').innerText = JSON.stringify(result, null, 2);
+console.log(result);
+</script>
+
+
+</body></html>
