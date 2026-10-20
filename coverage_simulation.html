@@ -1952,11 +1952,11 @@
           <div class="form-row" style="margin-bottom: 0.75rem;">
             <div class="form-group">
               <label>ละติจูด (Lat - N) <span class="unit-hint">°</span></label>
-              <input type="number" step="0.000001" id="modal-client-lat" class="form-input" placeholder="14.882000" onkeydown="if(event.key==='Enter') saveClientModal()" />
+              <input type="number" step="0.000001" id="modal-client-lat" class="form-input" placeholder="14.882000" onchange="onModalClientCoordsChanged()" onkeydown="if(event.key==='Enter') saveClientModal()" />
             </div>
             <div class="form-group">
               <label>ลองจิจูด (Lon - E) <span class="unit-hint">°</span></label>
-              <input type="number" step="0.000001" id="modal-client-lon" class="form-input" placeholder="99.865000" onkeydown="if(event.key==='Enter') saveClientModal()" />
+              <input type="number" step="0.000001" id="modal-client-lon" class="form-input" placeholder="99.865000" onchange="onModalClientCoordsChanged()" onkeydown="if(event.key==='Enter') saveClientModal()" />
             </div>
           </div>
           <div class="form-row">
@@ -1967,7 +1967,7 @@
             <div class="form-group">
               <label>ความสูงระดับน้ำทะเล <span class="unit-hint">MSL (m)</span></label>
               <div style="display: flex; gap: 4px;">
-                <input type="number" step="1" id="modal-client-ground-elev" class="form-input" placeholder="ดึงอัตโนมัติ" onkeydown="if(event.key==='Enter') saveClientModal()" />
+                <input type="number" step="1" id="modal-client-ground-elev" class="form-input" placeholder="ดึงอัตโนมัติ (MSL)" onkeydown="if(event.key==='Enter') saveClientModal()" />
                 <button type="button" class="btn btn-outline" style="padding: 4px 8px; font-size: 0.74rem; white-space: nowrap; background: white;" onclick="fetchElevForModalClient()" title="ดึงความสูงจริงตามพิกัด (จากระดับน้ำทะเลปานกลาง MSL)">⛰️ ดึงจริง</button>
               </div>
             </div>
@@ -4733,25 +4733,27 @@
 
           let addedCount = 0;
           const prevLen = masterStations.length;
+          const pendingElevMasters = [];
+
           rows.forEach((r, idx) => {
             const name = r['ชื่อสถานีแม่ข่าย'] || r['ชื่อสถานี'] || r['ชื่อ'] || r['Name'] || r['name'] || r['Station'] || `BS แม่ข่าย ${masterStations.length + 1}`;
             const lat = parseFloat(r['ละติจูด'] || r['Lat'] || r['lat'] || r['latitude'] || r['Latitude'] || r['Y'] || r['y']);
             const lon = parseFloat(r['ลองจิจูด'] || r['Lon'] || r['lon'] || r['lng'] || r['longitude'] || r['Longitude'] || r['X'] || r['x']);
             const tower = parseFloat(r['ความสูงเสาส่ง_เมตร'] || r['ความสูงเสา'] || r['เสา'] || r['Tower'] || r['height'] || 45);
-            const ground = parseFloat(
-              r['ความสูงระดับน้ำทะเล_เมตร'] ||
-              r['ความสูงระดับน้ำทะเล'] ||
-              r['ระดับน้ำทะเล'] ||
-              r['ระดับน้ำทะเล_เมตร'] ||
-              r['ความสูงพื้นดิน_เมตร'] ||
-              r['ความสูงพื้นดิน'] ||
-              r['ความสูงผืนดิน'] ||
-              r['MSL'] ||
-              r['msl'] ||
-              r['Elevation'] ||
-              r['elevation'] ||
-              30
+            const groundRaw = (
+              r['ความสูงระดับน้ำทะเล_เมตร'] !== undefined && r['ความสูงระดับน้ำทะเล_เมตร'] !== '' ? r['ความสูงระดับน้ำทะเล_เมตร'] :
+              r['ความสูงระดับน้ำทะเล'] !== undefined && r['ความสูงระดับน้ำทะเล'] !== '' ? r['ความสูงระดับน้ำทะเล'] :
+              r['ระดับน้ำทะเล_เมตร'] !== undefined && r['ระดับน้ำทะเล_เมตร'] !== '' ? r['ระดับน้ำทะเล_เมตร'] :
+              r['ระดับน้ำทะเล'] !== undefined && r['ระดับน้ำทะเล'] !== '' ? r['ระดับน้ำทะเล'] :
+              r['ความสูงพื้นดิน_เมตร'] !== undefined && r['ความสูงพื้นดิน_เมตร'] !== '' ? r['ความสูงพื้นดิน_เมตร'] :
+              r['ความสูงพื้นดิน'] !== undefined && r['ความสูงพื้นดิน'] !== '' ? r['ความสูงพื้นดิน'] :
+              r['ความสูงผืนดิน'] !== undefined && r['ความสูงผืนดิน'] !== '' ? r['ความสูงผืนดิน'] :
+              r['MSL'] !== undefined && r['MSL'] !== '' ? r['MSL'] :
+              r['msl'] !== undefined && r['msl'] !== '' ? r['msl'] :
+              r['Elevation'] !== undefined && r['Elevation'] !== '' ? r['Elevation'] :
+              r['elevation'] !== undefined && r['elevation'] !== '' ? r['elevation'] : null
             );
+            const ground = (groundRaw !== null && groundRaw !== '') ? parseFloat(groundRaw) : NaN;
             const power = parseFloat(r['กำลังส่ง_วัตต์'] || r['กำลังส่ง'] || r['Power'] || r['watts'] || 50);
             const freq = parseFloat(r['ความถี่_MHz'] || r['ความถี่'] || r['Freq'] || r['frequency'] || 150.0);
             const gain = parseFloat(r['อัตราขยาย_dBi'] || r['อัตราขยาย'] || r['Gain'] || 9.0);
@@ -4760,13 +4762,14 @@
             if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
               const watts = isNaN(power) ? 50 : power;
               const dbm = Math.round((10 * Math.log10(watts * 1000)) * 10) / 10;
-              masterStations.push({
+              const hasGround = !isNaN(ground);
+              const masterObj = {
                 id: Date.now() + idx,
                 name: name,
                 lat: lat,
                 lon: lon,
                 towerHeight: isNaN(tower) ? 45 : tower,
-                groundElev: isNaN(ground) ? 30 : ground,
+                groundElev: hasGround ? ground : 30,
                 freqMHz: isNaN(freq) ? 150.0 : freq,
                 freqUnit: 'MHz',
                 powerWatts: watts,
@@ -4792,8 +4795,12 @@
                 clutterLoss: 0,
                 showCoverage: true,
                 coverageGrid: null
-              });
+              };
+              masterStations.push(masterObj);
               addedCount++;
+              if (!hasGround) {
+                pendingElevMasters.push(masterObj);
+              }
             }
           });
 
@@ -4804,8 +4811,27 @@
             renderMasterStationsList();
             updateMasterMarkers();
             fitCoverageMapBounds();
-            await runFullCoverageSimulation();
-            showToast(`นำเข้าสถานีแม่ข่ายสำเร็จ ${addedCount} สถานี และคำนวณ Coverage เรียบร้อยแล้ว!`);
+
+            if (pendingElevMasters.length > 0) {
+              showToast(`📥 นำเข้าแม่ข่าย ${addedCount} สถานี (กำลังดึงความสูง MSL อัตโนมัติ ${pendingElevMasters.length} สถานี...)`);
+              fetchBatchElevations(pendingElevMasters).then(async (fetchedCount) => {
+                if (masterStations[activeMasterIndex]) {
+                  simState.groundElev = masterStations[activeMasterIndex].groundElev;
+                  const elevInput = document.getElementById('site-ground-elev');
+                  if (elevInput) elevInput.value = simState.groundElev;
+                  const kpiElev = document.getElementById('kpi-ground-elev');
+                  if (kpiElev) kpiElev.innerHTML = `${simState.groundElev} <span class="kpi-unit">m (MSL)</span>`;
+                }
+                renderMasterStationsList();
+                await runFullCoverageSimulation();
+                showToast(`⛰️ ดึงความสูงระดับน้ำทะเลแม่ข่ายสำเร็จ ${fetchedCount} สถานีเรียบร้อยแล้ว!`);
+              }).catch(async () => {
+                await runFullCoverageSimulation();
+              });
+            } else {
+              await runFullCoverageSimulation();
+              showToast(`นำเข้าสถานีแม่ข่ายสำเร็จ ${addedCount} สถานี และคำนวณ Coverage เรียบร้อยแล้ว!`);
+            }
           } else {
             alert("ไม่พบข้อมูลพิกัด (ละติจูด/ลองจิจูด) ที่ถูกต้องในไฟล์ Excel");
           }
@@ -4957,42 +4983,66 @@
           }
 
           let addedCount = 0;
+          const pendingElevClients = [];
+
           rows.forEach((r, idx) => {
             const name = r['ชื่อสถานีลูกข่าย'] || r['ชื่อลูกข่าย'] || r['ชื่อสถานี'] || r['ชื่อ'] || r['Name'] || r['name'] || r['Client'] || `ลูกข่าย ${clientStations.length + 1}`;
             const lat = parseFloat(r['ละติจูด'] || r['Lat'] || r['lat'] || r['latitude'] || r['Latitude'] || r['Y'] || r['y']);
             const lon = parseFloat(r['ลองจิจูด'] || r['Lon'] || r['lon'] || r['lng'] || r['longitude'] || r['Longitude'] || r['X'] || r['x']);
             const height = parseFloat(r['ความสูงเสาลูกข่าย_เมตร'] || r['ความสูงเสา'] || r['เสา'] || r['Height'] || r['height'] || 3.0);
-            const ground = parseFloat(
-              r['ความสูงระดับน้ำทะเล_เมตร'] ||
-              r['ความสูงระดับน้ำทะเล'] ||
-              r['ระดับน้ำทะเล'] ||
-              r['ระดับน้ำทะเล_เมตร'] ||
-              r['ความสูงพื้นดิน_เมตร'] ||
-              r['ความสูงพื้นดิน'] ||
-              r['ความสูงผืนดิน'] ||
-              r['MSL'] ||
-              r['msl'] ||
-              r['Elevation'] ||
-              r['elevation']
+            
+            const groundRaw = (
+              r['ความสูงระดับน้ำทะเล_เมตร'] !== undefined && r['ความสูงระดับน้ำทะเล_เมตร'] !== '' ? r['ความสูงระดับน้ำทะเล_เมตร'] :
+              r['ความสูงระดับน้ำทะเล'] !== undefined && r['ความสูงระดับน้ำทะเล'] !== '' ? r['ความสูงระดับน้ำทะเล'] :
+              r['ระดับน้ำทะเล_เมตร'] !== undefined && r['ระดับน้ำทะเล_เมตร'] !== '' ? r['ระดับน้ำทะเล_เมตร'] :
+              r['ระดับน้ำทะเล'] !== undefined && r['ระดับน้ำทะเล'] !== '' ? r['ระดับน้ำทะเล'] :
+              r['ความสูงพื้นดิน_เมตร'] !== undefined && r['ความสูงพื้นดิน_เมตร'] !== '' ? r['ความสูงพื้นดิน_เมตร'] :
+              r['ความสูงพื้นดิน'] !== undefined && r['ความสูงพื้นดิน'] !== '' ? r['ความสูงพื้นดิน'] :
+              r['ความสูงผืนดิน'] !== undefined && r['ความสูงผืนดิน'] !== '' ? r['ความสูงผืนดิน'] :
+              r['MSL'] !== undefined && r['MSL'] !== '' ? r['MSL'] :
+              r['msl'] !== undefined && r['msl'] !== '' ? r['msl'] :
+              r['Elevation'] !== undefined && r['Elevation'] !== '' ? r['Elevation'] :
+              r['elevation'] !== undefined && r['elevation'] !== '' ? r['elevation'] : null
             );
+            const ground = (groundRaw !== null && groundRaw !== '') ? parseFloat(groundRaw) : NaN;
 
             if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-              clientStations.push({
+              const hasGround = !isNaN(ground);
+              const clientObj = {
                 id: Date.now() + idx,
                 name: name,
                 lat: lat,
                 lon: lon,
                 height: isNaN(height) ? 3.0 : height,
-                groundElev: isNaN(ground) ? null : ground
-              });
+                groundElev: hasGround ? ground : null
+              };
+              clientStations.push(clientObj);
               addedCount++;
+
+              if (!hasGround) {
+                pendingElevClients.push(clientObj);
+              }
             }
           });
 
           if (addedCount > 0) {
-            showToast(`นำเข้าสถานีลูกข่ายสำเร็จ ${addedCount} สถานี!`);
             updateClientMarkersAndLinks();
             renderClientTable();
+
+            if (pendingElevClients.length > 0) {
+              showToast(`📥 นำเข้าลูกข่าย ${addedCount} สถานี (กำลังดึงความสูง MSL อัตโนมัติ ${pendingElevClients.length} สถานี...)`);
+              fetchBatchElevations(pendingElevClients).then(doneCount => {
+                updateClientMarkersAndLinks();
+                renderClientTable();
+                showToast(`⛰️ ดึงความสูงระดับน้ำทะเล (MSL) สำเร็จอัตโนมัติ ${doneCount} สถานีเรียบร้อยแล้ว!`);
+              }).catch(err => {
+                console.warn("Auto elevation fetch error:", err);
+                updateClientMarkersAndLinks();
+                renderClientTable();
+              });
+            } else {
+              showToast(`นำเข้าสถานีลูกข่ายสำเร็จ ${addedCount} สถานี!`);
+            }
           } else {
             alert("ไม่พบข้อมูลพิกัด (ละติจูด/ลองจิจูด) ที่ถูกต้องในไฟล์ Excel");
           }
@@ -5044,25 +5094,78 @@
 
     async function fetchClientSiteElevation(lat, lon) {
       const input = document.getElementById('modal-client-ground-elev');
-      if (input) input.placeholder = "กำลังดึงข้อมูล...";
+      if (input) input.placeholder = "กำลังดึงข้อมูล MSL...";
+      let elev = null;
       try {
         const resp = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`);
         if (resp.ok) {
           const json = await resp.json();
-          if (json.elevation && json.elevation.length > 0) {
-            const elev = Math.round(json.elevation[0]);
-            if (input) input.value = elev;
-            return elev;
+          if (json.elevation && json.elevation.length > 0 && typeof json.elevation[0] === 'number' && !isNaN(json.elevation[0])) {
+            elev = Math.round(json.elevation[0]);
           }
         }
       } catch (err) {
         console.warn("DEM client fetch fallback:", err.message);
       }
-      if (input && !input.value) {
-        const synth = Math.round(getSyntheticTerrainAt(lat, lon, 1, 0));
-        input.value = synth;
-        return synth;
+      if (elev === null || isNaN(elev)) {
+        elev = Math.round(getSyntheticTerrainAt(lat, lon, 1, 0));
       }
+      if (input) {
+        input.value = elev;
+        input.placeholder = "ดึงอัตโนมัติ (MSL)";
+      }
+      return elev;
+    }
+
+    function onModalClientCoordsChanged() {
+      const lat = parseFloat(document.getElementById('modal-client-lat').value);
+      const lon = parseFloat(document.getElementById('modal-client-lon').value);
+      if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+        fetchClientSiteElevation(lat, lon);
+      }
+    }
+
+    // Helper to batch-fetch elevations for multiple stations (clients or masters)
+    async function fetchBatchElevations(stationsList, onProgress = null) {
+      if (!stationsList || stationsList.length === 0) return 0;
+      let fetchedCount = 0;
+      const CHUNK_SIZE = 50;
+
+      for (let i = 0; i < stationsList.length; i += CHUNK_SIZE) {
+        const chunk = stationsList.slice(i, i + CHUNK_SIZE);
+        const lats = chunk.map(s => Number(s.lat).toFixed(6)).join(',');
+        const lons = chunk.map(s => Number(s.lon).toFixed(6)).join(',');
+        let elevations = null;
+
+        try {
+          const resp = await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lons}`);
+          if (resp.ok) {
+            const json = await resp.json();
+            if (json.elevation && Array.isArray(json.elevation)) {
+              elevations = json.elevation;
+            }
+          }
+        } catch (err) {
+          console.warn("Batch elevation fetch error:", err.message);
+        }
+
+        chunk.forEach((s, idx) => {
+          let elev = null;
+          if (elevations && typeof elevations[idx] === 'number' && !isNaN(elevations[idx])) {
+            elev = Math.round(elevations[idx]);
+          } else {
+            elev = Math.round(getSyntheticTerrainAt(s.lat, s.lon, 1, 0));
+          }
+          s.groundElev = elev;
+          fetchedCount++;
+        });
+
+        if (typeof onProgress === 'function') {
+          onProgress(fetchedCount, stationsList.length);
+        }
+      }
+
+      return fetchedCount;
     }
 
     function fetchElevForModalClient() {
@@ -5157,6 +5260,15 @@
       updateClientMarkersAndLinks();
       renderClientTable();
 
+      // Automatically fetch sea level elevation for the newly added client station
+      fetchClientSiteElevation(newClient.lat, newClient.lon).then(elev => {
+        if (elev !== undefined && !isNaN(elev)) {
+          newClient.groundElev = elev;
+          updateClientMarkersAndLinks();
+          renderClientTable();
+        }
+      });
+
       // Pan map to new client safely
       if (map) {
         const zoom = (typeof map.getZoom === 'function' ? map.getZoom() : 12) || 12;
@@ -5175,7 +5287,7 @@
         }, 300);
       }
 
-      showToast(`✅ เพิ่มสถานีลูกข่าย "${name}" เรียบร้อยแล้ว (สามารถลากหมุดบนแผนที่เพื่อย้ายตำแหน่งได้)`);
+      showToast(`✅ เพิ่มสถานีลูกข่าย "${name}" เรียบร้อยแล้ว (กำลังดึงความสูง MSL อัตโนมัติ...)`);
     }
 
     function openClientModal(mode = 'add', idx = -1, clickLat = null, clickLon = null) {
@@ -5195,7 +5307,23 @@
         document.getElementById('modal-client-lat').value = Number(c.lat).toFixed(6);
         document.getElementById('modal-client-lon').value = Number(c.lon).toFixed(6);
         document.getElementById('modal-client-height').value = c.height;
-        document.getElementById('modal-client-ground-elev').value = (c.groundElev !== null && c.groundElev !== undefined && !isNaN(c.groundElev)) ? c.groundElev : '';
+
+        const elevInput = document.getElementById('modal-client-ground-elev');
+        if (c.groundElev !== null && c.groundElev !== undefined && !isNaN(c.groundElev)) {
+          elevInput.value = c.groundElev;
+        } else {
+          elevInput.value = '';
+          elevInput.placeholder = "กำลังดึงข้อมูล MSL อัตโนมัติ...";
+          fetchClientSiteElevation(c.lat, c.lon).then(elev => {
+            if (elev !== undefined && !isNaN(elev)) {
+              c.groundElev = elev;
+              if (modalClientTargetIndex === idx && document.getElementById('modal-client-ground-elev')) {
+                document.getElementById('modal-client-ground-elev').value = elev;
+              }
+              renderClientTable();
+            }
+          });
+        }
       } else {
         if (title) title.innerHTML = `➕ เพิ่มสถานีลูกข่ายใหม่`;
         const typedName = nameInput ? nameInput.value.trim() : '';
@@ -5540,6 +5668,13 @@
           const pos = e.target.getLatLng();
           c.lat = pos.lat;
           c.lon = pos.lng;
+          fetchClientSiteElevation(c.lat, c.lon).then(elev => {
+            if (elev !== undefined && !isNaN(elev)) {
+              c.groundElev = elev;
+              updateClientMarkersAndLinks();
+              renderClientTable();
+            }
+          });
           updateClientMarkersAndLinks();
           renderClientTable();
         });
@@ -5618,7 +5753,12 @@
           <td style="font-family:var(--font-mono); font-size:0.8rem; color:#475569;">
             ${c.lat.toFixed(5)}, ${c.lon.toFixed(5)}
           </td>
-          <td style="text-align:center; font-family:var(--font-mono); font-size:0.82rem;">${c.height} m</td>
+          <td style="text-align:center; font-family:var(--font-mono); font-size:0.82rem;">
+            ${c.height} m
+            <div style="font-size:0.7rem; color:#64748b;" title="ความสูงระดับน้ำทะเล (MSL)">
+              ${c.groundElev !== null && c.groundElev !== undefined ? `MSL ${c.groundElev}m` : '<span style="color:#f59e0b;">กำลังดึง...</span>'}
+            </div>
+          </td>
           <td style="text-align:right; font-family:var(--font-mono); font-weight:700;">${distStr}</td>
           <td style="text-align:center; font-family:var(--font-mono);">${azStr}</td>
           <td style="text-align:center;">
