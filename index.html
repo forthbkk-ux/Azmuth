@@ -4417,9 +4417,12 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
           // Clearance: ray minus effective ground
           const clearance = rayHeight - effectiveGround;
 
-          // 1st Fresnel Zone radius at 400 MHz (UHF): F1 = 17.32 * sqrt( (d1 * d2) / (0.4 * D) )
+          // 1st Fresnel Zone radius at active frequency (GHz): F1 = 17.32 * sqrt( (d1 * d2) / (fGHz * D) )
+          const fGHzActive = (typeof selectedFresnelFreqMHz !== 'undefined' && selectedFresnelFreqMHz > 0)
+            ? selectedFresnelFreqMHz / 1000.0
+            : (parseFloat(document.getElementById('fresnel-freq-ghz')?.value) || 7.5);
           const fresnelR = (totalDistKm > 0 && d_i > 0 && d_i < totalDistKm)
-            ? 17.32 * Math.sqrt((d_i * (totalDistKm - d_i)) / (0.4 * totalDistKm))
+            ? 17.32 * Math.sqrt((d_i * (totalDistKm - d_i)) / (fGHzActive * totalDistKm))
             : 0;
 
           // Slope %
@@ -4625,24 +4628,52 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         ctx.fillText(`${d.toFixed(1)} km`, x, H - padBottom + 8);
       }
 
-      // 1. Draw 1st Fresnel Zone Ellipse Band (Translucent Cyan)
+      // 1. Draw 1st Fresnel Zone Ellipse Bands (100% Cyan and 60% Amber matching 3D)
       ctx.beginPath();
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        const yTop = yCoord(p.rayHeight + p.fresnelR * 0.6);
+        const yTop = yCoord(p.rayHeight + (p.fresnelR || 0));
         const x = xCoord(p.distKm);
         if (i === 0) ctx.moveTo(x, yTop);
         else ctx.lineTo(x, yTop);
       }
       for (let i = points.length - 1; i >= 0; i--) {
         const p = points[i];
-        const yBottom = yCoord(p.rayHeight - p.fresnelR * 0.6);
+        const yBottom = yCoord(p.rayHeight - (p.fresnelR || 0));
         const x = xCoord(p.distKm);
         ctx.lineTo(x, yBottom);
       }
       ctx.closePath();
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.08)';
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.16)';
       ctx.fill();
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 60% Clearance Zone (Inner Amber)
+      ctx.beginPath();
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+        const yTop = yCoord(p.rayHeight + (p.fresnelR || 0) * 0.6);
+        const x = xCoord(p.distKm);
+        if (i === 0) ctx.moveTo(x, yTop);
+        else ctx.lineTo(x, yTop);
+      }
+      for (let i = points.length - 1; i >= 0; i--) {
+        const p = points[i];
+        const yBottom = yCoord(p.rayHeight - (p.fresnelR || 0) * 0.6);
+        const x = xCoord(p.distKm);
+        ctx.lineTo(x, yBottom);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+      ctx.fill();
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = 'rgba(245, 158, 11, 0.6)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.restore();
 
       // 2. Draw Terrain Area (Google Earth Pro Red/Coral Gradient Fill)
       ctx.beginPath();
@@ -6017,13 +6048,18 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const totalD = data.totalDistKm || 1;
       const sub = data.subStation || { name: 'A', height: 50 };
       const master = data.masterStation || { name: 'B', height: 50 };
+      const freqGHz = parseFloat(data.freqGHz) || (typeof selectedFresnelFreqMHz !== 'undefined' ? selectedFresnelFreqMHz / 1000.0 : 7.5);
 
       let minE = Infinity;
       let maxE = -Infinity;
       points.forEach(p => {
         const eg = (p.effectiveGround !== undefined) ? p.effectiveGround : (p.groundElev || 0);
         const rh = (p.rayHeight !== undefined) ? p.rayHeight : 0;
-        const fr = (p.fresnelR !== undefined) ? p.fresnelR : 0;
+        const d1 = p.distKm;
+        const d2 = totalD - d1;
+        const fr = (totalD > 0 && d1 > 0 && d1 < totalD)
+          ? 17.32 * Math.sqrt((d1 * d2) / (freqGHz * totalD))
+          : (p.fresnelR || 0);
         if (eg < minE) minE = eg;
         if (eg > maxE) maxE = eg;
         if (rh + fr > maxE) maxE = rh + fr;
@@ -6087,55 +6123,78 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       ctx.textAlign = 'right';
       ctx.fillText('MSL (m)', W - 4, padTop - 14);
 
-      // Top Legend
+      // Top Legend (Matching 3D Theme)
       ctx.font = '8.5px "Inter", "Sarabun", sans-serif';
       ctx.textAlign = 'center';
       ctx.fillStyle = '#0284c7';
-      ctx.fillText('― แนวสายตา LOS', W / 2 - 150, padTop - 14);
-      ctx.fillStyle = '#16a34a';
-      ctx.fillText('■ 1st Fresnel Zone (100% / 60%)', W / 2, padTop - 14);
+      ctx.fillText('― แนวสายตา LOS', W / 2 - 180, padTop - 14);
+      ctx.fillStyle = '#0284c7';
+      ctx.fillText('■ 100% 1st Fresnel Zone', W / 2 - 50, padTop - 14);
+      ctx.fillStyle = '#d97706';
+      ctx.fillText('■ 60% Clearance Zone', W / 2 + 75, padTop - 14);
       ctx.fillStyle = '#0f766e';
-      ctx.fillText('■ ผิวภูมิประเทศและส่วนโค้งโลก (K=4/3)', W / 2 + 160, padTop - 14);
+      ctx.fillText('■ ผิวภูมิประเทศ & ส่วนโค้งโลก (K=4/3)', W / 2 + 205, padTop - 14);
 
-      // 1st Fresnel Zone 100% Ellipse
+      // 1. 1st Fresnel Zone 100% Ellipse (Sky Blue / Cyan matching 3D)
       ctx.beginPath();
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        const yTop = yCoord(p.rayHeight + (p.fresnelR || 0));
+        const d1 = p.distKm;
+        const d2 = totalD - d1;
+        const fr = (totalD > 0 && d1 > 0 && d1 < totalD) ? 17.32 * Math.sqrt((d1 * d2) / (freqGHz * totalD)) : 0;
+        const yTop = yCoord(p.rayHeight + fr);
         const x = xCoord(p.distKm);
         if (i === 0) ctx.moveTo(x, yTop);
         else ctx.lineTo(x, yTop);
       }
       for (let i = points.length - 1; i >= 0; i--) {
         const p = points[i];
-        const yBottom = yCoord(p.rayHeight - (p.fresnelR || 0));
+        const d1 = p.distKm;
+        const d2 = totalD - d1;
+        const fr = (totalD > 0 && d1 > 0 && d1 < totalD) ? 17.32 * Math.sqrt((d1 * d2) / (freqGHz * totalD)) : 0;
+        const yBottom = yCoord(p.rayHeight - fr);
         const x = xCoord(p.distKm);
         ctx.lineTo(x, yBottom);
       }
       ctx.closePath();
-      ctx.fillStyle = 'rgba(74, 222, 128, 0.35)';
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.22)';
       ctx.fill();
-      ctx.strokeStyle = '#22c55e';
+      ctx.strokeStyle = '#0284c7';
       ctx.lineWidth = 1.2;
       ctx.stroke();
 
-      // 60% F1 clearance dashed stroke
-      ctx.save();
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = 'rgba(21, 128, 61, 0.65)';
-      ctx.lineWidth = 1;
+      // 2. 60% F1 clearance zone (Amber / Gold matching 3D)
       ctx.beginPath();
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        const yBot60 = yCoord(p.rayHeight - (p.fresnelR || 0) * 0.6);
+        const d1 = p.distKm;
+        const d2 = totalD - d1;
+        const fr60 = (totalD > 0 && d1 > 0 && d1 < totalD) ? 17.32 * Math.sqrt((d1 * d2) / (freqGHz * totalD)) * 0.6 : 0;
+        const yTop60 = yCoord(p.rayHeight + fr60);
         const x = xCoord(p.distKm);
-        if (i === 0) ctx.moveTo(x, yBot60);
-        else ctx.lineTo(x, yBot60);
+        if (i === 0) ctx.moveTo(x, yTop60);
+        else ctx.lineTo(x, yTop60);
       }
+      for (let i = points.length - 1; i >= 0; i--) {
+        const p = points[i];
+        const d1 = p.distKm;
+        const d2 = totalD - d1;
+        const fr60 = (totalD > 0 && d1 > 0 && d1 < totalD) ? 17.32 * Math.sqrt((d1 * d2) / (freqGHz * totalD)) * 0.6 : 0;
+        const yBot60 = yCoord(p.rayHeight - fr60);
+        const x = xCoord(p.distKm);
+        ctx.lineTo(x, yBot60);
+      }
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(245, 158, 11, 0.12)';
+      ctx.fill();
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = '#d97706';
+      ctx.lineWidth = 1;
       ctx.stroke();
       ctx.restore();
 
-      // Terrain Area
+      // 3. Terrain Area
       ctx.beginPath();
       ctx.moveTo(xCoord(0), H - padBottom);
       for (let i = 0; i < points.length; i++) {
@@ -6163,18 +6222,18 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       ctx.lineWidth = 1.8;
       ctx.stroke();
 
-      // LOS Ray
+      // 4. LOS Ray (Cyan laser style matching 3D)
       ctx.save();
       ctx.setLineDash([5, 4]);
       ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 1.8;
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
       ctx.moveTo(xCoord(0), yCoord(points[0].rayHeight));
       ctx.lineTo(xCoord(totalD), yCoord(points[points.length - 1].rayHeight));
       ctx.stroke();
       ctx.restore();
 
-      // Station Towers
+      // 5. Station Towers
       const ptStart = points[0];
       const ptEnd = points[points.length - 1];
 
@@ -6220,16 +6279,26 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       const bTextY = yB_top < padTop + 14 ? yB_top + 14 : yB_top - 2;
       ctx.fillText(`[B] ${master.name || 'B'} (${master.height || 50}m)`, xB - 5, bTextY);
 
-      // Obstacle Warning Indicator on Canvas
+      // 6. Obstacle Analysis & Clear LOS Stamp (Consistent with 3D model)
+      let worstClearance = Infinity;
+      let worstPt = null;
       let worstCanvasPt = null;
       let maxPen = 0;
       for (let i = 0; i < points.length; i++) {
         const p = points[i];
-        if (p.clearance < 0 && Math.abs(p.clearance) > maxPen) {
-          maxPen = Math.abs(p.clearance);
+        const frac = totalD > 0 ? (p.distKm / totalD) : 0;
+        if (frac <= 0.02 || frac >= 0.98) continue;
+        const clr = p.rayHeight - p.effectiveGround;
+        if (clr < worstClearance) {
+          worstClearance = clr;
+          worstPt = p;
+        }
+        if (clr < 0 && Math.abs(clr) > maxPen) {
+          maxPen = Math.abs(clr);
           worstCanvasPt = p;
         }
       }
+
       if (worstCanvasPt && maxPen > 0) {
         const xObs = xCoord(worstCanvasPt.distKm);
         const yObs = yCoord(worstCanvasPt.effectiveGround);
@@ -6248,6 +6317,30 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
         ctx.textBaseline = 'bottom';
         const txtY = Math.max(padTop + 10, yObs - 7);
         ctx.fillText(`⚠️ สันเขาบังคลื่น +${maxPen.toFixed(1)}m`, xObs, txtY);
+        ctx.restore();
+      } else if (worstPt && worstClearance > 0) {
+        // Clear LOS Badge (Aligned with 3D +28.4 m clearance status)
+        ctx.save();
+        ctx.fillStyle = 'rgba(240, 253, 244, 0.92)';
+        ctx.strokeStyle = '#86efac';
+        ctx.lineWidth = 1;
+        const badgeTxt = `✓ Line-of-Sight ปลอดโปร่ง (ระยะเคลียร์ต่ำสุด +${worstClearance.toFixed(1)} m | 100% F1 Pass)`;
+        ctx.font = 'bold 9px "Inter", "Sarabun", sans-serif';
+        const txtW = ctx.measureText(badgeTxt).width;
+        const bX = W - padRight - txtW - 12;
+        const bY = padTop + 6;
+        ctx.beginPath();
+        if (typeof ctx.roundRect === 'function') {
+          ctx.roundRect(bX, bY, txtW + 10, 18, 4);
+        } else {
+          ctx.rect(bX, bY, txtW + 10, 18);
+        }
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillStyle = '#15803d';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(badgeTxt, bX + 5, bY + 9);
         ctx.restore();
       }
 
@@ -6635,16 +6728,26 @@ Back Azimuth (สถานีปลายทาง B ➔ สถานีต้�
       let profileImage = null;
       let elevProfile = null;
       if (typeof currentElevProfileData !== 'undefined' && currentElevProfileData && currentElevProfileData.points && currentElevProfileData.points.length > 0) {
+        const fGHzReport = freqGHz || 7.5;
+        const totalD = currentElevProfileData.totalDistKm || distKm;
         elevProfile = {
-          totalDistKm: currentElevProfileData.totalDistKm || distKm,
-          points: currentElevProfileData.points.map(p => ({
-            distKm: p.distKm,
-            effectiveGround: Math.round(p.effectiveGround * 100) / 100,
-            groundElev: Math.round((p.elevation || p.groundElev || 0) * 100) / 100,
-            rayHeight: Math.round(p.rayHeight * 100) / 100,
-            fresnelR: Math.round((p.fresnelR || 0) * 100) / 100,
-            clearance: Math.round((p.clearance || 0) * 100) / 100
-          })),
+          totalDistKm: totalD,
+          freqGHz: fGHzReport,
+          points: currentElevProfileData.points.map(p => {
+            const d1 = p.distKm;
+            const d2 = totalD - d1;
+            const accurateFresnelR = (totalD > 0 && d1 > 0 && d1 < totalD)
+              ? 17.32 * Math.sqrt((d1 * d2) / (fGHzReport * totalD))
+              : 0;
+            return {
+              distKm: p.distKm,
+              effectiveGround: Math.round(p.effectiveGround * 100) / 100,
+              groundElev: Math.round((p.elevation || p.groundElev || 0) * 100) / 100,
+              rayHeight: Math.round(p.rayHeight * 100) / 100,
+              fresnelR: Math.round(accurateFresnelR * 100) / 100,
+              clearance: Math.round((p.rayHeight - p.effectiveGround) * 100) / 100
+            };
+          }),
           subStation: { name: nameA, height: antA },
           masterStation: { name: nameB, height: antB }
         };

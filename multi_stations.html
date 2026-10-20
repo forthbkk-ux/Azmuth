@@ -2781,9 +2781,12 @@
           // Clearance: ray minus effective ground
           const clearance = rayHeight - effectiveGround;
 
-          // 1st Fresnel Zone radius at 400 MHz (UHF): F1 = 17.32 * sqrt( (d1 * d2) / (0.4 * D) )
+          // 1st Fresnel Zone radius at active frequency (GHz): F1 = 17.32 * sqrt( (d1 * d2) / (fGHz * D) )
+          const fGHzActive = (typeof selectedFresnelFreqMHz !== 'undefined' && selectedFresnelFreqMHz > 0)
+            ? selectedFresnelFreqMHz / 1000.0
+            : 0.4;
           const fresnelR = (totalDistKm > 0 && d_i > 0 && d_i < totalDistKm)
-            ? 17.32 * Math.sqrt((d_i * (totalDistKm - d_i)) / (0.4 * totalDistKm))
+            ? 17.32 * Math.sqrt((d_i * (totalDistKm - d_i)) / (fGHzActive * totalDistKm))
             : 0;
 
           // Slope %
